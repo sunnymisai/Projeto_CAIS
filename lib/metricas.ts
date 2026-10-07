@@ -16,24 +16,32 @@ import { diasEntre, hojeISO, somaDias } from './utils.ts';
    tudo é recalculado a partir dos dados, como faria a API. */
 
 /**
- * Quem deve cumprir a trilha, conforme o alcance (slide 5).
- * - geral: todos os profissionais que não estão inativos;
+ * Quem deve cumprir a trilha, conforme o alcance (slide 5 e §4).
+ * - geral: todos os profissionais E todas as pessoas de perfil Empresa ("todas as
+ *   empresas e todos os profissionais"), menos as inativas;
  * - profissional: só as pessoas escolhidas em `pessoaIds`;
- * - empresa: quem está alocado em algum projeto daquela empresa.
+ * - empresa: quem está alocado em algum projeto daquela empresa E as pessoas de
+ *   perfil Empresa vinculadas a ela (`pessoa.empresaId`), menos as inativas.
+ * O administrador nunca entra no público: ele opera o programa, não cumpre trilha.
  * @param t - a trilha.
  * @param d - todos os dados (vindos de `useDados()`).
  * @returns lista de ids de pessoas, sem repetição.
+ * @example publicoDaTrilha(trilhaDaVertice, d).includes('pes_marcos') // true: ele é da Vértice
  */
+// TODO(PROGLOGIC): confirmar que a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (§3: "cumpre a trilha dela").
 export function publicoDaTrilha(t: Trilha, d: Dados): string[] {
   // Inativo não recebe trilha nova (§11: inativar mantém o histórico, mas tira da operação).
-  const profissionais = d.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo');
-  if (t.alcance === 'geral') return profissionais.map((p) => p.id);
+  const ativas = d.pessoas.filter((p) => p.status !== 'inativo');
+  if (t.alcance === 'geral') return ativas.filter((p) => p.perfil === 'profissional' || p.perfil === 'empresa').map((p) => p.id);
   if (t.alcance === 'profissional') return t.pessoaIds;
-  // Alcance 'empresa': a pessoa está "ligada à empresa" quando está alocada num projeto dela.
+  // Alcance 'empresa', parte 1: o profissional está "ligado à empresa" quando está alocado num projeto dela.
   // Set dos ids de projeto para a busca `has` ser rápida.
   const projetos = new Set(d.projetos.filter((p) => p.empresaId === t.empresaId).map((p) => p.id));
-  // O Set externo tira repetidos (a mesma pessoa pode estar em dois projetos da empresa).
-  return [...new Set(d.alocacoes.filter((a) => projetos.has(a.projetoId)).map((a) => a.pessoaId))];
+  const alocados = d.alocacoes.filter((a) => projetos.has(a.projetoId)).map((a) => a.pessoaId);
+  // Parte 2: as contas da própria empresa (perfil Empresa com o vínculo).
+  const daEmpresa = ativas.filter((p) => p.perfil === 'empresa' && p.empresaId === t.empresaId).map((p) => p.id);
+  // O Set tira repetidos (a mesma pessoa pode estar em dois projetos da empresa).
+  return [...new Set([...alocados, ...daEmpresa])];
 }
 
 /**

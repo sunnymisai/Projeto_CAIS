@@ -110,8 +110,9 @@ export function criarSeed(): Dados {
       },
       {
         id: 'tri_nivel_front', titulo: 'Nivelamento de front-end', descricao: 'React, TypeScript e o design system do CAIS.',
-        // publicadaEm d(-14) + 21 dias: prazo em d(+7) para o Bruno e a Elisa (NO PRAZO); o Felipe conta da entrada, d(-2).
-        alcance: 'profissional', empresaId: '', pessoaIds: ['pes_bruno', 'pes_elisa', 'pes_felipe'], status: 'publicada', prazoDias: 21, publicadaEm: d(-14),
+        // publicadaEm d(-14) + 21 dias: prazo em d(+7) para a Ana, o Bruno e a Elisa (NO PRAZO); o Felipe conta da entrada, d(-2).
+        // A Ana (conta de demonstração do profissional) está no meio desta trilha (2 de 5), para "Minhas trilhas" ter uma em andamento.
+        alcance: 'profissional', empresaId: '', pessoaIds: ['pes_ana', 'pes_bruno', 'pes_elisa', 'pes_felipe'], status: 'publicada', prazoDias: 21, publicadaEm: d(-14),
         etapas: [
           { id: 'et_n1', titulo: 'Componentes e props', tipo: 'video', obrigatoria: true, notaMinima: 0,
             conteudo: { texto: 'Como quebrar uma tela em componentes e passar dados por props.', url: 'https://example.com/videos/componentes-e-props' } },
@@ -131,7 +132,7 @@ export function criarSeed(): Dados {
               { id: 'q_n5', enunciado: 'Quais são os quatro estados que toda tela precisa ter?', alternativas: ['Carregando, vazio, com erro e com dado', 'Claro, escuro, celular e desktop', 'Criar, ler, editar e apagar'], correta: 0 },
             ] },
         ],
-        progresso: { pes_bruno: { concluidas: 4 }, pes_elisa: { concluidas: 1 }, pes_felipe: { concluidas: 0 } },
+        progresso: { pes_ana: { concluidas: 2 }, pes_bruno: { concluidas: 4 }, pes_elisa: { concluidas: 1 }, pes_felipe: { concluidas: 0 } },
       },
       {
         id: 'tri_lgpd', titulo: 'LGPD na prática', descricao: 'Como tratar dados pessoais nos projetos dos clientes.',

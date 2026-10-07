@@ -1,10 +1,12 @@
 /* ============================================================================
    BUTTON.TSX — BOTÃO DO DESIGN SYSTEM CAIS
    O que é: botão com 4 variantes, 3 tamanhos e os estados repouso, hover,
-   pressionado, foco, carregando e desabilitado.
+   pressionado, foco, carregando e desabilitado; e classesBotao(), as mesmas
+   classes para um <Link> que navega mas deve parecer botão.
    Onde é usado: components/LoginForm.tsx, telas de app/(sistema) (empresas,
    pessoas, projetos, projetos/[id], trilhas, trilhas/[id], design-system) e
-   components/projetos (DetalheTarefa, Equipe, FormProjeto, Quadro).
+   components/projetos (DetalheTarefa, Equipe, FormProjeto, Quadro); classesBotao
+   em app/(sistema)/minhas-trilhas e minhas-trilhas/[id].
    Depende de: react (forwardRef) e lib/utils (cx).
    Contexto: §9 (design system: botão e seus estados) e §13 (foco visível;
    ação dá retorno em menos de 1 s, por isso o estado "carregando").
@@ -60,6 +62,35 @@ const TAMANHOS = {
 };
 
 /**
+ * Classes do botão, para usar também num <Link> que deve PARECER botão.
+ * Regra de semântica: se a ação navega para outra página, é <Link> (com estas classes);
+ * se faz algo na tela atual, é <Button>.
+ * ⚠️ ATENÇÃO: o <Button> abaixo usa esta mesma função; mudar aqui muda os dois.
+ * @param op.variante cor (padrão primario).
+ * @param op.tamanho altura (padrão md).
+ * @param op.larguraTotal ocupa toda a largura do pai.
+ * @param op.className classes extras.
+ * @returns a string de classes Tailwind.
+ * @example <Link href="/minhas-trilhas" className={classesBotao({ tamanho: 'lg' })}>Continuar</Link>
+ */
+export function classesBotao({ variante = "primario", tamanho = "md", larguraTotal = false, className }: {
+  variante?: keyof typeof VARIANTES; tamanho?: keyof typeof TAMANHOS; larguraTotal?: boolean; className?: string;
+} = {}) {
+  return cx(
+    "group relative inline-flex shrink-0 items-center justify-center font-archivo font-semibold whitespace-nowrap",
+    // active:scale-[0.98]: o botão "afunda" levemente ao ser pressionado.
+    "transition-[background-color,color,transform,filter] duration-150 active:scale-[0.98]",
+    "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
+    // Anel de foco só na navegação por teclado (focus-visible), com respiro da cor do fundo (ring-offset).
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie",
+    VARIANTES[variante],
+    TAMANHOS[tamanho],
+    larguraTotal && "w-full",
+    className
+  );
+}
+
+/**
  * Botão do Design System CAIS. Repassa qualquer prop de <button> (onClick, aria-*...).
  * Usa forwardRef para que outros componentes consigam focar o botão.
  * @param props ver ButtonProps.
@@ -91,18 +122,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       disabled={disabled || isLoading}
       // aria-busy avisa o leitor de tela que algo está em andamento.
       aria-busy={isLoading || undefined}
-      className={cx(
-        "group relative inline-flex shrink-0 items-center justify-center font-archivo font-semibold whitespace-nowrap",
-        // active:scale-[0.98]: o botão "afunda" levemente ao ser pressionado.
-        "transition-[background-color,color,transform,filter] duration-150 active:scale-[0.98]",
-        "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
-        // Anel de foco só na navegação por teclado (focus-visible), com respiro da cor do fundo (ring-offset).
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie",
-        VARIANTES[variante],
-        TAMANHOS[tamanho],
-        larguraTotal && "w-full",
-        className
-      )}
+      className={classesBotao({ variante, tamanho, larguraTotal, className })}
       {...rest}
     >
       {/* Carregando: spinner (borda girando) + texto no lugar do conteúdo. */}

@@ -2,7 +2,7 @@
    CASOS DE TESTE DAS PERMISSÕES
    O que é: script simples (sem biblioteca de testes) que confere podeAcessar, podeFazer e os filtros de lib/escopo.ts. Cada caso tem entrada, esperado e o porquê.
    Onde é usado: rodado à mão no terminal; nenhuma tela importa este arquivo.
-   Depende de: lib/permissoes.ts (inclusive a guarda da trilha obrigatória), lib/escopo.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
+   Depende de: lib/metricas.ts (publicoDaTrilha), lib/permissoes.ts (inclusive a guarda da trilha obrigatória), lib/escopo.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
    Contexto: §3 (Perfis), §5 (Permissões de projetos).
    Como rodar: node --experimental-strip-types lib/permissoes.casos.ts
    ============================================================================ */
@@ -12,6 +12,7 @@ import {
   ROTAS_POR_PERFIL, ROTULO_DAS_ROTAS, ROTULO_DAS_ACOES, TODAS_AS_ACOES, rotasDoPerfil, permissaoDaAcao, mudancaDeAcesso,
 } from './permissoes.ts';
 import { projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
+import { publicoDaTrilha } from './metricas.ts';
 import type { Dados, Pessoa, Tarefa } from './tipos.ts';
 
 // Mini base de dados só para os testes (espelha os ids do seed: Vértice e Aurora).
@@ -124,7 +125,10 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'trilha em rascunho não trava ninguém', obtido: temTrilhaObrigatoriaPendente('pes_bruno', comTrilha(trilhaGeral('rascunho'))), esperado: false },
   { porque: 'trilha de alcance "profissional" não entra na regra conservadora', obtido: temTrilhaObrigatoriaPendente('pes_bruno', comTrilha(trilhaGeral('publicada', 'profissional'))), esperado: false },
   { porque: 'pessoa nova sem registro de progresso começa do zero: pendente', obtido: temTrilhaObrigatoriaPendente('pes_novo', { ...comTrilha(trilhaGeral('publicada')), pessoas: [...dados.pessoas, pessoa('pes_novo', 'profissional')] }), esperado: true },
-  { porque: 'perfil empresa não está no público geral de profissionais: nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_marcos', comTrilha(trilhaGeral('publicada'))), esperado: false },
+  { porque: 'perfil empresa agora faz parte do público da trilha geral (§4) e tem pendência; a trava do layout só vale para o perfil Profissional', obtido: temTrilhaObrigatoriaPendente('pes_marcos', comTrilha(trilhaGeral('publicada'))), esperado: true },
+  { porque: 'trilha da Vértice inclui o Marcos (perfil Empresa vinculado à Vértice)', obtido: publicoDaTrilha({ ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice' }, dados).includes('pes_marcos'), esperado: true },
+  { porque: 'trilha da Vértice NÃO inclui a Patrícia (é da Aurora)', obtido: publicoDaTrilha({ ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice' }, dados).includes('pes_patricia'), esperado: false },
+  { porque: 'administrador nunca entra no público da trilha geral', obtido: publicoDaTrilha(trilhaGeral('publicada'), dados).includes('pes_admin'), esperado: false },
   { porque: 'EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO nasce desligada (bloco D liga)', obtido: EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO, esperado: false },
   { porque: '/minhas-trilhas fica liberada com trilha pendente', obtido: rotaLiberadaComTrilhaPendente('/minhas-trilhas'), esperado: true },
   { porque: '/minhas-trilhas/tri_1?x=1 fica liberada (subrota e query)', obtido: rotaLiberadaComTrilhaPendente('/minhas-trilhas/tri_1?x=1'), esperado: true },

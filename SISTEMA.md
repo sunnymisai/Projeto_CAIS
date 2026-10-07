@@ -9,6 +9,8 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `node testes/navegador/d02-minhas-trilhas.mjs`. Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+
 **Contas de demonstração** (todas com a senha `Cais@2026`). Na tela de login, os botões "Entrar como" (Administrador, Profissional e Empresa) preenchem e-mail e senha das três primeiras contas abaixo; a Patrícia só entra digitando:
 
 | Perfil | E-mail | O que enxerga |
@@ -36,7 +38,10 @@ npm run dev        # http://localhost:3000
 | `/design-system` | Documentação viva dos componentes |
 | `/acessos` | Admin: tabela de contas (pessoa, e-mail/login, perfil, empresa, status, último acesso) com filtros e menu por linha (reenviar convite, redefinir senha para `Cais@2026`, mudar perfil com explicação do que ganha e perde, inativar/reativar) e o quadro "O que cada perfil pode fazer", gerado de `ROTAS_POR_PERFIL` e `podeFazer` |
 | `/carga` | Admin: carga da equipe ("Em construção") |
-| `/minhas-trilhas` e `/minhas-tarefas` | Empresa e profissional (trilhas) e só profissional (tarefas): "Em construção" |
+| `/minhas-trilhas` | Profissional e empresa: "Continue de onde parou" (próxima etapa em destaque) e as trilhas agrupadas por alcance, com progresso, nota e prazo (no prazo, perto, vencido) |
+| `/minhas-trilhas/[id]` | Detalhe da trilha para quem a cumpre: etapas concluídas, atual e bloqueadas (com o motivo), botão Começar/Continuar (fixo no rodapé no celular). Trilha fora do público, em rascunho ou inexistente vai para `/sem-permissao` |
+| `/minhas-trilhas/[id]/etapa/[etapaId]` | Player da etapa: "Em construção" até o D03 |
+| `/minhas-tarefas` | Só profissional: "Em construção" |
 | `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
 
@@ -108,7 +113,8 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Textos oficiais dos termos de uso e da política de privacidade (LGPD) do primeiro acesso.
 - Trava da trilha obrigatória desligada (`EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false`) até o bloco D.
 - Painéis dos perfis Empresa e Profissional (hoje "Em construção").
-- Telas `/carga`, `/minhas-trilhas` e `/minhas-tarefas` (hoje "Em construção").
+- Telas `/carga`, `/minhas-tarefas` e o player de etapa (hoje "Em construção").
+- Público das trilhas: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`, com `TODO(PROGLOGIC)`). Por isso o Marcos e a Patrícia contam como "não iniciada" nos números do admin.
 - Redefinir senha na tela Acessos grava a senha temporária `Cais@2026` sem forçar a troca no próximo login (SIMULADO).
 - Permissão no servidor: as regras de perfil só existem no navegador.
 - Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v2`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).

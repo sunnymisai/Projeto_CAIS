@@ -33,6 +33,11 @@ export const metadata: Metadata = {
  * escuro, as mesmas cores de fundo do globals.css (§9).
  */
 export const viewport: Viewport = {
+  // viewport-fit=cover: sem isto, env(safe-area-inset-bottom) vale sempre 0 no iPhone e a barra
+  // fixa do rodapé (botão "Continuar" em /minhas-trilhas/[id]) ficaria atrás da barrinha de início.
+  // ⚠️ ATENÇÃO: com "cover" a página pode ir até a borda da tela; quem fica colado na borda
+  // (rodapés fixos) precisa somar a área segura no padding.
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#F6F7FB' },
     { media: '(prefers-color-scheme: dark)', color: '#14161F' },

@@ -1,7 +1,7 @@
 /* ============================================================================
    TRILHAS (RÓTULOS, ÍCONES E CORES)
-   O que é: tabelas fixas com o rótulo e o ícone de cada tipo de etapa e o rótulo, a descrição e a cor de cada alcance de trilha; o padrão de tentativas e a validação do quiz.
-   Onde é usado: app/(sistema)/trilhas/page.tsx e app/(sistema)/trilhas/[id]/page.tsx.
+   O que é: tabelas fixas com o rótulo e o ícone de cada tipo de etapa e o rótulo, a descrição e a cor de cada alcance de trilha; o padrão de tentativas, a validação do quiz e o endereço do player (hrefEtapa).
+   Onde é usado: app/(sistema)/trilhas/page.tsx, app/(sistema)/trilhas/[id]/page.tsx e as telas de app/(sistema)/minhas-trilhas.
    Depende de: lucide-react (ícones) e lib/tipos.ts (Etapa, TipoEtapa, Trilha).
    Contexto: §4 (Trilhas: alcances e tipos de conteúdo), §9 (cor tem significado).
    ============================================================================ */
@@ -69,3 +69,13 @@ export function problemasDoQuiz(etapa: Etapa, numero: number): string[] {
   });
   return erros;
 }
+
+/**
+ * Endereço do player de uma etapa (tela do D03), usado pelos botões "Começar"/"Continuar".
+ * @param trilhaId - id da trilha.
+ * @param etapaId - id da etapa.
+ * @returns o caminho.
+ * @example hrefEtapa('tri_boasvindas', 'et_1') // '/minhas-trilhas/tri_boasvindas/etapa/et_1'
+ */
+// ⚠️ ATENÇÃO: o formato precisa bater com a pasta app/(sistema)/minhas-trilhas/[id]/etapa/[etapaId].
+export const hrefEtapa = (trilhaId: string, etapaId: string) => `/minhas-trilhas/${trilhaId}/etapa/${etapaId}`;
