@@ -9,7 +9,9 @@
    Depende de: next/navigation (useParams, useRouter), lib/store.tsx
      (useDados: trilhas, pessoas, empresas, salvar, remover), lib/toast.tsx,
      lib/metricas.ts (publicoDaTrilha, situacaoNaTrilha), lib/trilhas.ts
-     (TIPOS_ETAPA, ALCANCE) e componentes de components/ui/.
+     (TIPOS_ETAPA, ALCANCE, TENTATIVAS_PADRAO, problemasDoQuiz), lib/utils.ts
+     (cx, hojeISO, novoId), components/trilhas/EditorConteudoEtapa.tsx (conteúdo
+     e perguntas da etapa) e componentes de components/ui/.
    Contexto: §4 (Trilhas: alcances, anatomia trilha → etapa → conteúdo/quiz,
      o que o admin define e o que o profissional vê), §12 fluxo 2 (admin
      publica trilha) e docs/notas-next16.md §2 (useParams).
@@ -20,11 +22,12 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { ArrowUp, ArrowDown, Trash2, Plus, Check, Send, Undo2, GripVertical, Lock } from 'lucide-react';
+import { ArrowUp, ArrowDown, Trash2, Plus, Check, Send, Undo2, GripVertical, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDados, Trilha } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import { publicoDaTrilha, situacaoNaTrilha } from '@/lib/metricas';
-import { TIPOS_ETAPA, ALCANCE } from '@/lib/trilhas';
+import { TIPOS_ETAPA, ALCANCE, TENTATIVAS_PADRAO, problemasDoQuiz } from '@/lib/trilhas';
+import EditorConteudoEtapa from '@/components/trilhas/EditorConteudoEtapa';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import Button from '@/components/button';
 import Input from '@/components/input';
@@ -33,7 +36,7 @@ import { Select, AreaTexto, Segmentado } from '@/components/ui/form';
 import { Card, CardTitulo, Etiqueta, Abas, Aviso, Avatar, Progresso, EstadoVazio, Esqueleto } from '@/components/ui/basicos';
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
-import { cx, novoId } from '@/lib/utils';
+import { cx, hojeISO, novoId } from '@/lib/utils';
 import type { TipoEtapa } from '@/lib/tipos';
 
 /**
@@ -62,6 +65,8 @@ export default function EditorTrilha() {
   // - arrastando: índice da etapa que está sendo arrastada (null = nenhuma).
   // - alvo: posição onde ela vai entrar (0 = antes da primeira; length = depois da última).
   const [pegaPelaAlca, setPegaPelaAlca] = useState<string | null>(null);
+  // Id da etapa com o painel de conteúdo aberto (um por vez, para a lista não ficar enorme).
+  const [aberta, setAberta] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState<number | null>(null);
   const [alvo, setAlvo] = useState<number | null>(null);
 
@@ -141,6 +146,8 @@ export default function EditorTrilha() {
     t.etapas.some((e) => !e.titulo.trim()) && 'Todas as etapas precisam de título.',
     t.alcance === 'empresa' && !t.empresaId && 'Escolha a empresa que recebe a trilha.',
     t.alcance === 'profissional' && t.pessoaIds.length === 0 && 'Escolha pelo menos uma pessoa.',
+    // Quiz: pelo menos uma pergunta, cada uma com enunciado, 2+ alternativas e a correta (lib/trilhas.ts).
+    ...t.etapas.flatMap((e, i) => problemasDoQuiz(e, i + 1)),
   ].filter(Boolean) as string[];
 
   // Ids de quem recebe a trilha, conforme o alcance (publicoDaTrilha em
@@ -160,9 +167,17 @@ export default function EditorTrilha() {
     // A aba é escolhida procurando as palavras "empresa"/"pessoa" no texto do
     // problema. ⚠️ ATENÇÃO: se reescrever as mensagens de `problemas` sem
     // essas palavras, o botão passa a abrir a aba errada.
-    if (problemas.length) { setAba(problemas.some((p) => p.includes('empresa') || p.includes('pessoa')) ? 'publico' : 'etapas'); avisar('Falta pouco: resolva os pontos indicados para publicar.', 'erro'); return; }
-    // GRAVA: status "publicada".
-    atualizar({ status: 'publicada' });
+    if (problemas.length) {
+      setAba(problemas.some((p) => p.includes('empresa') || p.includes('pessoa')) ? 'publico' : 'etapas');
+      // Abre o painel do primeiro quiz com pendência, para a pessoa ver direto o que falta.
+      const quizComProblema = t.etapas.find((e, i) => problemasDoQuiz(e, i + 1).length > 0);
+      if (quizComProblema) setAberta(quizComProblema.id);
+      avisar('Falta pouco: resolva os pontos indicados para publicar.', 'erro');
+      return;
+    }
+    // GRAVA: status "publicada" e a data da PRIMEIRA publicação (publicadaEm). Despublicar e
+    // publicar de novo mantém a data antiga, para não reiniciar o prazo de quem já recebeu.
+    atualizar({ status: 'publicada', publicadaEm: t.publicadaEm ?? hojeISO() });
     // SIMULADO: ninguém recebe aviso de verdade; a mensagem só conta o público.
     // TODO(API): a notificação às pessoas será feita pelo back-end (§12, fluxo 2).
     avisar(`Trilha publicada. ${publico.length} pessoa(s) foram avisadas.`);
@@ -230,7 +245,7 @@ export default function EditorTrilha() {
                         onDragEnd={fimDoArrasto}
                         // relative: referência da linha roxa de "vai entrar aqui"; opacity-50: a etapa
                         // arrastada fica apagada no lugar de origem enquanto se move.
-                        className={cx('relative flex flex-wrap items-center gap-3 rounded-xl border border-borda bg-fundo/50 p-3 sm:flex-nowrap', arrastando === i && 'opacity-50')}>
+                        className={cx('relative flex flex-wrap items-center gap-3 rounded-xl border border-borda bg-fundo/50 p-3', arrastando === i && 'opacity-50')}>
                         {/* Linha roxa onde a etapa vai entrar: antes desta (alvo === i) ou, na
                           * última, depois dela (alvo === length). -top/-bottom-[5px] centraliza a
                           * linha no espaço de 8 px (space-y-2) entre as etapas. */}
@@ -255,9 +270,9 @@ export default function EditorTrilha() {
                             className={cx('w-full rounded-md bg-transparent px-1 py-0.5 text-sm font-semibold text-tinta placeholder:text-erro/70 focus:bg-superficie focus:outline-none focus:ring-2 focus:ring-primaria/40')} />
                           <div className="mt-1 flex flex-wrap items-center gap-3 px-1 text-[12px] text-tinta-suave">
                             <span className="flex items-center gap-1"><T.icone className="h-3.5 w-3.5" aria-hidden />
-                              {/* Trocar o tipo ajusta a nota mínima: 70% se
-                                * virou quiz, 0 nos outros tipos. */}
-                              <select value={e.tipo} onChange={(ev) => setEtapa(i, { tipo: ev.target.value as TipoEtapa, notaMinima: ev.target.value === 'quiz' ? 70 : 0 })} aria-label="Tipo de conteúdo"
+                              {/* Trocar o tipo ajusta a nota mínima (70% se virou quiz, 0 nos
+                                * outros) e, no quiz, as tentativas padrão. */}
+                              <select value={e.tipo} onChange={(ev) => setEtapa(i, { tipo: ev.target.value as TipoEtapa, notaMinima: ev.target.value === 'quiz' ? 70 : 0, ...(ev.target.value === 'quiz' && e.tentativasMax === undefined ? { tentativasMax: TENTATIVAS_PADRAO } : {}) })} aria-label="Tipo de conteúdo"
                                 className="rounded bg-transparent font-medium text-tinta-suave focus:outline-none focus:ring-2 focus:ring-primaria/40">
                                 {Object.entries(TIPOS_ETAPA).map(([k, v]) => <option key={k} value={k}>{v.rotulo}</option>)}
                               </select>
@@ -267,6 +282,15 @@ export default function EditorTrilha() {
                               <label className="flex items-center gap-1">Nota mínima
                                 <input type="number" min={0} max={100} value={e.notaMinima} onChange={(ev) => setEtapa(i, { notaMinima: Number(ev.target.value) })}
                                   className="w-14 rounded border border-borda bg-superficie px-1.5 py-0.5 text-tinta focus:outline-none focus:ring-2 focus:ring-primaria/40" />%
+                              </label>
+                            )}
+                            {/* Tentativas do quiz (§4). 0 = sem limite; sem valor salvo, mostra o padrão. */}
+                            {e.tipo === 'quiz' && (
+                              <label className="flex items-center gap-1" title="0 = sem limite">Tentativas
+                                <input type="number" min={0} max={20} value={e.tentativasMax ?? TENTATIVAS_PADRAO}
+                                  // Math.max/Math.floor: não aceita negativo nem fração.
+                                  onChange={(ev) => setEtapa(i, { tentativasMax: Math.max(0, Math.floor(Number(ev.target.value) || 0)) })}
+                                  className="w-12 rounded border border-borda bg-superficie px-1.5 py-0.5 text-tinta focus:outline-none focus:ring-2 focus:ring-primaria/40" />
                               </label>
                             )}
                             {/* Etapa obrigatória trava a próxima até ser
@@ -282,10 +306,26 @@ export default function EditorTrilha() {
                           * remover. APAGA: remover tira a etapa da trilha na
                           * hora, sem confirmação. */}
                         <div className="flex shrink-0 items-center gap-0.5">
+                          {/* Abre/fecha o painel de conteúdo (e perguntas, no quiz) desta etapa.
+                            * aria-expanded + aria-controls: o leitor de tela sabe que abre um painel e qual.
+                            * Quiz com pendência ganha um ponto de atenção (com texto escondido para o leitor de tela). */}
+                          <Button variante={aberta === e.id ? 'secundario' : 'fantasma'} tamanho="sm" aria-expanded={aberta === e.id} aria-controls={`conteudo-${e.id}`}
+                            onClick={() => setAberta(aberta === e.id ? null : e.id)}>
+                            {aberta === e.id ? <ChevronUp className="h-4 w-4" aria-hidden /> : <ChevronDown className="h-4 w-4" aria-hidden />}
+                            {e.tipo === 'quiz' ? `Perguntas (${e.perguntas?.length ?? 0})` : 'Conteúdo'}
+                            {problemasDoQuiz(e, i + 1).length > 0 && <><span className="h-2 w-2 rounded-full bg-aviso" aria-hidden /><span className="sr-only">(com pendências)</span></>}
+                          </Button>
                           <button onClick={() => mover(i, -1)} disabled={i === 0} aria-label="Subir etapa" className="rounded-lg p-1.5 text-tinta-fraca hover:bg-superficie-alt hover:text-tinta disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
                           <button onClick={() => mover(i, 1)} disabled={i === t.etapas.length - 1} aria-label="Descer etapa" className="rounded-lg p-1.5 text-tinta-fraca hover:bg-superficie-alt hover:text-tinta disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
                           <button onClick={() => atualizar({ etapas: t.etapas.filter((_, j) => j !== i) })} aria-label="Remover etapa" className="rounded-lg p-1.5 text-tinta-fraca hover:bg-erro/10 hover:text-erro"><Trash2 className="h-4 w-4" /></button>
                         </div>
+                        {/* Painel de conteúdo: basis-full faz ele ocupar a linha inteira embaixo da etapa
+                          * (a <li> é flex-wrap). GRAVA: cada mudança salva a etapa (setEtapa). */}
+                        {aberta === e.id && (
+                          <div className="basis-full">
+                            <EditorConteudoEtapa id={`conteudo-${e.id}`} etapa={e} numero={i + 1} onChange={(parcial) => setEtapa(i, parcial)} />
+                          </div>
+                        )}
                       </li>
                     );
                   })}
@@ -296,8 +336,8 @@ export default function EditorTrilha() {
                   <div className="w-48"><Select label="Tipo da nova etapa" value={novoTipo} onChange={(e) => setNovoTipo(e.target.value as TipoEtapa)} opcoes={Object.entries(TIPOS_ETAPA).map(([valor, v]) => ({ valor, rotulo: v.rotulo }))} /></div>
                   {/* GRAVA: adiciona uma etapa no fim, sem título (a pessoa
                     * digita direto na lista), obrigatória por padrão e com
-                    * nota mínima 70% se for quiz. */}
-                  <Button variante="secundario" onClick={() => atualizar({ etapas: [...t.etapas, { id: novoId('et'), titulo: '', tipo: novoTipo, obrigatoria: true, notaMinima: novoTipo === 'quiz' ? 70 : 0 }] })}>
+                    * nota mínima 70% e as tentativas padrão se for quiz. */}
+                  <Button variante="secundario" onClick={() => atualizar({ etapas: [...t.etapas, { id: novoId('et'), titulo: '', tipo: novoTipo, obrigatoria: true, notaMinima: novoTipo === 'quiz' ? 70 : 0, ...(novoTipo === 'quiz' ? { tentativasMax: TENTATIVAS_PADRAO, perguntas: [] } : {}) }] })}>
                     <Plus className="h-4 w-4" aria-hidden />Adicionar etapa
                   </Button>
                 </div>

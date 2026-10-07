@@ -84,7 +84,23 @@ export interface Pessoa {
 /** Tipos de conteúdo que uma etapa de trilha pode ter (§4). Ícones em lib/trilhas.ts. */
 export type TipoEtapa = 'texto' | 'video' | 'pdf' | 'audio' | 'apresentacao' | 'link' | 'quiz';
 
-/** Uma etapa dentro de uma trilha. */
+/**
+ * Uma pergunta de quiz (§4: quiz com nota mínima e tentativas).
+ * @example { id: 'q1', enunciado: 'Quem aprova a entrega?', alternativas: ['O cliente', 'O time'], correta: 0 }
+ */
+export interface Pergunta {
+  id: string;
+  enunciado: string;
+  alternativas: string[];
+  /** Índice da alternativa certa em `alternativas`; -1 = nenhuma marcada ainda. */
+  correta: number;
+}
+
+/**
+ * Uma etapa dentro de uma trilha.
+ * ⚠️ ATENÇÃO: `conteudo`, `perguntas` e `tentativasMax` são opcionais para dados
+ * antigos não quebrarem; quem lê usa o padrão (`?? {}`, `?? []`, `?? TENTATIVAS_PADRAO`).
+ */
 export interface Etapa {
   id: string;
   titulo: string;
@@ -92,6 +108,12 @@ export interface Etapa {
   /** true = trava o acesso às próximas até ser concluída (§4). */
   obrigatoria: boolean;
   notaMinima: number; // só para quiz (0 a 100)
+  /** O que a pessoa lê ou abre: texto corrido e/ou um endereço (vídeo, PDF, link...). */
+  conteudo?: { texto?: string; url?: string };
+  /** Só para quiz: as perguntas, na ordem em que aparecem. */
+  perguntas?: Pergunta[];
+  /** Só para quiz: quantas vezes a pessoa pode responder (0 = sem limite). */
+  tentativasMax?: number;
 }
 
 /** Trilha de onboarding (Pilar 1, §4). */
@@ -110,8 +132,16 @@ export interface Trilha {
   /** Prazo para concluir, em dias. */
   prazoDias: number;
   etapas: Etapa[];
-  /** pessoaId → quantas etapas concluiu e nota do quiz */
-  progresso: Record<string, { concluidas: number; nota?: number }>;
+  /**
+   * pessoaId → quantas etapas concluiu, nota do quiz e tentativas usadas.
+   * As etapas são concluídas EM ORDEM: `concluidas: 3` = as três primeiras.
+   */
+  progresso: Record<string, { concluidas: number; nota?: number; tentativas?: number }>;
+  /**
+   * Data (AAAA-MM-DD) da PRIMEIRA publicação; conta o prazo de quem já estava no programa.
+   * Opcional: rascunho não tem, e dados antigos podem não ter.
+   */
+  publicadaEm?: string;
 }
 
 /** Coluna do quadro kanban de um projeto (ex.: "A fazer"). */

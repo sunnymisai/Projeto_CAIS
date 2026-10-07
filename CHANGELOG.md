@@ -2,6 +2,12 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco D: profissional (branch `feat/profissional`)
+
+### D01: conteúdo de etapa e quiz no modelo e no editor
+- Criado: `components/trilhas/EditorConteudoEtapa.tsx` (texto e endereço da etapa; perguntas com alternativas, correta por radio, reordenar e remover), `Pergunta` em `lib/tipos.ts`, `TENTATIVAS_PADRAO` e `problemasDoQuiz` em `lib/trilhas.ts`, `prazoDaPessoaNaTrilha`, `situacaoDoPrazo`, `DIAS_PRAZO_PERTO` e `trilhasDaPessoaDetalhadas` em `lib/metricas.ts`.
+- Modificado: `lib/tipos.ts` (`Etapa.conteudo`, `perguntas` e `tentativasMax`; `Trilha.publicadaEm`; `tentativas` no progresso; tudo opcional), `lib/seed.ts` (conteúdo em todas as etapas, 3 a 5 perguntas por quiz, `publicadaEm` com um prazo vencido, um perto e um no prazo), `lib/store.tsx` (chave `cais-dados-v1` → `cais-dados-v2`: os dados antigos do navegador são descartados), `app/(sistema)/trilhas/[id]/page.tsx` (botão "Conteúdo"/"Perguntas" por etapa, campo Tentativas, validação do quiz ao publicar, `publicadaEm` gravado na primeira publicação), `SISTEMA.md`.
+
 ## Editor de trilha: arrastar etapas (branch `feat/acessos`)
 - Modificado: `app/(sistema)/trilhas/[id]/page.tsx`. A alça ⋮⋮ das etapas, que era só desenho, agora reordena por arrastar e soltar (HTML5 nativo, como o Quadro). Só a alça inicia o arrasto, para não atrapalhar a seleção de texto nos campos. Uma linha roxa mostra onde a etapa vai entrar, e a etapa arrastada fica apagada. As setas ↑↓ continuam para teclado e celular.
 

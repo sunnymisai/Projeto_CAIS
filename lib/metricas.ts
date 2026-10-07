@@ -1,16 +1,16 @@
 /* ============================================================================
    MÉTRICAS (CÁLCULOS DERIVADOS)
-   O que é: funções puras que calculam público e situação das trilhas, progresso dos projetos e rótulos/cores de status e prioridade.
+   O que é: funções puras que calculam público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos e rótulos/cores de status e prioridade.
    Onde é usado: app/(sistema)/painel, pessoas, projetos, projetos/[id], trilhas, trilhas/[id] e components/projetos/Equipe.tsx e Vistas.tsx.
-   Depende de: lib/tipos.ts (Dados, Trilha) e lib/utils.ts (hojeISO).
+   Depende de: lib/tipos.ts (Dados, Perfil, Pessoa, Trilha) e lib/utils.ts (hojeISO, somaDias, diasEntre).
    Contexto: §4 (alcance das trilhas), §5 (equipe e tarefas), §6 (dashboards).
    ============================================================================ */
 
 // ⚠️ ATENÇÃO: os imports levam a extensão .ts de propósito (tsconfig: allowImportingTsExtensions):
 // lib/permissoes.ts importa publicoDaTrilha daqui e é testado com Node (permissoes.casos.ts),
 // que só acha o módulo com a extensão. Tirar o ".ts" quebra o teste, não o app.
-import type { Dados, Perfil, Trilha } from './tipos.ts';
-import { hojeISO } from './utils.ts';
+import type { Dados, Perfil, Pessoa, Trilha } from './tipos.ts';
+import { diasEntre, hojeISO, somaDias } from './utils.ts';
 
 /* Cálculos derivados usados no painel e nas fichas. Nada aqui é salvo:
    tudo é recalculado a partir dos dados, como faria a API. */
@@ -77,6 +77,103 @@ export function resumoTrilha(t: Trilha, d: Dados) {
 export function trilhasDaPessoa(pessoaId: string, d: Dados) {
   const minhas = d.trilhas.filter((t) => t.status === 'publicada' && publicoDaTrilha(t, d).includes(pessoaId));
   return { total: minhas.length, concluidas: minhas.filter((t) => situacaoNaTrilha(t, pessoaId) === 'concluida').length };
+}
+
+/**
+ * Até quando a pessoa tem para concluir a trilha.
+ * Conta a partir da data MAIS RECENTE entre a publicação da trilha e a entrada da pessoa:
+ * quem já estava no programa conta da publicação; quem entrou depois, da própria entrada.
+ * @param trilha - a trilha (precisa de `publicadaEm`).
+ * @param pessoa - a pessoa (usa `dataEntrada`).
+ * @returns a data limite (AAAA-MM-DD) ou null se a trilha nunca foi publicada.
+ * @example prazoDaPessoaNaTrilha({ publicadaEm: '2026-10-01', prazoDias: 7 }, { dataEntrada: '2026-10-05' }) // '2026-10-12'
+ */
+// TODO(PROGLOGIC): confirmar regra (o deck diz "quando abre" e "até quando", mas não de onde o prazo conta).
+export function prazoDaPessoaNaTrilha(trilha: Pick<Trilha, 'publicadaEm' | 'prazoDias'>, pessoa: Pick<Pessoa, 'dataEntrada'>): string | null {
+  if (!trilha.publicadaEm) return null;
+  // Comparar texto funciona porque o formato é AAAA-MM-DD; sem dataEntrada, vale a publicação.
+  const inicio = pessoa.dataEntrada && pessoa.dataEntrada > trilha.publicadaEm ? pessoa.dataEntrada : trilha.publicadaEm;
+  return somaDias(inicio, trilha.prazoDias);
+}
+
+/** Situação de um prazo: dentro, perto de vencer (3 dias ou menos) ou já vencido. */
+export type SituacaoPrazo = 'no_prazo' | 'perto' | 'vencido';
+
+/** Quantos dias antes do fim o prazo passa a contar como "perto" (§4: aviso quando está perto). */
+export const DIAS_PRAZO_PERTO = 3;
+
+/**
+ * Classifica um prazo em relação a hoje.
+ * @param prazo - data limite (AAAA-MM-DD).
+ * @param hoje - data de referência (padrão: hoje); existe para facilitar teste.
+ * @returns 'vencido' se já passou; 'perto' se faltam 3 dias ou menos (inclui hoje); senão 'no_prazo'.
+ * @example situacaoDoPrazo('2026-10-09', '2026-10-07') // 'perto' (faltam 2 dias)
+ */
+export function situacaoDoPrazo(prazo: string, hoje: string = hojeISO()): SituacaoPrazo {
+  const faltam = diasEntre(hoje, prazo);
+  if (faltam < 0) return 'vencido';
+  if (faltam <= DIAS_PRAZO_PERTO) return 'perto';
+  return 'no_prazo';
+}
+
+/** Uma trilha vista pela pessoa: o que as telas do profissional precisam, já calculado. */
+export interface TrilhaDaPessoa {
+  trilha: Trilha;
+  situacao: ReturnType<typeof situacaoNaTrilha>;
+  /** Quantas etapas, das primeiras, a pessoa já concluiu (limitado ao total). */
+  concluidas: number;
+  total: number;
+  /** Percentual de 0 a 100. */
+  pct: number;
+  /** Índice da próxima etapa a fazer, ou null se concluiu tudo. */
+  proximaEtapa: number | null;
+  /** Data limite (AAAA-MM-DD), ou null se a trilha não tem `publicadaEm`. */
+  prazo: string | null;
+  /** Situação do prazo; null quando concluída (prazo não importa mais) ou sem prazo. */
+  situacaoPrazo: SituacaoPrazo | null;
+  nota?: number;
+  tentativas: number;
+}
+
+/**
+ * Trilhas publicadas que a pessoa recebe, com progresso, próxima etapa e prazo.
+ * Usada pelas telas do profissional (Minhas trilhas, player, painel).
+ * Ordem: primeiro as não concluídas (prazo mais curto antes), depois as concluídas.
+ * @param pessoaId - id da pessoa.
+ * @param d - todos os dados.
+ * @returns lista de `TrilhaDaPessoa` ([] se a pessoa não existir).
+ * @example trilhasDaPessoaDetalhadas('pes_elisa', d)[0].proximaEtapa // 3 (a 4ª etapa)
+ */
+export function trilhasDaPessoaDetalhadas(pessoaId: string, d: Dados): TrilhaDaPessoa[] {
+  const pessoa = d.pessoas.find((p) => p.id === pessoaId);
+  if (!pessoa) return [];
+  const lista = d.trilhas
+    .filter((t) => t.status === 'publicada' && publicoDaTrilha(t, d).includes(pessoaId))
+    .map((trilha): TrilhaDaPessoa => {
+      const prog = trilha.progresso[pessoaId];
+      const total = trilha.etapas.length;
+      // Math.min: etapa removida depois da conclusão não pode dar "6 de 5".
+      const concluidas = Math.min(prog?.concluidas ?? 0, total);
+      const situacao = situacaoNaTrilha(trilha, pessoaId);
+      const prazo = prazoDaPessoaNaTrilha(trilha, pessoa);
+      return {
+        trilha, situacao, concluidas, total,
+        // Trilha sem etapas conta como 0% (evita divisão por zero).
+        pct: total ? (concluidas / total) * 100 : 0,
+        proximaEtapa: concluidas < total ? concluidas : null,
+        prazo,
+        situacaoPrazo: situacao !== 'concluida' && prazo ? situacaoDoPrazo(prazo) : null,
+        nota: prog?.nota,
+        tentativas: prog?.tentativas ?? 0,
+      };
+    });
+  // Concluídas por último; entre as abertas, o prazo mais curto primeiro (sem prazo vai para o fim).
+  return lista.sort((a, b) => {
+    const fimA = a.situacao === 'concluida' ? 1 : 0;
+    const fimB = b.situacao === 'concluida' ? 1 : 0;
+    if (fimA !== fimB) return fimA - fimB;
+    return (a.prazo ?? '9999-12-31').localeCompare(b.prazo ?? '9999-12-31');
+  });
 }
 
 /**

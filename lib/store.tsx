@@ -23,7 +23,11 @@ import { hojeISO } from './utils';
 // ⚠️ ATENÇÃO: mudar esta chave faz o navegador "esquecer" os dados já salvos
 // (todo mundo volta para a demonstração). Troque o "v1" só se o formato de
 // `Dados` mudar de um jeito incompatível com o que já está gravado.
-const CHAVE = 'cais-dados-v1';
+// ⚠️ ATENÇÃO: v1 → v2 no D01 (bloco D). O seed mudou: as etapas ganharam conteúdo, os quizzes
+// ganharam perguntas e as trilhas publicadas ganharam `publicadaEm`. Os dados antigos do
+// navegador (chave v1) são DESCARTADOS: todo mundo volta para a demonstração nova.
+// A sessão ('cais-sessao') e as senhas trocadas ('cais-senhas-demo') não são afetadas.
+const CHAVE = 'cais-dados-v2';
 
 /** As seis coleções que todo `Dados` precisa ter (usadas para conferir o que veio do navegador). */
 const COLECOES = ['empresas', 'pessoas', 'trilhas', 'projetos', 'alocacoes', 'tarefas'] as const;
