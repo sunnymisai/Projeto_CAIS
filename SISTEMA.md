@@ -30,7 +30,7 @@ npm run dev        # http://localhost:3000
 | `/login` | Login (redireciona para `?voltar=`, só caminho interno, ou `/painel`) |
 | `/recuperar-senha` | Recuperação de senha SIMULADA em 3 passos: e-mail → "link enviado" (botão de demonstração "Abrir o link recebido") → `?token=demo&email=...` com nova senha e regras em tempo real. A mensagem de sucesso é a mesma exista ou não o e-mail |
 | `/primeiro-acesso?convite=<pessoaId>` | Primeiro acesso por convite (SIMULADO): mostra nome e e-mail, pede senha com regras em tempo real e aceite dos termos/LGPD; ao salvar ativa a pessoa e entra no `/painel`. Convite inexistente, usado ou de pessoa inativa mostra erro com botão para o login. O link é copiado na ficha de pessoa (status "convidado") |
-| `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); empresa e profissional ainda "Em construção" |
+| `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); profissional (minhas trilhas e a próxima etapa, as 5 próximas tarefas, carga da semana e histórico de entregas de 8 semanas); empresa ainda "Em construção" |
 | `/empresas` | Lista e ficha de empresa (CNPJ validado, CEP via ViaCEP) |
 | `/pessoas` | Lista e ficha de pessoa (campos por perfil, convite, inativar) |
 | `/trilhas` e `/trilhas/[id]` | Lista e editor de trilha (etapas, público, progresso). Cada etapa tem o painel "Conteúdo" (texto e endereço) e, no quiz, o editor de perguntas (alternativas, correta por radio, nota mínima e tentativas). Publicar exige quiz completo e grava `publicadaEm` só na primeira vez. As etapas reordenam por setas ou arrastando a alça |
@@ -113,6 +113,7 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Textos oficiais dos termos de uso e da política de privacidade (LGPD) do primeiro acesso.
 - Painéis dos perfis Empresa e Profissional (hoje "Em construção").
 - Tela `/carga` (hoje "Em construção").
+- Painel do profissional: o semáforo de carga (cor de atenção) entra no bloco F; falta o teste de navegador automático do D05 (conferido à mão).
 - Quiz sem tentativas: a pessoa vê "Fale com a coordenação", mas ainda não existe tela para o admin liberar uma nova tentativa (`TODO(PROGLOGIC)`). Para destravar no protótipo, apague o registro do quiz em `progresso[pessoa].quizzes` ou use "Restaurar dados de demonstração".
 - Vídeos e áudios do seed apontam para endereços `example.com`, que não existem: o player mostra o estado de erro com "Abrir em nova aba".
 - Público das trilhas: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`, com `TODO(PROGLOGIC)`). Por isso o Marcos e a Patrícia contam como "não iniciada" nos números do admin.

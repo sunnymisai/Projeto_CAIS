@@ -4,6 +4,10 @@ Cada entrada lista o que foi criado, modificado e removido.
 
 ## Bloco D: profissional (branch `feat/profissional`)
 
+### D05: painel do profissional
+- Modificado: `components/paineis/PainelProfissional.tsx` (era "Em construção"; agora os quatro blocos do §6 com estados por bloco), `lib/metricas.ts` (`inicioDaSemana`, `cargaDaSemana`, `entregasPorSemana`) e `lib/metricas.casos.ts` (19 casos), `lib/seed.ts` (5 entregas antigas da Ana; o Portal de pedidos e a alocação dela começam em d(-42)), `SISTEMA.md`.
+- Pendência: teste de navegador automático do D05 (`testes/navegador/d05-...`), feito à mão nesta versão.
+
 ### D04: minhas tarefas do profissional
 - Criado: `agruparMinhasTarefas`, `fimDaSemana` e `DIAS_CONCLUIDA_RECENTE` em `lib/metricas.ts`, `lib/metricas.casos.ts` (9 casos), `testes/navegador/d04-minhas-tarefas.mjs` (24 conferências).
 - Modificado: `app/(sistema)/minhas-tarefas/page.tsx` (era "Em construção"; agora grupos por prazo, concluídas recolhidas, filtros, contagem, detalhe por cima com `?tarefa=` e os quatro estados), `lib/seed.ts` (4 tarefas novas da Ana no Portal de pedidos: atrasada, hoje, esta semana e concluída; a chave continua `cais-dados-v2`, então quem tem dados salvos precisa de "Restaurar dados de demonstração" para vê-las), `SISTEMA.md`.

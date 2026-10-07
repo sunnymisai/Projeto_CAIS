@@ -1,15 +1,15 @@
 /* ============================================================================
    MÉTRICAS (CÁLCULOS DERIVADOS)
-   O que é: funções puras que calculam público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas" e rótulos/cores de status e prioridade.
+   O que é: funções puras que calculam público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas", a carga da semana e o histórico de entregas, e rótulos/cores de status e prioridade.
    Onde é usado: app/(sistema)/painel, pessoas, projetos, projetos/[id], trilhas, trilhas/[id] e components/projetos/Equipe.tsx e Vistas.tsx.
-   Depende de: lib/tipos.ts (Dados, Perfil, Pessoa, Prioridade, Projeto, Tarefa, Trilha) e lib/utils.ts (hojeISO, somaDias, diasEntre).
+   Depende de: lib/tipos.ts (Alocacao, Dados, Perfil, Pessoa, Prioridade, Projeto, Tarefa, Trilha) e lib/utils.ts (hojeISO, somaDias, diasEntre).
    Contexto: §4 (alcance das trilhas), §5 (equipe e tarefas), §6 (dashboards).
    ============================================================================ */
 
 // ⚠️ ATENÇÃO: os imports levam a extensão .ts de propósito (tsconfig: allowImportingTsExtensions):
 // lib/permissoes.ts importa publicoDaTrilha daqui e é testado com Node (permissoes.casos.ts),
 // que só acha o módulo com a extensão. Tirar o ".ts" quebra o teste, não o app.
-import type { Dados, Perfil, Pessoa, Prioridade, Projeto, Tarefa, Trilha } from './tipos.ts';
+import type { Alocacao, Dados, Perfil, Pessoa, Prioridade, Projeto, Tarefa, Trilha } from './tipos.ts';
 import { diasEntre, hojeISO, somaDias } from './utils.ts';
 
 /* Cálculos derivados usados no painel e nas fichas. Nada aqui é salvo:
@@ -282,4 +282,87 @@ export function agruparMinhasTarefas(tarefas: Tarefa[], projetos: Projeto[], hoj
   g.atrasadas.sort(porPrazo); g.hoje.sort(porPrazo); g.semana.sort(porPrazo); g.depois.sort(porPrazo);
   g.concluidas.sort((a, b) => (b.concluidaEm ?? b.prazo).localeCompare(a.concluidaEm ?? a.prazo));
   return g;
+}
+
+/* ---------------- Painel do profissional (D05) ---------------- */
+
+/**
+ * Segunda-feira da semana de uma data (a semana vai de segunda a domingo).
+ * @param iso - data AAAA-MM-DD.
+ * @returns a segunda (AAAA-MM-DD); se a data já é segunda, ela mesma.
+ * @example inicioDaSemana('2026-10-07') // '2026-10-05' (quarta → segunda)
+ */
+export function inicioDaSemana(iso: string): string {
+  // getDay(): 0 = domingo... 6 = sábado. Dias desde a segunda: domingo → 6; segunda → 0; quarta → 2.
+  const diaDaSemana = new Date(iso + 'T12:00:00').getDay();
+  return somaDias(iso, -((diaDaSemana + 6) % 7));
+}
+
+/** Um projeto na carga da semana. */
+export interface ItemCarga { alocacao: Alocacao; projeto: Projeto }
+
+/**
+ * Carga da pessoa na semana de hoje: soma as horas semanais (`carga`) das alocações
+ * cujo período cruza a semana (segunda a domingo).
+ * Não julga se está alto ou baixo: o semáforo de carga por período é do bloco F (§16).
+ * @param pessoaId - id da pessoa.
+ * @param d - todos os dados.
+ * @param hoje - data de referência (padrão: hoje).
+ * @returns `{ total, limite, itens }`: total em h/sem, o limite da pessoa (`cargaMax`) e os projetos.
+ * @example cargaDaSemana('pes_ana', d).total // 20
+ */
+export function cargaDaSemana(pessoaId: string, d: Dados, hoje: string = hojeISO()) {
+  const seg = inicioDaSemana(hoje);
+  const dom = fimDaSemana(hoje);
+  const itens: ItemCarga[] = d.alocacoes
+    // Cruza a semana = começa até domingo E termina a partir de segunda.
+    .filter((a) => a.pessoaId === pessoaId && a.inicio <= dom && a.fim >= seg)
+    .map((alocacao) => ({ alocacao, projeto: d.projetos.find((p) => p.id === alocacao.projetoId)! }))
+    // Alocação de projeto apagado não conta.
+    .filter((i) => !!i.projeto)
+    // Maior carga primeiro.
+    .sort((a, b) => b.alocacao.carga - a.alocacao.carga);
+  const limite = d.pessoas.find((p) => p.id === pessoaId)?.cargaMax ?? 40;
+  return { total: itens.reduce((s, i) => s + i.alocacao.carga, 0), limite, itens };
+}
+
+/** Entregas de uma semana (para o gráfico de histórico). */
+export interface EntregasDaSemana {
+  /** Segunda-feira da semana (AAAA-MM-DD). */
+  inicio: string;
+  /** Rótulo curto: dia/mês da segunda, ex.: "21/9". */
+  rotulo: string;
+  valor: number;
+}
+
+/**
+ * Tarefas que a pessoa concluiu por semana, nas últimas `semanas` semanas (a atual é a última).
+ * "Concluída" = está na última coluna do projeto e tem `concluidaEm` (sem a data, não dá para saber a semana).
+ * @param pessoaId - id da pessoa (responsável pela tarefa).
+ * @param d - todos os dados.
+ * @param semanas - quantas semanas (padrão 8).
+ * @param hoje - data de referência (padrão: hoje).
+ * @returns uma entrada por semana, da mais antiga para a atual.
+ * @example entregasPorSemana('pes_ana', d).at(-1) // { inicio: '2026-10-05', rotulo: '5/10', valor: 1 }
+ */
+export function entregasPorSemana(pessoaId: string, d: Dados, semanas = 8, hoje: string = hojeISO()): EntregasDaSemana[] {
+  const segAtual = inicioDaSemana(hoje);
+  // Segundas das N semanas, da mais antiga para a atual.
+  const lista = Array.from({ length: semanas }, (_, i) => somaDias(segAtual, -7 * (semanas - 1 - i)));
+  const concluidas = d.tarefas.filter((t) => {
+    if (t.responsavelId !== pessoaId || !t.concluidaEm) return false;
+    const projeto = d.projetos.find((p) => p.id === t.projetoId);
+    // Só conta se ainda está na última coluna (se voltou para "Fazendo", não é entrega).
+    return !!projeto && t.colunaId === projeto.colunas[projeto.colunas.length - 1]?.id;
+  });
+  return lista.map((inicio) => {
+    const fim = somaDias(inicio, 6);
+    const [, m, dia] = inicio.split('-');
+    return {
+      inicio,
+      rotulo: `${Number(dia)}/${Number(m)}`,
+      // Comparar texto funciona porque o formato é AAAA-MM-DD.
+      valor: concluidas.filter((t) => t.concluidaEm! >= inicio && t.concluidaEm! <= fim).length,
+    };
+  });
 }
