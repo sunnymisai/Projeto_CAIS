@@ -2,6 +2,9 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Ajustes visuais para a apresentação (branch `fix/login-visual`)
+- Modificado: `next.config.ts` (`devIndicators: false`: some a bolinha "N" do Next no `npm run dev`), `components/LoginForm.tsx` (os botões "Entrar como" ficam um embaixo do outro, com largura total; em três colunas o ícone de Administrador e Profissional encolhia até sumir).
+
 ## Bloco D: profissional (branch `feat/profissional`)
 
 ### D05: painel do profissional

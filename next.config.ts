@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
   // ao painel e nenhuma validação funciona. Esta lista libera esses endereços.
   // Vale só para o `npm run dev`; não muda nada no build.
   allowedDevOrigins: ["127.0.0.1", ...ipsDaRede()],
+  // Esconde a bolinha "N" que o Next mostra no canto da tela durante o `npm run dev`
+  // (ela nunca aparece no build). Erros de compilação e de execução continuam aparecendo.
+  devIndicators: false,
 };
 
 export default nextConfig;

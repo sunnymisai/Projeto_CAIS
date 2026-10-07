@@ -323,12 +323,13 @@ export const LoginForm = () => {
        * TODO(API): remover esta caixa quando a API real estiver ligada. */}
       <div className="mt-6 rounded-xl border border-dashed border-borda bg-superficie-alt/60 px-4 py-3">
         <p id="demo-titulo" className="text-[13px] font-semibold text-tinta">{COPY.demoLabel}</p>
-        {/* Três colunas de mesma largura; abaixo de 400 px (celular estreito) viram uma coluna só. */}
+        {/* Um botão embaixo do outro, com largura total: em três colunas o cartão deixava ~104 px por
+          * botão, pouco para "Administrador" + ícone (o ícone encolhia até sumir). */}
         <div
           role="group"
           aria-labelledby="demo-titulo"
           aria-describedby="demo-dica"
-          className="mt-2 grid grid-cols-1 gap-2 min-[400px]:grid-cols-3"
+          className="mt-2 grid grid-cols-1 gap-2"
         >
           {BOTOES_DEMO.map(({ perfil, rotulo, Icone }) => {
             const conta = CONTAS_DEMO.find((c) => c.perfil === perfil);
@@ -339,6 +340,9 @@ export const LoginForm = () => {
                 key={perfil}
                 variante="secundario"
                 tamanho="sm"
+                larguraTotal
+                // justify-start: ícone e nome alinhados à esquerda, como uma lista de opções.
+                className="justify-start"
                 disabled={loading}
                 // GRAVA: só o estado local do formulário (e-mail e senha digitados).
                 // Zera o "tocado" para não mostrar erro velho nos campos recém-preenchidos.
@@ -350,7 +354,8 @@ export const LoginForm = () => {
                   setAuthError("");
                 }}
               >
-                <Icone aria-hidden="true" className="h-4 w-4" />
+                {/* shrink-0: o ícone nunca encolhe, mesmo se o botão ficar estreito. */}
+                <Icone aria-hidden="true" className="h-4 w-4 shrink-0" />
                 {rotulo}
               </Button>
             );
