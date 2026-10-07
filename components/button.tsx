@@ -1,3 +1,14 @@
+/* ============================================================================
+   BUTTON.TSX — BOTÃO DO DESIGN SYSTEM CAIS
+   O que é: botão com 4 variantes, 3 tamanhos e os estados repouso, hover,
+   pressionado, foco, carregando e desabilitado.
+   Onde é usado: components/LoginForm.tsx, telas de app/(sistema) (empresas,
+   pessoas, projetos, projetos/[id], trilhas, trilhas/[id], design-system) e
+   components/projetos (DetalheTarefa, Equipe, FormProjeto, Quadro).
+   Depende de: react (forwardRef) e lib/utils (cx).
+   Contexto: §9 (design system: botão e seus estados) e §13 (foco visível;
+   ação dá retorno em menos de 1 s, por isso o estado "carregando").
+   ============================================================================ */
 "use client";
 
 import { ButtonHTMLAttributes, ReactNode, forwardRef } from "react";
@@ -15,15 +26,21 @@ import { cx } from "@/lib/utils";
  * Estados: repouso, hover, pressionado, foco, carregando e desabilitado.
  */
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Estilo do botão (padrão "primario"). */
   variante?: "primario" | "secundario" | "fantasma" | "perigo";
+  /** Altura: sm 32 px, md 40 px (padrão), lg 48 px. */
   tamanho?: "sm" | "md" | "lg";
+  /** Ocupa toda a largura do pai (ex.: botão "Entrar" do login). */
   larguraTotal?: boolean;
+  /** Mostra o spinner, troca o texto por `loadingText` e desabilita o botão. */
   isLoading?: boolean;
   /** Texto mostrado ao lado do spinner e lido pelo leitor de tela. */
   loadingText?: string;
   children: ReactNode;
 }
 
+// Classes de cada variante. A sombra do primário imita um leve relevo
+// (brilho interno em cima + sombra roxa embaixo).
 const VARIANTES = {
   primario:
     "bg-botao text-white hover:bg-botao-hover shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_6px_16px_-8px_rgba(112,82,242,0.8)]",
@@ -35,12 +52,21 @@ const VARIANTES = {
     "bg-erro text-white hover:brightness-110 dark:text-[#14161F]",
 };
 
+// Altura, espaçamento e fonte de cada tamanho.
 const TAMANHOS = {
   sm: "h-8 gap-1.5 rounded-lg px-3 text-[13px]",
   md: "h-10 gap-2 rounded-xl px-4 text-sm",
   lg: "h-12 gap-2 rounded-xl px-5 text-[15px]",
 };
 
+/**
+ * Botão do Design System CAIS. Repassa qualquer prop de <button> (onClick, aria-*...).
+ * Usa forwardRef para que outros componentes consigam focar o botão.
+ * @param props ver ButtonProps.
+ * @returns o <button> estilizado.
+ * @example
+ * <Button variante="perigo" isLoading={salvando} loadingText="Excluindo…" onClick={excluir}>Excluir</Button>
+ */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     variante = "primario",
@@ -51,6 +77,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     children,
     disabled,
     className,
+    // Padrão "button" (e não "submit"): um botão qualquer dentro de <form> não envia o formulário sem querer.
     type = "button",
     ...rest
   },
@@ -60,12 +87,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
     <button
       ref={ref}
       type={type}
+      // Carregando também desabilita: evita clique duplo (ex.: salvar duas vezes).
       disabled={disabled || isLoading}
+      // aria-busy avisa o leitor de tela que algo está em andamento.
       aria-busy={isLoading || undefined}
       className={cx(
         "group relative inline-flex shrink-0 items-center justify-center font-archivo font-semibold whitespace-nowrap",
+        // active:scale-[0.98]: o botão "afunda" levemente ao ser pressionado.
         "transition-[background-color,color,transform,filter] duration-150 active:scale-[0.98]",
         "disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100",
+        // Anel de foco só na navegação por teclado (focus-visible), com respiro da cor do fundo (ring-offset).
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie",
         VARIANTES[variante],
         TAMANHOS[tamanho],
@@ -74,6 +105,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       )}
       {...rest}
     >
+      {/* Carregando: spinner (borda girando) + texto no lugar do conteúdo. */}
       {isLoading ? (
         <>
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current" aria-hidden="true" />

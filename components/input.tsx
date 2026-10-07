@@ -1,3 +1,14 @@
+/* ============================================================================
+   INPUT.TSX — CAMPO DE TEXTO DO DESIGN SYSTEM CAIS
+   O que é: campo de texto com rótulo, ícone, estados (padrão, foco, sucesso,
+   erro, desabilitado), mensagem de ajuda/erro e mostrar/ocultar senha.
+   Onde é usado: components/LoginForm.tsx, telas de app/(sistema) (empresas,
+   pessoas, projetos/[id], trilhas/[id], design-system) e components/projetos
+   (Equipe, FormProjeto). É a referência de estados de components/ui/form.tsx.
+   Depende de: react (forwardRef, useId, useState) e lucide-react (ícones).
+   Contexto: §9 (design system: campo e seus estados), §11 (erro ao sair do
+   campo) e §13 (acessível: rótulo, foco visível, erro anunciado).
+   ============================================================================ */
 "use client";
 
 import React, { InputHTMLAttributes, forwardRef, useId, useState } from 'react';
@@ -15,7 +26,9 @@ import { CircleAlert, CircleCheck, Eye, EyeOff } from 'lucide-react';
  * Campos type="password" ganham automaticamente o botão mostrar/ocultar.
  */
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  /** Texto do rótulo acima do campo (ligado ao campo pelo htmlFor). */
   label?: string;
+  /** Ícone decorativo à esquerda (ex.: envelope no e-mail). */
   icon?: React.ReactNode;
   /** Mensagem de erro. Quando presente, o campo fica no estado de erro. */
   error?: string;
@@ -27,16 +40,30 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   compacto?: boolean;
 }
 
+/**
+ * Campo de texto do Design System CAIS.
+ * Usa forwardRef para que a tela (ou um hook de formulário) consiga focar o campo.
+ * Todas as props de um <input> comum também funcionam (value, onChange, onBlur...).
+ * @param props ver InputProps.
+ * @returns rótulo + campo + mensagem.
+ * @example
+ * <Input label="E-mail" type="email" required error={erros.email} valid={emailOk} icon={<Mail />} />
+ */
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, label, icon, error, valid, hint, id, compacto, required, ...props }, ref) => {
+    // id automático caso a tela não passe um: liga rótulo, campo e mensagem.
     const autoId = useId();
     const inputId = id ?? autoId;
+    // id da mensagem de erro/dica, apontado pelo aria-describedby do campo.
     const messageId = `${inputId}-msg`;
+    // Senha visível ou escondida (botão do olho).
     const [mostrarSenha, setMostrarSenha] = useState(false);
 
+    // Campo de senha com "mostrar" ligado vira type="text" para exibir o que foi digitado.
     const isPassword = type === 'password';
     const tipoReal = isPassword && mostrarSenha ? 'text' : type;
 
+    // Classes de borda e anel conforme o estado. Prioridade: erro > sucesso > padrão.
     const estado = error
       ? 'border-erro focus:border-erro focus:ring-erro/25'
       : valid
@@ -56,6 +83,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
 
         <div className="relative flex items-center">
+          {/* Ícone à esquerda; pointer-events-none deixa o clique atravessar até o campo. */}
           {icon && (
             <span
               className={`pointer-events-none absolute left-3.5 transition-colors ${
@@ -66,6 +94,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
 
+          {/* pl-11 abre espaço para o ícone. aria-invalid e aria-describedby fazem o
+           * leitor de tela anunciar "inválido" e ler a mensagem junto com o campo. */}
           <input
             id={inputId}
             ref={ref}
@@ -79,9 +109,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
 
+          {/* À direita aparece só um: botão do olho (senha), ícone de erro ou ícone de sucesso. */}
           {isPassword ? (
             <button
               type="button"
+              // Alterna mostrar/ocultar; aria-pressed conta ao leitor de tela se está ligado.
               onClick={() => setMostrarSenha((v) => !v)}
               aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
               aria-pressed={mostrarSenha}
@@ -97,6 +129,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           ) : null}
         </div>
 
+        {/* Mensagem abaixo do campo: o erro tem prioridade sobre a dica. */}
         {error ? (
           <p id={messageId} className="text-[13px] font-medium text-erro">
             {error}
@@ -111,6 +144,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
+// Nome exibido no React DevTools (com forwardRef, sem isso aparece "Anonymous").
 Input.displayName = 'Input';
 
 export default Input;
