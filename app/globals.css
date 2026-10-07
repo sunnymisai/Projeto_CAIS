@@ -1,26 +1,177 @@
+/* ============================================================================
+   ESTILOS GLOBAIS + TOKENS DE MARCA (CAIS) — com DARK MODE
+   ============================================================================
+   Como funciona:
+   1) Os valores reais das cores ficam em variáveis CSS no :root (tema claro)
+      e em .dark (tema escuro). O tema escuro é ligado adicionando a classe
+      "dark" no <html> (feito pelo script em app/layout.tsx e pelo botão
+      ThemeToggle).
+   2) O bloco @theme inline transforma essas variáveis em classes do
+      Tailwind: --color-fundo vira bg-fundo, text-fundo, border-fundo...
+      Como a classe aponta para a variável, ela troca de cor sozinha quando
+      o tema muda — quase não precisamos escrever "dark:" nos componentes.
+
+   >>> PARA REBRANDEAR, EDITE SÓ OS VALORES EM :root E .dark <<<
+   ============================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Faz a variante "dark:" do Tailwind obedecer à classe .dark (e não só ao
+   sistema operacional), permitindo o botão de alternar tema. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Marca (iguais nos dois temas, exceto a primária, que clareia no escuro) */
+  --marca: #7C5CFF;             /* Roxo Maré — só no símbolo e em ilustrações */
+  --primaria: #7052F2;          /* Roxo Maré ajustado p/ texto: 5,0:1 no branco */
+  --primaria-forte: #5B3FD4;    /* Roxo Fundo — hover/ativo */
+  --primaria-suave: #EEEAFF;    /* fundo de destaque leve */
+  --botao: #7052F2;             /* fundo do botão primário (5,0:1 c/ branco) */
+  --botao-hover: #5B3FD4;
+  --sucesso: #047857;           /* Verde Atracado escurecido: 5,5:1, serve p/ texto */
+  --aviso: #B45309;             /* Atenção: 5,0:1, serve p/ texto */
+  --erro: #DC3545;              /* Erro */
+
+  /* Superfícies e texto — tema claro */
+  --fundo: #F6F7FB;             /* Névoa */
+  --superficie: #FFFFFF;
+  --superficie-alt: #F1F2F8;
+  --tinta: #14161F;             /* texto principal */
+  --tinta-suave: #5B6075;       /* texto secundário (contraste AA) */
+  --tinta-fraca: #8A8FA3;       /* placeholders e ícones */
+  --borda: #E1E3EC;
+  --sombra-card: 0 1px 2px rgba(20, 22, 31, 0.04), 0 12px 40px -12px rgba(60, 40, 160, 0.18);
+
+  color-scheme: light;
+}
+
+.dark {
+  --marca: #8F74FF;
+  --primaria: #8F74FF;
+  --primaria-forte: #A48FFF;
+  --primaria-suave: rgba(143, 116, 255, 0.14);
+  --botao: #7052F2;             /* mantém contraste com texto branco */
+  --botao-hover: #6A4AF0;
+  --sucesso: #34D399;
+  --aviso: #FBBF24;
+  --erro: #F87171;
+
+  --fundo: #14161F;
+  --superficie: #1C1F2B;
+  --superficie-alt: #242838;
+  --tinta: #ECEDF3;
+  --tinta-suave: #A3A8BC;
+  --tinta-fraca: #6E7389;
+  --borda: #2E3244;
+  --sombra-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-marca: var(--marca);
+  --color-primaria: var(--primaria);
+  --color-primaria-forte: var(--primaria-forte);
+  --color-primaria-suave: var(--primaria-suave);
+  --color-botao: var(--botao);
+  --color-botao-hover: var(--botao-hover);
+  --color-sucesso: var(--sucesso);
+  --color-aviso: var(--aviso);
+  --color-erro: var(--erro);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-fundo: var(--fundo);
+  --color-superficie: var(--superficie);
+  --color-superficie-alt: var(--superficie-alt);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-tinta-fraca: var(--tinta-fraca);
+  --color-borda: var(--borda);
+
+  --shadow-card: var(--sombra-card);
+
+  /* Cores fixas do painel de marca (sempre escuro, nos dois temas) */
+  --color-noite: #14161F;
+  --color-noite-alt: #1B1D2A;
+  --color-pilar-roxo: #7C5CFF;
+  --color-pilar-verde: #10B981;
+  --color-pilar-ambar: #F5A524;
+
+  /* Tipografia: título em Space Grotesk, corpo em Archivo */
+  --font-space: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-archivo: "Archivo", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--font-archivo);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 250ms ease, color 250ms ease;
+}
+
+/* ---------------------------------------------------------------------------
+   Momento de animação único: ao abrir a tela, as linhas que conectam os três
+   pilares (Onboarding → Projetos → Dashboards) são "desenhadas" em sequência
+   e os pontos acendem. O card do formulário só aparece suavemente.
+   --------------------------------------------------------------------------- */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-card-in { animation: card-in 480ms ease-out both; }
+
+@keyframes trilha-desenha { to { stroke-dashoffset: 0; } }
+.trilha-linha {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  animation: trilha-desenha 900ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes pilar-acende {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.pilar-no {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: pilar-acende 420ms ease-out forwards;
+}
+
+@keyframes erro-balanca {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.animate-erro { animation: erro-balanca 240ms ease-in-out 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-card-in, .animate-erro { animation: none; }
+  .trilha-linha { animation: none; stroke-dashoffset: 0; }
+  .pilar-no { animation: none; opacity: 1; }
+  body { transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilitários do sistema
+   --------------------------------------------------------------------------- */
+/* Barra de rolagem discreta nas áreas que rolam (conteúdo, colunas do quadro) */
+.rolagem { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--tinta-fraca) 45%, transparent) transparent; }
+.rolagem::-webkit-scrollbar { width: 10px; height: 10px; }
+.rolagem::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--tinta-fraca) 40%, transparent); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+
+@keyframes esqueleto { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+.esqueleto {
+  background: linear-gradient(90deg, var(--superficie-alt) 25%, color-mix(in srgb, var(--superficie-alt) 40%, var(--superficie)) 50%, var(--superficie-alt) 75%);
+  background-size: 200% 100%;
+  animation: esqueleto 1.4s ease-in-out infinite;
+}
+
+@keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
+.animate-modal-in { animation: modal-in 180ms ease-out both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fade-in 160ms ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto, .animate-modal-in, .animate-fade-in { animation: none; }
 }
