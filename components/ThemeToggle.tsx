@@ -1,52 +1,30 @@
 /* ============================================================================
    THEMETOGGLE.TSX — BOTÃO DE TEMA CLARO/ESCURO
    O que é: botão redondo (sol/lua) que alterna o tema e lembra a escolha.
-   Onde é usado: app/page.tsx (tela de login) e components/shell/Topbar.tsx.
-   Depende de: react (useState, useSyncExternalStore), lucide-react (ícones),
-   localStorage e do script de tema em app/layout.tsx.
+   Onde é usado: components/AcessoLayout.tsx (login, recuperar senha e primeiro acesso), components/home/TopoHome.tsx e components/shell/Topbar.tsx.
+   Depende de: lib/tema.ts (useTema: a lógica do tema mora lá), lucide-react (ícones) e do script de tema em app/layout.tsx.
    Contexto: §9 (design system) e §13 (qualidade: tema claro e escuro).
    ============================================================================ */
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useTema } from "@/lib/tema";
 
 /**
  * Alterna entre tema claro e escuro.
- * Salva a escolha em localStorage ("cais-tema"); o script em app/layout.tsx
- * lê esse valor na próxima visita, antes de a página aparecer.
+ * Toda a lógica (ler, aplicar e gravar "cais-tema") fica em lib/tema.ts; este botão
+ * só chama `definir`. Como o hook sincroniza todos os usuários, trocar o tema em
+ * /perfil (Preferências) também muda o ícone daqui, e vice-versa.
  * @param className classes extras do botão.
  * @returns o botão com os ícones de sol e lua.
  */
 export default function ThemeToggle({ className = "" }: { className?: string }) {
-  // Tema lido do <html> no navegador; null no servidor (evita divergência na hidratação)
-  const temaInicial = useSyncExternalStore(
-    () => () => {},
-    () => document.documentElement.classList.contains("dark"),
-    () => null
-  );
-  // Tema escolhido por clique; null enquanto a pessoa não clicou.
-  const [escolhido, setEscuro] = useState<boolean | null>(null);
-  // Vale o escolhido; se não houver, o tema que a página já tinha.
-  const escuro = escolhido ?? temaInicial;
+  const { escuro, definir } = useTema();
 
-  // Clique no botão: inverte o tema, aplica na página e salva a escolha.
-  const alternar = () => {
-    const proximo = !escuro;
-    // A classe "dark" no <html> liga as cores escuras definidas em app/globals.css.
-    document.documentElement.classList.toggle("dark", proximo);
-    // GRAVA: salva "escuro" ou "claro" no localStorage, chave "cais-tema".
-    // ⚠️ ATENÇÃO: a chave e os valores precisam bater com o script de app/layout.tsx;
-    // se mudar aqui sem mudar lá, o tema escolhido não é restaurado na próxima visita.
-    // O try/catch existe porque o localStorage pode falhar (ex.: navegação privada).
-    try {
-      localStorage.setItem("cais-tema", proximo ? "escuro" : "claro");
-    } catch {
-      /* navegação privada: apenas não salva */
-    }
-    // Atualiza o estado para trocar o ícone e o rótulo.
-    setEscuro(proximo);
-  };
+  // Clique: escolhe o tema oposto ao que está valendo. Quem estava em "seguir o sistema"
+  // passa a ter uma escolha explícita (claro ou escuro).
+  // GRAVA: lib/tema.ts guarda a escolha em localStorage["cais-tema"].
+  const alternar = () => definir(escuro ? "claro" : "escuro");
 
   // O rótulo descreve a AÇÃO do clique ("Usar tema claro"), não o tema atual.
   const rotulo = escuro ? "Usar tema claro" : "Usar tema escuro";

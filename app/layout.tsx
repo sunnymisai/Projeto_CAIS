@@ -4,8 +4,8 @@
    Onde é usado: pelo próprio Next.js, automaticamente, em TODAS as rotas
      (homepage "/", login "/login", área interna "(sistema)", "/sem-permissao" e página 404).
    Depende de: app/globals.css (cores, fontes e tema), app/providers.tsx
-     (sessão, dados e avisos) e o localStorage "cais-tema" gravado pelo
-     components/ThemeToggle.tsx.
+     (sessão, dados e avisos) e o localStorage "cais-tema", gravado por lib/tema.ts
+     (usado por components/ThemeToggle.tsx e pela aba Preferências de /perfil).
    Contexto: §9 (design system e marca: cores Tinta e Névoa) e
      docs/notas-next16.md §1 (é Server Component) e §5 (metadados).
    ============================================================================ */
@@ -43,7 +43,7 @@ export const viewport: Viewport = {
   Script de tema — roda ANTES da página aparecer, para evitar o "piscar"
   branco quando o usuário usa o modo escuro.
   Ordem de decisão:
-    1) escolha salva pelo usuário (botão ThemeToggle → localStorage "cais-tema")
+    1) escolha salva pelo usuário (lib/tema.ts → localStorage "cais-tema"; sem chave = seguir o sistema)
     2) se não houver, segue o tema do sistema operacional
 */
 /*
@@ -60,8 +60,10 @@ export const viewport: Viewport = {
  * - Ele só ADICIONA a classe "dark" no <html>; o globals.css troca as cores
  *   quando essa classe existe.
  * ⚠️ ATENÇÃO: a chave 'cais-tema' e os valores 'escuro'/'claro' precisam ser
- * iguais aos do components/ThemeToggle.tsx; se mudar só de um lado, o tema
- * escolhido deixa de ser lembrado. Não escreva comentários DENTRO do texto
+ * iguais aos de lib/tema.ts (CHAVE_TEMA e definirTema), que é o único código que
+ * grava essa chave. Este script não pode importar lib/tema.ts (é um texto no
+ * <head>, executado antes do React), por isso a repetição é intencional. Se mudar
+ * só de um lado, o tema escolhido deixa de ser lembrado. Não escreva comentários DENTRO do texto
  * abaixo: eles virariam parte do código executado no navegador.
  */
 const themeScript = `

@@ -9,7 +9,7 @@
 // ⚠️ ATENÇÃO: os imports levam a extensão .ts de propósito (tsconfig: allowImportingTsExtensions):
 // lib/permissoes.ts importa publicoDaTrilha daqui e é testado com Node (permissoes.casos.ts),
 // que só acha o módulo com a extensão. Tirar o ".ts" quebra o teste, não o app.
-import type { Dados, Trilha } from './tipos.ts';
+import type { Dados, Perfil, Trilha } from './tipos.ts';
 import { hojeISO } from './utils.ts';
 
 /* Cálculos derivados usados no painel e nas fichas. Nada aqui é salvo:
@@ -97,6 +97,9 @@ export function progressoProjeto(projetoId: string, d: Dados) {
   // Projeto sem tarefas fica em 0% (evita divisão por zero).
   return { total: tarefas.length, prontas, atrasadas, pct: tarefas.length ? (prontas / tarefas.length) * 100 : 0 };
 }
+
+/** Nome de cada perfil de acesso, em português (Meu perfil, Acessos). */
+export const ROTULO_PERFIL: Record<Perfil, string> = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' };
 
 /** Texto exibido para cada status de projeto. */
 export const ROTULO_STATUS_PROJETO = { planejado: 'Planejado', andamento: 'Em andamento', pausado: 'Pausado', concluido: 'Concluído' } as const;

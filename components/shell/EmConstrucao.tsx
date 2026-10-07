@@ -1,7 +1,7 @@
 /* ============================================================================
    EMCONSTRUCAO.TSX — PÁGINA "EM CONSTRUÇÃO"
    O que é: o cabeçalho de uma página mais um estado vazio "Em construção", usado pelas telas que ainda serão feitas nos próximos blocos.
-   Onde é usado: app/(sistema)/carga, acessos, minhas-trilhas, minhas-tarefas e perfil; components/paineis/PainelEmpresa.tsx e PainelProfissional.tsx (somente o miolo, via EstadoConstrucao).
+   Onde é usado: app/(sistema)/carga, acessos, minhas-trilhas e minhas-tarefas; components/paineis/PainelEmpresa.tsx e PainelProfissional.tsx (somente o miolo, via EstadoConstrucao).
    Depende de: components/shell/Pagina.tsx (CabecalhoPagina), components/ui/basicos.tsx (Card, EstadoVazio) e lucide-react (Construction).
    Contexto: §8 (mapa de telas e ondas) e §13 (toda tela tem os quatro estados; aqui, o vazio).
    ============================================================================ */

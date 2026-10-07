@@ -1,6 +1,6 @@
 /* ============================================================================
    AUTH (AUTENTICAÇÃO)
-   O que é: guarda quem está logado (a sessão), oferece entrar(), iniciarSessao() e sair() e guarda as SENHAS SIMULADAS (definirSenha e conferirSenha).
+   O que é: guarda quem está logado (a sessão), oferece entrar(), iniciarSessao(), atualizarSessao() e sair() e guarda as SENHAS SIMULADAS (definirSenha e conferirSenha).
 
    !!! SIMULADO, NUNCA PARA PRODUÇÃO !!!
    As senhas ficam em TEXTO PURO no localStorage ('cais-senhas-demo'), só para o protótipo
@@ -163,6 +163,8 @@ interface AuthCtx {
   entrar: (email: string, senha: string, lembrar: boolean) => Promise<ResultadoLogin>;
   /** Abre a sessão de uma pessoa sem pedir senha (só no fim do primeiro acesso, quando ela acabou de criá-la). */
   iniciarSessao: (pessoa: { id: string; nome: string; email: string; perfil: Perfil }, lembrar: boolean) => void;
+  /** Atualiza nome, e-mail ou perfil da sessão aberta (ex.: depois de editar Meu perfil). Não mexe no token. */
+  atualizarSessao: (parcial: Partial<Pick<Sessao, 'nome' | 'email' | 'perfil'>>) => void;
   /** Desloga e apaga a sessão do navegador. */
   sair: () => void;
 }
@@ -201,7 +203,7 @@ function guardarSessao(s: Sessao, lembrar: boolean) {
 /**
  * Provedor da autenticação. Envolve o app inteiro (montado em app/providers.tsx).
  * @param children - a árvore que vai poder chamar `useAuth()`.
- * @returns o Provider com sessão, `pronto`, `entrar`, `iniciarSessao` e `sair`.
+ * @returns o Provider com sessão, `pronto`, `entrar`, `iniciarSessao`, `atualizarSessao` e `sair`.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessao, setSessao] = useState<Sessao | null>(null);
@@ -250,6 +252,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessao(s);
   }, []);
 
+  /**
+   * Atualiza campos da sessão aberta e regrava onde ela já estava guardada.
+   * Existe porque a sessão guarda uma CÓPIA do nome e do perfil: sem isto, trocar o nome
+   * em Meu perfil não mudaria o topo da tela até o próximo login.
+   * @param parcial - só os campos que mudaram.
+   * @example atualizarSessao({ nome: 'Ana Souza Lima' })
+   */
+  // GRAVA: reescreve a sessão no storage em que ela estava (localStorage ou sessionStorage).
+  // TODO(API): com a API, o nome vem do perfil do usuário; a sessão guarda só o token.
+  const atualizarSessao = useCallback((parcial: Partial<Pick<Sessao, 'nome' | 'email' | 'perfil'>>) => {
+    setSessao((atual) => {
+      // Sem sessão aberta não há o que atualizar.
+      if (!atual) return atual;
+      const nova = { ...atual, ...parcial };
+      try {
+        // Regrava onde a sessão já estava ("lembrar-me" = localStorage; senão sessionStorage).
+        const storage = localStorage.getItem(CHAVE) !== null ? localStorage : sessionStorage;
+        storage.setItem(CHAVE, JSON.stringify(nova));
+      } catch { /* navegação privada: só em memória */ }
+      return nova;
+    });
+  }, []);
+
   /** Desloga: limpa a sessão da memória e dos dois armazenamentos. */
   const sair = useCallback(() => {
     // APAGA: remove a sessão dos dois lugares, porque não sabemos onde ela foi salva.
@@ -261,12 +286,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessao(null);
   }, []);
 
-  return <Ctx.Provider value={{ sessao, pronto, entrar, iniciarSessao, sair }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ sessao, pronto, entrar, iniciarSessao, atualizarSessao, sair }}>{children}</Ctx.Provider>;
 }
 
 /**
  * Hook para ler a sessão e chamar entrar/sair em qualquer tela.
- * @returns `{ sessao, pronto, entrar, iniciarSessao, sair }`.
+ * @returns `{ sessao, pronto, entrar, iniciarSessao, atualizarSessao, sair }`.
  * @example const { sessao, sair } = useAuth();
  */
 export function useAuth() {

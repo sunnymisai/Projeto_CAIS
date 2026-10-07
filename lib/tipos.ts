@@ -73,6 +73,12 @@ export interface Pessoa {
   habilidades: string[];
   /** Obrigatório para perfil Empresa; opcional para profissional; '' quando não há. */
   empresaId: string;
+  /**
+   * Preferência da própria pessoa (aba Preferências de /perfil): espaçamento das linhas das tabelas.
+   * Opcional: quem nunca escolheu fica em 'confortavel'. Quem lê é lib/preferencias.ts.
+   * TODO(API): virar campo do perfil/preferências do usuário na API da PROGLOGIC.
+   */
+  densidadeTabela?: 'confortavel' | 'compacta';
 }
 
 /** Tipos de conteúdo que uma etapa de trilha pode ter (§4). Ícones em lib/trilhas.ts. */

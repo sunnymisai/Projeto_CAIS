@@ -36,7 +36,7 @@ npm run dev        # http://localhost:3000
 | `/design-system` | Documentação viva dos componentes |
 | `/carga` e `/acessos` | Admin: carga da equipe e gestão de acessos ("Em construção") |
 | `/minhas-trilhas` e `/minhas-tarefas` | Empresa e profissional (trilhas) e só profissional (tarefas): "Em construção" |
-| `/perfil` | Meu perfil, para os três perfis ("Em construção") |
+| `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
 
 ## Permissões por perfil
@@ -66,6 +66,8 @@ Parâmetros úteis: `/projetos/[id]?aba=equipe|tarefas|geral&tarefa=<id>` e `/em
 
 **Guarda da trilha obrigatória (§12).** `temTrilhaObrigatoriaPendente(pessoaId, dados)` (em `lib/permissoes.ts`) diz se o profissional ainda tem etapa obrigatória por concluir numa trilha geral publicada. O layout de `(sistema)` só aplica o bloqueio ("Conclua sua trilha de boas-vindas para liberar o sistema", em qualquer rota fora de `/painel` e `/minhas-trilhas*`) quando `EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO` é `true`. Hoje é `false`: as telas de trilha do profissional nascem no bloco D, que liga a constante.
 
+**Tema e preferências.** `lib/tema.ts` é o único código que lê, aplica e grava o tema (chave `cais-tema`; "seguir o sistema" = sem chave). O botão sol/lua (`ThemeToggle`) e a aba Preferências usam o mesmo hook `useTema()`, então ficam sincronizados. O `<script>` inline de `app/layout.tsx` continua necessário (aplica o tema antes da hidratação, sem piscar) e repete a chave e os valores de propósito. A densidade das tabelas fica no cadastro da pessoa (`Pessoa.densidadeTabela`) e é lida por `lib/preferencias.ts` na `Tabela`.
+
 ## Onde ligar a API da PROGLOGIC
 
 A autenticação e os dados passam por dois arquivos:
@@ -85,8 +87,9 @@ components/ui/        design system: basicos, form, Modal, Menu, Tabela, Grafico
 components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), CartaoAcesso, LoginForm, RecuperarSenhaForm, PrimeiroAcessoForm
 components/paineis/   PainelAdmin, PainelEmpresa, PainelProfissional (o /painel escolhe pelo perfil)
 components/shell/     Sidebar (menu filtrado por perfil), Topbar (busca Ctrl+K e avisos com escopo, perfil), Pagina, EmConstrucao
+components/perfil/    AbaDados, AbaPreferencias, AbaSeguranca (as abas de /perfil)
 components/projetos/  Quadro, CartaoTarefa, DetalheTarefa, Vistas, Equipe, FormProjeto
-lib/                  tipos, seed, store, auth, senha, convite, permissoes, escopo, toast, metricas, useFormulario, utils
+lib/                  tipos, seed, store, auth, senha, convite, tema, preferencias, permissoes, escopo, toast, metricas, useFormulario, utils
 ```
 
 ## Ainda simulado ou fora desta versão
@@ -99,5 +102,5 @@ lib/                  tipos, seed, store, auth, senha, convite, permissoes, esco
 - Textos oficiais dos termos de uso e da política de privacidade (LGPD) do primeiro acesso.
 - Trava da trilha obrigatória desligada (`EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false`) até o bloco D.
 - Painéis dos perfis Empresa e Profissional (hoje "Em construção").
-- Telas `/carga`, `/acessos`, `/minhas-trilhas`, `/minhas-tarefas` e `/perfil` (hoje "Em construção").
+- Telas `/carga`, `/acessos`, `/minhas-trilhas` e `/minhas-tarefas` (hoje "Em construção").
 - Permissão no servidor: as regras de perfil só existem no navegador.

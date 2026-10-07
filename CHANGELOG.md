@@ -2,6 +2,13 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco C: perfil e preferências (branch `feat/perfil`)
+
+### C07: tela de perfil e preferências
+- Criado: `lib/tema.ts` (chave `cais-tema`, `useTema()`, `definirTema()`; único lugar que grava o tema), `lib/preferencias.ts` (`useDensidadeTabela`), `components/perfil/AbaDados.tsx`, `AbaPreferencias.tsx`, `AbaSeguranca.tsx`.
+- Modificado: `app/(sistema)/perfil/page.tsx` (era "Em construção"; agora abas e os estados carregando, erro e com dado), `components/ThemeToggle.tsx` (usa `useTema`), `app/layout.tsx` (só os comentários: o script inline continua, ligado a `lib/tema.ts`), `lib/tipos.ts` (`Pessoa.densidadeTabela`, opcional), `lib/auth.tsx` (`atualizarSessao`), `lib/metricas.ts` (`ROTULO_PERFIL`), `components/ui/Tabela.tsx` (densidade compacta por pessoa), `components/shell/EmConstrucao.tsx` (só o cabeçalho).
+- Removido: a lógica de tema que estava duplicada dentro do `ThemeToggle`.
+
 ## Bloco C: fluxos de acesso (branch `feat/fluxos-de-acesso`)
 
 ### C05: recuperação de senha simulada
