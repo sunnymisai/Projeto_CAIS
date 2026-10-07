@@ -22,7 +22,7 @@ Fora dos prompts, já no `master`:
 
 ## Como retomar amanhã
 
-1. Abra o terminal em `login_cais/` e rode `npm run dev` (http://localhost:3000).
+1. Abra o terminal na pasta do projeto, `Projeto_CAIS/`, e rode `npm run dev` (http://localhost:3000).
 2. No navegador, menu do perfil → **"Restaurar dados de demonstração"**, para partir do seed atual.
 3. Crie a branch do bloco: `git switch -c feat/empresa`.
 4. Rode o prompt [`docs/prompts/E01-empresa-publico-e-painel.txt`](prompts/E01-empresa-publico-e-painel.txt) em modo de planejamento.
