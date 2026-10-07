@@ -1,13 +1,26 @@
+/* ============================================================================
+   SEED (DADOS DE DEMONSTRAÇÃO, FICTÍCIOS)
+   O que é: cria o conjunto inicial de empresas, pessoas, trilhas, projetos, alocações e tarefas do protótipo.
+   Onde é usado: lib/store.tsx (estado inicial e "Restaurar demonstração" do Topbar) e components/projetos/FormProjeto.tsx (COLUNAS_PADRAO).
+   Depende de: lib/tipos.ts (Dados, Coluna) e lib/utils.ts (hojeISO, somaDias).
+   Contexto: §5 (as 4 colunas padrão do quadro), §16 (Bruno passa de 40 h de propósito, para mostrar o aviso de carga).
+   ============================================================================ */
+
 import type { Dados, Coluna } from './tipos';
 import { hojeISO, somaDias } from './utils';
 
-/* ============================================================================
-   DADOS DE DEMONSTRAÇÃO (fictícios)
-   As datas são geradas a partir de hoje, para que prazos, atrasos e
-   alertas façam sentido sempre que o sistema for aberto.
-   Quando a API existir, este arquivo deixa de ser usado.
-   ============================================================================ */
+/*
+ * As datas são geradas a partir de hoje, para que prazos, atrasos e
+ * alertas façam sentido sempre que o sistema for aberto.
+ * Quando a API existir, este arquivo deixa de ser usado.
+ * TODO(API): apagar este arquivo quando os dados vierem da API da PROGLOGIC.
+ */
 
+/**
+ * As quatro colunas com que todo projeto nasce (§5): A fazer, Fazendo, Revisão, Pronto.
+ * ⚠️ ATENÇÃO: a ÚLTIMA coluna conta como "pronto" em lib/metricas.ts e lib/store.tsx;
+ * mudar a ordem muda o que é considerado concluído. Usada também em FormProjeto.
+ */
 export const COLUNAS_PADRAO: Coluna[] = [
   { id: 'col_afazer', titulo: 'A fazer' },
   { id: 'col_fazendo', titulo: 'Fazendo' },
@@ -15,18 +28,30 @@ export const COLUNAS_PADRAO: Coluna[] = [
   { id: 'col_pronto', titulo: 'Pronto' },
 ];
 
+/**
+ * Monta os dados de demonstração com datas relativas ao dia de hoje.
+ * Cada chamada gera um objeto novo (nada é compartilhado entre chamadas).
+ * @returns um objeto `Dados` completo, pronto para a store.
+ * @example const dados = criarSeed(); dados.projetos.length // 3
+ */
+// SIMULADO: tudo aqui é fictício (domínios .example, CNPJs de teste).
 export function criarSeed(): Dados {
   const h = hojeISO();
+  // Atalho: d(-14) = 14 dias atrás; d(45) = daqui a 45 dias (AAAA-MM-DD).
   const d = (n: number) => somaDias(h, n);
+  // Data-hora ISO de "N horas atrás", usada nos comentários (3600000 ms = 1 h).
   const agoraMenos = (horas: number) => new Date(Date.now() - horas * 3600000).toISOString();
 
   return {
+    // Quatro empresas em situações diferentes (ativa, em negociação, encerrada) para testar filtros e etiquetas.
     empresas: [
       { id: 'emp_vertice', razaoSocial: 'Vértice Logística Integrada Ltda.', nomeFantasia: 'Vértice Logística', cnpj: '11.222.333/0001-81', segmento: 'Logística', porte: 'Médio', site: 'https://vertice.example', cep: '50030-230', logradouro: 'Av. Rio Branco', numero: '120', cidadeUf: 'Recife / PE', contatoNome: 'Marcos Vieira', contatoEmail: 'marcos@vertice.example', contatoTelefone: '(81) 99876-1122', contatoCargo: 'Gerente de TI', status: 'ativa', dataEntrada: d(-60) },
       { id: 'emp_aurora', razaoSocial: 'Aurora Saúde e Bem-Estar S.A.', nomeFantasia: 'Aurora Saúde', cnpj: '45.678.901/0001-75', segmento: 'Saúde', porte: 'Grande', site: 'https://aurora.example', cep: '52011-000', logradouro: 'Rua da Aurora', numero: '455', cidadeUf: 'Recife / PE', contatoNome: 'Patrícia Melo', contatoEmail: 'patricia@aurora.example', contatoTelefone: '(81) 98765-3344', contatoCargo: 'Diretora de Produto', status: 'ativa', dataEntrada: d(-30) },
       { id: 'emp_mare', razaoSocial: 'Maré Alta Comércio Varejista Ltda.', nomeFantasia: 'Maré Alta Varejo', cnpj: '90.817.263/0001-80', segmento: 'Varejo', porte: 'Pequeno', site: '', cep: '', logradouro: '', numero: '', cidadeUf: 'Olinda / PE', contatoNome: 'Rafael Costa', contatoEmail: 'rafael@marealta.example', contatoTelefone: '(81) 99111-2233', contatoCargo: 'Sócio', status: 'negociacao', dataEntrada: d(-5) },
       { id: 'emp_agro', razaoSocial: 'Nordeste Agro Tecnologia Ltda.', nomeFantasia: 'Nordeste Agro', cnpj: '33.445.566/0001-86', segmento: 'Agronegócio', porte: 'Médio', site: 'https://nordesteagro.example', cep: '', logradouro: '', numero: '', cidadeUf: 'Petrolina / PE', contatoNome: 'Júlia Farias', contatoEmail: 'julia@nordesteagro.example', contatoTelefone: '(87) 99222-4455', contatoCargo: 'Coordenadora', status: 'encerrada', dataEntrada: d(-200) },
     ],
+    // Pessoas dos três perfis. pes_admin, pes_ana e pes_marcos batem com as contas SIMULADAS de lib/auth.tsx.
+    // ⚠️ ATENÇÃO: mudar esses ids ou e-mails desencontra o login de demonstração e o cadastro.
     pessoas: [
       { id: 'pes_admin', nome: 'Administrador CAIS', email: 'admin@cais.com.br', telefone: '', cargo: 'Coordenação do programa', perfil: 'admin', status: 'ativo', dataEntrada: d(-120), area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId: '' },
       { id: 'pes_ana', nome: 'Ana Souza', email: 'ana.souza@cais.example', telefone: '(81) 99000-0001', cargo: 'Desenvolvedora', perfil: 'profissional', status: 'ativo', dataEntrada: d(-90), area: 'Front-end', nivel: 'Pleno', cargaMax: 40, habilidades: ['React', 'TypeScript', 'Liderança'], empresaId: '' },
@@ -38,6 +63,7 @@ export function criarSeed(): Dados {
       { id: 'pes_marcos', nome: 'Marcos Vieira', email: 'marcos@vertice.example', telefone: '(81) 99876-1122', cargo: 'Gerente de TI', perfil: 'empresa', status: 'ativo', dataEntrada: d(-60), area: '', nivel: '', cargaMax: 0, habilidades: [], empresaId: 'emp_vertice' },
       { id: 'pes_patricia', nome: 'Patrícia Melo', email: 'patricia@aurora.example', telefone: '(81) 98765-3344', cargo: 'Diretora de Produto', perfil: 'empresa', status: 'ativo', dataEntrada: d(-30), area: '', nivel: '', cargaMax: 0, habilidades: [], empresaId: 'emp_aurora' },
     ],
+    // Uma trilha de cada alcance (geral, empresa, profissional) + um rascunho, para o painel ter todos os casos (§4).
     trilhas: [
       {
         id: 'tri_boasvindas', titulo: 'Boas-vindas ao programa', descricao: 'Como a residência funciona, código de conduta e ferramentas do dia a dia.',
@@ -83,11 +109,13 @@ export function criarSeed(): Dados {
         progresso: {},
       },
     ],
+    // Dois projetos em andamento e um planejado (que só começa daqui a 7 dias).
     projetos: [
       { id: 'prj_portal', nome: 'Portal de pedidos', tipo: 'Aplicação web', empresaId: 'emp_vertice', contatoNome: 'Marcos Vieira', descricao: 'Portal para os clientes da Vértice acompanharem pedidos, entregas e notas fiscais em tempo real.', inicio: d(-14), entrega: d(45), prioridade: 'alta', liderId: 'pes_ana', status: 'andamento', cor: 'roxo', colunas: COLUNAS_PADRAO },
       { id: 'prj_estoque', nome: 'Painel de estoque', tipo: 'Dashboard', empresaId: 'emp_vertice', contatoNome: 'Marcos Vieira', descricao: 'Painel interno com níveis de estoque por centro de distribuição.', inicio: d(-7), entrega: d(30), prioridade: 'media', liderId: 'pes_bruno', status: 'andamento', cor: 'verde', colunas: COLUNAS_PADRAO },
       { id: 'prj_agenda', nome: 'App de agendamento', tipo: 'Aplicativo móvel', empresaId: 'emp_aurora', contatoNome: 'Patrícia Melo', descricao: 'Agendamento de consultas pelo celular, com lembretes e confirmação.', inicio: d(7), entrega: d(80), prioridade: 'media', liderId: 'pes_carla', status: 'planejado', cor: 'ambar', colunas: COLUNAS_PADRAO },
     ],
+    // Bruno soma 30 h + 15 h = 45 h (acima das 40 h) de propósito: mostra o aviso de carga (§5: "é aviso, não bloqueio").
     alocacoes: [
       { id: 'alo_1', projetoId: 'prj_portal', pessoaId: 'pes_ana', papel: 'Líder', inicio: d(-14), fim: d(45), carga: 20, obs: '' },
       { id: 'alo_2', projetoId: 'prj_portal', pessoaId: 'pes_bruno', papel: 'Front-end', inicio: d(-14), fim: d(45), carga: 30, obs: '' },
@@ -97,6 +125,7 @@ export function criarSeed(): Dados {
       { id: 'alo_6', projetoId: 'prj_estoque', pessoaId: 'pes_elisa', papel: 'Front-end', inicio: d(-7), fim: d(30), carga: 20, obs: '' },
       { id: 'alo_7', projetoId: 'prj_agenda', pessoaId: 'pes_carla', papel: 'Líder', inicio: d(7), fim: d(80), carga: 15, obs: '' },
     ],
+    // Tarefas nas 4 colunas; algumas com prazo já vencido (d(-2), d(-1)) para mostrar atraso.
     tarefas: [
       { id: 'tar_1', projetoId: 'prj_portal', colunaId: 'col_afazer', titulo: 'Tela de login', descricao: 'Tela de acesso com e-mail e senha, estados de erro e link para recuperar a senha.', responsavelId: 'pes_bruno', prazo: d(15), prioridade: 'alta', etiquetas: ['Front', 'Login'], checklist: [{ id: 'c1', texto: 'Layout aprovado', feito: true }, { id: 'c2', texto: 'Estados de erro', feito: true }, { id: 'c3', texto: 'Versão para celular', feito: false }, { id: 'c4', texto: 'Ligar à API real', feito: false }], comentarios: [{ id: 'm1', autorId: 'pes_ana', texto: 'Falta o estado de senha errada.', data: agoraMenos(2) }], ordem: 0 },
       { id: 'tar_2', projetoId: 'prj_portal', colunaId: 'col_afazer', titulo: 'Ficha da empresa', descricao: '', responsavelId: 'pes_carla', prazo: d(17), prioridade: 'media', etiquetas: ['Front'], checklist: Array.from({ length: 6 }, (_, i) => ({ id: 'f' + i, texto: `Item ${i + 1}`, feito: false })), comentarios: [], ordem: 1 },
