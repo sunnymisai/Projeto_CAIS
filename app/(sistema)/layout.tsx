@@ -1,13 +1,15 @@
 /* ============================================================================
    APP/(SISTEMA)/LAYOUT.TSX (CASCA PROTEGIDA)
    O que é: a casca (menu lateral + topo + área de conteúdo) de todas as telas
-     internas, e o "porteiro" que barra quem não está logado ou não é admin.
+     internas, e o "porteiro" que barra quem não está logado ou cujo perfil
+     não pode abrir a rota (lib/permissoes.ts).
    Onde é usado: pelo Next.js, automaticamente, em toda rota dentro de
      app/(sistema)/: /painel, /trilhas, /trilhas/[id], /projetos,
-     /projetos/[id], /empresas, /pessoas e /design-system. Os parênteses em
+     /projetos/[id], /empresas, /pessoas, /design-system, /perfil, /carga,
+     /acessos, /minhas-trilhas e /minhas-tarefas. Os parênteses em
      "(sistema)" agrupam pastas sem aparecer na URL.
    Depende de: lib/auth.tsx (useAuth → sessao e pronto), next/navigation
-     (useRouter, usePathname), components/shell/Sidebar.tsx,
+     (useRouter, usePathname), lib/permissoes.ts (podeAcessar), components/shell/Sidebar.tsx,
      components/shell/Topbar.tsx e components/CaisLogo.tsx (CaisMark).
    Contexto: §3 (perfis), §10 (anatomia de toda tela: só o conteúdo rola),
      §15 item 1 (shell da aplicação) e docs/notas-next16.md §4 (rotas
@@ -22,12 +24,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/components/shell/Sidebar';
 import Topbar from '@/components/shell/Topbar';
 import { useAuth } from '@/lib/auth';
+import { podeAcessar } from '@/lib/permissoes';
 import { CaisMark } from '@/components/CaisLogo';
 
 /**
  * Casca de todas as telas internas.
  * - Protege as rotas: sem sessão volta para o login (com ?voltar=); sessão
- *   com perfil diferente de admin vai para /sem-permissao.
+ *   cujo perfil não pode abrir a rota (podeAcessar) vai para /sem-permissao.
  * - Enquanto a sessão ainda está sendo lida (`pronto` falso), mostra só o
  *   símbolo do CAIS pulsando ("verificando acesso"), para não piscar a tela
  *   interna para quem não deveria vê-la.
@@ -64,15 +67,15 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     // replace (e não push) para o botão "voltar" do navegador não cair de
     // novo na tela protegida.
     if (!sessao) router.replace(`/login?voltar=${encodeURIComponent(caminho)}`);
-    // NAVEGA: logado, mas não é admin → tela de acesso negado.
-    else if (sessao.perfil !== 'admin') router.replace('/sem-permissao');
+    // NAVEGA: logado, mas o perfil não pode abrir esta rota → tela de acesso negado.
+    else if (!podeAcessar(sessao.perfil, caminho)) router.replace('/sem-permissao');
   }, [pronto, sessao, router, caminho]);
 
   // Enquanto verifica (ou enquanto o redirecionamento acima não acontece),
   // nunca mostra a casca: só o símbolo pulsando no meio da tela.
-  // ⚠️ ATENÇÃO: esta condição precisa bater com a do useEffect; se alguém
-  // liberar outro perfil lá, precisa liberar aqui também.
-  if (!pronto || !sessao || sessao.perfil !== 'admin') {
+  // ⚠️ ATENÇÃO: esta condição precisa bater com a do useEffect (mesma regra
+  // podeAcessar); senão a tela proibida piscaria antes do redirecionamento.
+  if (!pronto || !sessao || !podeAcessar(sessao.perfil, caminho)) {
     return (
       // role="status": leitores de tela anunciam o texto "Verificando acesso…".
       <div className="flex h-screen items-center justify-center bg-fundo" role="status">

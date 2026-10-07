@@ -9,6 +9,11 @@ Cada entrada lista o que foi criado, modificado e removido.
 - Modificado: `tsconfig.json` ganhou `allowImportingTsExtensions` (só os arquivos acima usam `import ... from './x.ts'`, para o Node achar os módulos).
 - Nenhuma tela foi alterada. Regras ambíguas estão marcadas `// TODO(PROGLOGIC): confirmar`.
 
+### C02: login dos três perfis e proteção de rota
+- Modificado: `lib/auth.tsx` (sem bloqueio de perfil; `CONTA_DEMO` virou `CONTAS_DEMO` com as 4 contas: admin, Ana, Marcos/Vértice e Patrícia/Aurora; motivo `perfil` removido), `components/LoginForm.tsx` (seletor "Entrar como…" no lugar de "Preencher"; mensagem de perfil sem acesso removida), `app/(sistema)/layout.tsx` (usa `podeAcessar`), `app/sem-permissao/page.tsx` (explica o motivo; botões "Voltar ao painel" e "Entrar com outra conta").
+- Removido: o bloqueio `perfil !== admin` e a mensagem "perfil sem acesso".
+- Pendência: `/painel` mostra o painel do admin para Empresa e Profissional até o C03.
+
 ## Bloco B: homepage pública (branch `feat/homepage`)
 
 ### Criado

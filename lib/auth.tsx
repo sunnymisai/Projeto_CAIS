@@ -1,7 +1,7 @@
 /* ============================================================================
    AUTH (AUTENTICAÇÃO)
    O que é: guarda quem está logado (a sessão) e oferece entrar() e sair() para o resto do sistema.
-   Onde é usado: app/providers.tsx (monta o AuthProvider), app/(sistema)/layout.tsx (protege as rotas), app/(sistema)/painel/page.tsx, app/sem-permissao/page.tsx, components/LoginForm.tsx (useAuth e CONTA_DEMO), components/shell/Topbar.tsx e components/projetos/DetalheTarefa.tsx.
+   Onde é usado: app/providers.tsx (monta o AuthProvider), app/(sistema)/layout.tsx (protege as rotas), app/(sistema)/painel/page.tsx, app/sem-permissao/page.tsx, components/LoginForm.tsx (useAuth e CONTAS_DEMO), components/shell/Topbar.tsx e components/projetos/DetalheTarefa.tsx.
    Depende de: React (Context, useState, useEffect, useCallback), lib/tipos.ts (Perfil), localStorage e sessionStorage do navegador.
    Contexto: §3 (Perfis), §7 (autenticação no back é da PROGLOGIC), §12 e §15 item 1 (Login e primeiro acesso).
    ============================================================================ */
@@ -12,7 +12,9 @@ import { createContext, useCallback, useContext, useEffect, useState, ReactNode 
 import type { Perfil } from './tipos';
 
 /*
- * Nesta versão só o perfil ADMINISTRADOR entra no sistema.
+ * Os três perfis (Administrador, Empresa e Profissional) entram no sistema.
+ * O que cada um pode abrir é decidido por lib/permissoes.ts (podeAcessar),
+ * conferido pelo layout protegido; aqui só se confere e-mail e senha.
  *
  * >>> PARA LIGAR NA API DA PROGLOGIC <<<
  * Troque o corpo de `autenticar()` por um fetch para o endpoint de login.
@@ -38,23 +40,28 @@ export interface Sessao {
  * Resposta de `entrar()`.
  * - `{ ok: true }`: logou.
  * - `motivo: 'credenciais'`: e-mail ou senha errados.
- * - `motivo: 'perfil'`: senha certa, mas o perfil ainda não tem acesso nesta versão.
  */
-type ResultadoLogin = { ok: true } | { ok: false; motivo: 'credenciais' | 'perfil' };
+type ResultadoLogin = { ok: true } | { ok: false; motivo: 'credenciais' };
 
-/** Contas de demonstração. Remova quando a API estiver ligada. */
-// SIMULADO: e-mail e senha fixos no código, exibidos na tela de login (LoginForm).
-// ⚠️ ATENÇÃO: components/LoginForm.tsx importa CONTA_DEMO; apagar isto quebra o login.
-export const CONTA_DEMO = { email: 'admin@cais.com.br', senha: 'Cais@2026' };
+// SIMULADO: senha única de todas as contas de demonstração.
+const SENHA_DEMO = 'Cais@2026';
+
+/** Contas de demonstração, uma por perfil (a Empresa tem duas: Vértice e Aurora). */
+// SIMULADO: e-mails e senha fixos no código, listados no seletor "Entrar como…" do LoginForm.
+// ⚠️ ATENÇÃO: components/LoginForm.tsx importa CONTAS_DEMO; apagar isto quebra o seletor.
+// ⚠️ ATENÇÃO: os pessoaId precisam existir em lib/seed.ts (pessoas); senão o escopo
+// de lib/escopo.ts não acha a empresa/alocações da conta e a pessoa vê tudo vazio.
+// TODO(API): apagar junto com CONTAS quando a API estiver ligada.
+export const CONTAS_DEMO = [
+  { rotulo: 'Administrador', email: 'admin@cais.com.br', senha: SENHA_DEMO, pessoaId: 'pes_admin', nome: 'Administrador CAIS', perfil: 'admin' as Perfil },
+  { rotulo: 'Profissional · Ana Souza', email: 'ana.souza@cais.example', senha: SENHA_DEMO, pessoaId: 'pes_ana', nome: 'Ana Souza', perfil: 'profissional' as Perfil },
+  { rotulo: 'Empresa Vértice · Marcos Vieira', email: 'marcos@vertice.example', senha: SENHA_DEMO, pessoaId: 'pes_marcos', nome: 'Marcos Vieira', perfil: 'empresa' as Perfil },
+  { rotulo: 'Empresa Aurora · Patrícia Melo', email: 'patricia@aurora.example', senha: SENHA_DEMO, pessoaId: 'pes_patricia', nome: 'Patrícia Melo', perfil: 'empresa' as Perfil },
+];
 
 // SIMULADO: "banco" de usuários fixo, com senhas em texto puro — só serve para o protótipo.
 // TODO(API): apagar esta lista; quem confere e-mail e senha passa a ser a API.
-const CONTAS = [
-  { ...CONTA_DEMO, pessoaId: 'pes_admin', nome: 'Administrador CAIS', perfil: 'admin' as Perfil },
-  // Perfis ainda sem acesso nesta versão (servem para testar o bloqueio)
-  { email: 'ana.souza@cais.example', senha: 'Cais@2026', pessoaId: 'pes_ana', nome: 'Ana Souza', perfil: 'profissional' as Perfil },
-  { email: 'marcos@vertice.example', senha: 'Cais@2026', pessoaId: 'pes_marcos', nome: 'Marcos Vieira', perfil: 'empresa' as Perfil },
-];
+const CONTAS = CONTAS_DEMO;
 
 // Nome da chave no localStorage/sessionStorage onde a sessão fica guardada.
 const CHAVE = 'cais-sessao';
@@ -85,7 +92,7 @@ interface AuthCtx {
   pronto: boolean;
   /**
    * Tenta logar.
-   * @example const r = await entrar(email, senha, true); if (!r.ok && r.motivo === 'perfil') ...
+   * @example const r = await entrar(email, senha, true); if (!r.ok) mostrarErro(r.motivo)
    */
   entrar: (email: string, senha: string, lembrar: boolean) => Promise<ResultadoLogin>;
   /** Desloga e apaga a sessão do navegador. */
@@ -139,8 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const s = await autenticar(email, senha);
     // Credenciais erradas: o LoginForm mostra o erro de e-mail/senha.
     if (!s) return { ok: false, motivo: 'credenciais' };
-    // Nesta versão só o admin entra; os outros perfis vão para a mensagem de bloqueio.
-    if (s.perfil !== 'admin') return { ok: false, motivo: 'perfil' };
+    // Os três perfis entram; o que cada um vê é decidido depois, por rota (lib/permissoes.ts).
     // GRAVA: salva a sessão no navegador (localStorage ou sessionStorage).
     // TODO(API): guardar o token devolvido pela API (de preferência em cookie httpOnly definido pelo back).
     try {

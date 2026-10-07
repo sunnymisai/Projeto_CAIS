@@ -1,9 +1,9 @@
 /* ============================================================================
    LOGINFORM.TSX — FORMULÁRIO DE LOGIN
    O que é: o cartão de login (e-mail, senha, "Lembrar-me"), com validação ao
-   sair do campo, mensagens de erro claras e acesso de demonstração.
-   Onde é usado: app/page.tsx (tela de login, ao lado do BrandPanel).
-   Depende de: lib/auth (useAuth, CONTA_DEMO), next/navigation (useRouter,
+   sair do campo, mensagens de erro claras e seletor "Entrar como…" (demonstração).
+   Onde é usado: app/login/page.tsx (tela de login, ao lado do BrandPanel).
+   Depende de: lib/auth (useAuth, CONTAS_DEMO), components/ui/form (Select), next/navigation (useRouter,
    useSearchParams), lucide-react e dos componentes ./input, ./button,
    ./checkbox e ./CaisLogo.
    Contexto: §15 (organograma: Login → Shell; Esqueci a senha; Primeiro
@@ -13,8 +13,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, ArrowRight, CircleAlert, ShieldCheck } from "lucide-react";
-import { useAuth, CONTA_DEMO } from "@/lib/auth";
+import { Mail, Lock, ArrowRight, CircleAlert } from "lucide-react";
+import { useAuth, CONTAS_DEMO } from "@/lib/auth";
+import { Select } from "@/components/ui/form";
 
 import Input from "./input";
 import Button from "./button";
@@ -26,7 +27,7 @@ import { CaisMark } from "./CaisLogo";
    ============================================================================ */
 const COPY = {
   title: "Bem-vindo de volta",
-  subtitle: "Acesso do administrador do programa.",
+  subtitle: "Entre com a conta do seu perfil no programa.",
   emailLabel: "E-mail",
   emailPlaceholder: "voce@empresa.com",
   passwordLabel: "Senha",
@@ -41,9 +42,9 @@ const COPY = {
   emailInvalid: "Use um e-mail no formato nome@empresa.com.",
   passwordRequired: "Informe sua senha.",
   authFailed: "E-mail ou senha incorretos. Confira os dados e tente de novo.",
-  perfilSemAcesso: "Seu perfil ainda não tem acesso nesta versão. Por enquanto, só administradores entram no sistema.",
-  demoTitle: "Acesso de demonstração",
-  demoFill: "Preencher",
+  demoLabel: "Entrar como…",
+  demoPlaceholder: "Escolha uma conta de demonstração",
+  demoHint: "Só no protótipo: preenche e-mail e senha. Você ainda clica em Entrar.",
 };
 
 /* ============================================================================
@@ -116,7 +117,7 @@ export const LoginForm = () => {
   // Roda quando a sessão termina de carregar (pronto) ou muda; não há o que limpar.
   // NAVEGA: replace (e não push) para a tela de login não ficar no histórico do "voltar".
   useEffect(() => {
-    if (pronto && sessao?.perfil === "admin") router.replace(destino);
+    if (pronto && sessao) router.replace(destino);
   }, [pronto, sessao, router, destino]);
 
   // Estado "sucesso" (borda verde) só depois de tocado e com formato válido.
@@ -176,8 +177,8 @@ export const LoginForm = () => {
         router.replace(destino);
         return; // mantém o botão carregando até a troca de página
       }
-      // Login recusado: perfil sem acesso nesta versão ou e-mail/senha errados.
-      setAuthError(r.motivo === "perfil" ? COPY.perfilSemAcesso : COPY.authFailed);
+      // Login recusado: e-mail ou senha errados (o perfil não bloqueia mais: as rotas é que filtram).
+      setAuthError(COPY.authFailed);
       setShakeKey((k) => k + 1);
     } catch {
       // Falha de rede ou servidor (a promessa deu erro): mensagem diferente de "senha errada".
@@ -298,20 +299,31 @@ export const LoginForm = () => {
         </Button>
       </form>
 
-      {/* SIMULADO: acesso de demonstração com a conta fictícia de lib/auth (CONTA_DEMO).
+      {/* SIMULADO: seletor "Entrar como…" com as contas fictícias de lib/auth (CONTAS_DEMO).
+       * Ao escolher uma, preenche e-mail e senha e limpa erros antigos; não entra sozinho:
+       * a pessoa ainda clica em Entrar. Fica numa caixa tracejada e discreta, fora do <form>,
+       * para não ser confundido com um campo do login.
        * TODO(API): remover esta caixa quando a API real estiver ligada. */}
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-dashed border-borda bg-superficie-alt/60 px-4 py-3">
-        <ShieldCheck className="h-5 w-5 shrink-0 text-primaria" aria-hidden="true" />
-        <div className="min-w-0 flex-1 text-[13px] leading-snug">
-          <p className="font-semibold text-tinta">{COPY.demoTitle}</p>
-          <p className="truncate text-tinta-suave">{CONTA_DEMO.email} · {CONTA_DEMO.senha}</p>
-        </div>
-        {/* SIMULADO: "Preencher" coloca o e-mail e a senha da conta demo nos campos e
-         * limpa erros antigos. Não entra sozinho: a pessoa ainda clica em Entrar. */}
-        <button type="button" onClick={() => { setEmail(CONTA_DEMO.email); setPassword(CONTA_DEMO.senha); setErros({}); setAuthError(""); }}
-          className="rounded-lg px-2.5 py-1.5 text-[13px] font-semibold text-primaria hover:bg-primaria-suave focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50">
-          {COPY.demoFill}
-        </button>
+      <div className="mt-6 rounded-xl border border-dashed border-borda bg-superficie-alt/60 px-4 py-3">
+        <Select
+          label={COPY.demoLabel}
+          placeholder={COPY.demoPlaceholder}
+          hint={COPY.demoHint}
+          // Não controlado: o select só dispara o preenchimento; o que vale são os campos de e-mail e senha.
+          defaultValue=""
+          disabled={loading}
+          opcoes={CONTAS_DEMO.map((c) => ({ valor: c.email, rotulo: c.rotulo }))}
+          onChange={(e) => {
+            const conta = CONTAS_DEMO.find((c) => c.email === e.target.value);
+            // Opção vazia (placeholder): não faz nada.
+            if (!conta) return;
+            // GRAVA: só o estado local do formulário (e-mail e senha digitados).
+            setEmail(conta.email);
+            setPassword(conta.senha);
+            setErros({});
+            setAuthError("");
+          }}
+        />
       </div>
 
       <p className="mt-6 border-t border-borda pt-5 text-center text-sm text-tinta-suave">
