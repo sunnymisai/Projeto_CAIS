@@ -7,16 +7,16 @@ Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles
 
 | Bloco | Prompts | Situação | Último commit |
 |---|---|---|---|
-| A · Fundação | A01 a A06 | ✅ feito, no `master` | `b824e34` |
-| B · Homepage | B01 a B04 | ✅ feito, no `master` | `c82712d` |
-| C · Perfis e acesso | C01 a C08 + revisão H01 | ✅ feito, no `master` | `c8e097a` |
-| D · Profissional | D01 a D05 | ✅ feito, no `master` | `ef7633b` |
+| A · Fundação | A01 a A06 | ✅ feito, no `main` | `b824e34` |
+| B · Homepage | B01 a B04 | ✅ feito, no `main` | `c82712d` |
+| C · Perfis e acesso | C01 a C08 + revisão H01 | ✅ feito, no `main` | `c8e097a` |
+| D · Profissional | D01 a D05 | ✅ feito, no `main` | `ef7633b` |
 | E · Empresa | E01, E02 | ⏳ **próximo**: começar pelo E01 | — |
 | F · Semáforo de carga | F01 a F04 | ⏳ a fazer (depende de C03; o F04 usa o D05) | — |
 | G · Lacunas do deck | G01, G02, G03 | ⏳ a fazer | — |
 | H · Revisão | H01 | 🔁 rodar ao fim de cada bloco (a do bloco D ainda não foi feita) | — |
 
-Fora dos prompts, já no `master`:
+Fora dos prompts, já no `main`:
 - `b553e8d`: some a bolinha "N" do Next no `npm run dev`; os botões "Entrar como" do login ficam um embaixo do outro, com ícone.
 - `9d1c03f`: **painel da Empresa em versão de apresentação** (andamento dos projetos, quem está no time, entregas e trilha do time). O **E01 deve partir dele** e aprofundar, não recomeçar do zero.
 
@@ -72,5 +72,6 @@ node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, des
 
 ## Repositório
 
-- O git é só local até agora. O responsável vai criar o repositório remoto depois de testar as features e mandar o link; aí entram `git remote add origin <link>` e o push do `master` e das branches.
-- Branches locais de cada bloco continuam existindo (`feat/homepage`, `feat/tres-perfis`, `feat/fluxos-de-acesso`, `feat/perfil`, `feat/acessos`, `feat/profissional`, `fix/login-visual`, `feat/painel-empresa`...). Todas já estão no `master`.
+- Remoto: **https://github.com/sunnymisai/Projeto_CAIS** (branch principal `main`; antes de 07/10/2026 ela se chamava `master` localmente, e o CHANGELOG antigo ainda fala em `master`).
+- As branches de cada bloco também foram enviadas (`feat/homepage`, `feat/tres-perfis`, `feat/fluxos-de-acesso`, `feat/perfil`, `feat/acessos`, `feat/profissional`, `fix/login-visual`, `feat/painel-empresa`...). Todas já estão dentro do `main`.
+- Fluxo daqui para a frente: branch por bloco (`git switch -c feat/empresa`), commits pequenos, merge no `main` com aprovação e `git push`. Antes de todo push: `node testes/auditar-comentarios.mjs` com 0 pontos.
