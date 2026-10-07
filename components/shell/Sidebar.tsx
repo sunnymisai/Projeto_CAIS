@@ -1,10 +1,11 @@
 /* ============================================================================
    SIDEBAR.TSX — MENU LATERAL DO SHELL
    O que é: o menu de navegação à esquerda, que marca a tela atual; no
-   celular vira uma gaveta que abre por cima do conteúdo.
+   celular vira uma gaveta que abre por cima do conteúdo. Mostra só os itens
+   do perfil da sessão.
    Onde é usado: app/(sistema)/layout.tsx (em todas as telas logadas).
    Depende de: next/link, next/navigation (usePathname), lucide-react,
-   components/CaisLogo, ./navegacao (lista de itens) e lib/utils (cx).
+   components/CaisLogo, ./navegacao (lista de itens), lib/auth (useAuth) e lib/utils (cx).
    Contexto: §10 (anatomia: menu sempre no mesmo lugar, marca onde você está)
    e §15 (organograma: shell da aplicação).
    ============================================================================ */
@@ -15,7 +16,11 @@ import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import CaisLogo from '@/components/CaisLogo';
 import { NAVEGACAO } from './navegacao';
+import { useAuth } from '@/lib/auth';
 import { cx } from '@/lib/utils';
+
+/** Nome de cada perfil, em português, para o rodapé do menu. */
+const NOME_PERFIL = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' } as const;
 
 /**
  * Menu lateral: sempre no mesmo lugar e marca onde você está (§10).
@@ -29,6 +34,12 @@ import { cx } from '@/lib/utils';
 export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: boolean; onFechar: () => void }) {
   // Endereço atual (ex.: "/projetos/p1"), usado para destacar o item ativo.
   const caminho = usePathname();
+  const { sessao } = useAuth();
+  // Filtra o menu pelo perfil: tira os itens que o perfil não enxerga e os grupos que ficaram vazios.
+  // Sem sessão (só por um instante, antes do layout redirecionar) o menu fica vazio.
+  const grupos = NAVEGACAO
+    .map((g) => ({ ...g, itens: g.itens.filter((i) => !!sessao && i.perfis.includes(sessao.perfil)) }))
+    .filter((g) => g.itens.length > 0);
 
   // O conteúdo do menu é montado uma vez nesta variável e reaproveitado nas duas
   // versões (desktop e gaveta do celular), para não duplicar código.
@@ -47,7 +58,7 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
 
       <div className="rolagem flex-1 space-y-6 overflow-y-auto px-3 py-4">
         {/* ⚠️ ATENÇÃO: lista vinda de navegacao.ts; uma tela nova precisa ser registrada lá. */}
-        {NAVEGACAO.map((g) => (
+        {grupos.map((g) => (
           <div key={g.grupo}>
             <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">{g.grupo}</p>
             <ul className="space-y-0.5">
@@ -75,9 +86,9 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
         ))}
       </div>
 
-      {/* SIMULADO: perfil fixo no rodapé; no protótipo só o Administrador entra. */}
+      {/* Perfil da sessão no rodapé (vem de lib/auth). */}
       <div className="border-t border-white/[0.07] px-5 py-4 text-[12px] leading-relaxed text-white/40">
-        <p className="font-semibold text-white/60">Perfil Administrador</p>
+        <p className="font-semibold text-white/60">Perfil {sessao ? NOME_PERFIL[sessao.perfil] : ''}</p>
         <p>Versão de demonstração · dados fictícios</p>
       </div>
     </nav>

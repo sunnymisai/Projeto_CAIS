@@ -14,6 +14,11 @@ Cada entrada lista o que foi criado, modificado e removido.
 - Removido: o bloqueio `perfil !== admin` e a mensagem "perfil sem acesso".
 - Pendência: `/painel` mostra o painel do admin para Empresa e Profissional até o C03.
 
+### C03: menu, topo e painel por perfil
+- Criado: `components/paineis/PainelAdmin.tsx` (o painel antigo, sem mudar o comportamento), `PainelEmpresa.tsx` e `PainelProfissional.tsx` (esqueletos); `components/shell/EmConstrucao.tsx`; rotas `/carga`, `/acessos`, `/minhas-trilhas`, `/minhas-tarefas` e `/perfil` (todas "Em construção").
+- Modificado: `app/(sistema)/painel/page.tsx` (só escolhe o painel pelo perfil), `components/shell/navegacao.ts` (cada item tem `perfis`), `Sidebar.tsx` (filtra por perfil e mostra o perfil no rodapé), `Topbar.tsx` (Etiqueta com o perfil, "Meu perfil" no menu, busca e avisos só com o que `lib/escopo` e `podeAcessar` permitem).
+- Removido: o texto fixo "Perfil Administrador" do menu e do topo.
+
 ## Bloco B: homepage pública (branch `feat/homepage`)
 
 ### Criado

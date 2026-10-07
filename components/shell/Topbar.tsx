@@ -1,11 +1,12 @@
 /* ============================================================================
    TOPBAR.TSX — BARRA DO TOPO DO SHELL
    O que é: a faixa no alto de toda tela logada, com busca global (Ctrl+K),
-   avisos (atrasos e sobrecarga), troca de tema e menu do perfil.
+   avisos (atrasos e sobrecarga), troca de tema e menu do perfil. Busca e avisos
+   só mostram o que o perfil da sessão pode ver (lib/escopo.ts e lib/permissoes.ts).
    Onde é usado: app/(sistema)/layout.tsx (em todas as telas logadas).
    Depende de: lib/auth (useAuth), lib/store (useDados), lib/toast (useToast),
-   lib/utils, next/navigation (useRouter), next/link, lucide-react,
-   components/ThemeToggle, components/ui/Menu e components/ui/basicos (Avatar).
+   lib/escopo (filtros por sessão), lib/permissoes (podeAcessar), lib/utils, next/navigation (useRouter), next/link, lucide-react,
+   components/ThemeToggle, components/ui/Menu e components/ui/basicos (Avatar, Etiqueta).
    Contexto: §10 (anatomia: topo com busca, avisos e perfil), §5 (aviso de
    carga acima de 40 h: "é aviso, não bloqueio") e §15 (shell da aplicação).
    ============================================================================ */
@@ -14,14 +15,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, Menu as MenuIcone, Search, LogOut, RotateCcw, Building2, Users, FolderKanban, GraduationCap, Clock, Gauge } from 'lucide-react';
+import { Bell, Menu as MenuIcone, Search, LogOut, RotateCcw, UserRound, Building2, Users, FolderKanban, GraduationCap, Clock, Gauge } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import Menu, { ItemMenu } from '@/components/ui/Menu';
-import { Avatar } from '@/components/ui/basicos';
+import { Avatar, Etiqueta } from '@/components/ui/basicos';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { useToast } from '@/lib/toast';
+import { empresasVisiveis, pessoasVisiveis, projetosVisiveis, tarefasVisiveis } from '@/lib/escopo';
+import { podeAcessar } from '@/lib/permissoes';
+import type { Perfil } from '@/lib/tipos';
 import { cx, hojeISO, normalizar, dataCurta } from '@/lib/utils';
+
+/** Nome de cada perfil, em português, para a Etiqueta ao lado do nome. */
+const NOME_PERFIL: Record<Perfil, string> = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' };
 
 /**
  * Topo da aplicação: busca, avisos e o seu perfil (§10).
@@ -66,6 +73,9 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
   }, []);
 
   // Resultados da busca: recalcula só quando o texto ou os dados mudam (useMemo).
+  // ESCOPO: cada tipo só entra se o perfil PODE abrir a tela dele (podeAcessar) e,
+  // dentro do tipo, só o que lib/escopo.ts deixa a sessão ver. Assim a busca nunca
+  // sugere um link que levaria a /sem-permissao nem revela dado de outra empresa.
   // TODO(API): hoje a busca roda no navegador sobre a store; com a API da
   // PROGLOGIC vira uma chamada ao servidor (com debounce para não chamar a cada letra).
   const resultados = useMemo(() => {
@@ -73,18 +83,21 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
     const q = normalizar(busca.trim());
     // Menos de 2 letras: não busca (1 letra traria quase tudo).
     if (q.length < 2) return [];
+    // Sem sessão não há escopo: não mostra nada (o layout já teria redirecionado).
+    if (!sessao) return [];
+    const perfil = sessao.perfil;
     // Atalho: "este texto contém o que foi buscado?".
     const m = (s: string) => normalizar(s).includes(q);
     // Junta os quatro tipos num formato único { tipo, titulo, sub, href, icone }
     // e mostra no máximo 8. Empresas e pessoas não têm página própria: o
     // "?abrir=<id>" pede à lista que abra o modal daquele item.
     return [
-      ...dados.projetos.filter((p) => m(p.nome)).map((p) => ({ id: p.id, tipo: 'Projeto', titulo: p.nome, sub: dados.empresa(p.empresaId)?.nomeFantasia ?? '', href: `/projetos/${p.id}`, icone: FolderKanban })),
-      ...dados.empresas.filter((e) => m(e.nomeFantasia) || m(e.razaoSocial) || m(e.cnpj)).map((e) => ({ id: e.id, tipo: 'Empresa', titulo: e.nomeFantasia, sub: e.cnpj, href: `/empresas?abrir=${e.id}`, icone: Building2 })),
-      ...dados.pessoas.filter((p) => m(p.nome) || m(p.email)).map((p) => ({ id: p.id, tipo: 'Pessoa', titulo: p.nome, sub: p.email, href: `/pessoas?abrir=${p.id}`, icone: Users })),
-      ...dados.trilhas.filter((t) => m(t.titulo)).map((t) => ({ id: t.id, tipo: 'Trilha', titulo: t.titulo, sub: `${t.etapas.length} etapas`, href: `/trilhas/${t.id}`, icone: GraduationCap })),
+      ...projetosVisiveis(sessao, dados).filter((p) => m(p.nome)).map((p) => ({ id: p.id, tipo: 'Projeto', titulo: p.nome, sub: dados.empresa(p.empresaId)?.nomeFantasia ?? '', href: `/projetos/${p.id}`, icone: FolderKanban })),
+      ...(podeAcessar(perfil, '/empresas') ? empresasVisiveis(sessao, dados) : []).filter((e) => m(e.nomeFantasia) || m(e.razaoSocial) || m(e.cnpj)).map((e) => ({ id: e.id, tipo: 'Empresa', titulo: e.nomeFantasia, sub: e.cnpj, href: `/empresas?abrir=${e.id}`, icone: Building2 })),
+      ...(podeAcessar(perfil, '/pessoas') ? pessoasVisiveis(sessao, dados) : []).filter((p) => m(p.nome) || m(p.email)).map((p) => ({ id: p.id, tipo: 'Pessoa', titulo: p.nome, sub: p.email, href: `/pessoas?abrir=${p.id}`, icone: Users })),
+      ...(podeAcessar(perfil, '/trilhas') ? dados.trilhas : []).filter((t) => m(t.titulo)).map((t) => ({ id: t.id, tipo: 'Trilha', titulo: t.titulo, sub: `${t.etapas.length} etapas`, href: `/trilhas/${t.id}`, icone: GraduationCap })),
     ].slice(0, 8);
-  }, [busca, dados]);
+  }, [busca, dados, sessao]);
 
   // NAVEGA: limpa a busca, tira o foco do campo (fecha a lista) e vai para o resultado.
   const ir = useCallback((href: string) => { setBusca(''); (document.activeElement as HTMLElement | null)?.blur(); router.push(href); }, [router]);
@@ -92,11 +105,15 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
   /* ---------- Avisos calculados a partir dos dados ---------- */
   // Avisos calculados na hora a partir dos dados (recalcula quando os dados mudam).
   // TODO(API): no sistema real virão do servidor como notificações, em tempo real.
+  // ESCOPO: só tarefas dos projetos que a sessão enxerga; o aviso de sobrecarga de
+  // pessoas é do Administrador (a tela /pessoas, para onde ele leva, é só dele).
   const avisos = useMemo(() => {
+    // Sem sessão não há o que avisar.
+    if (!sessao) return [];
     // Data de hoje como "AAAA-MM-DD": nesse formato dá para comparar datas como texto.
     const hoje = hojeISO();
     const lista: { id: string; texto: string; sub: string; href: string; tipo: 'atraso' | 'carga' }[] = [];
-    for (const t of dados.tarefas) {
+    for (const t of tarefasVisiveis(sessao, dados)) {
       const proj = dados.projeto(t.projetoId);
       // A última coluna do quadro (ex.: "Pronto") significa tarefa concluída.
       const ultima = proj?.colunas[proj.colunas.length - 1]?.id;
@@ -106,13 +123,13 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
       }
     }
     // Sobrecarga: só profissionais têm carga semanal.
-    for (const p of dados.pessoas.filter((x) => x.perfil === 'profissional')) {
+    for (const p of podeAcessar(sessao.perfil, '/pessoas') ? dados.pessoas.filter((x) => x.perfil === 'profissional') : []) {
       const carga = dados.cargaDaPessoa(p.id);
       // Passou do limite da pessoa → aviso (nunca bloqueio, §5).
       if (carga > p.cargaMax) lista.push({ id: p.id, tipo: 'carga', texto: `${p.nome} está com ${carga} h/sem`, sub: `Acima do limite de ${p.cargaMax} h`, href: `/pessoas?abrir=${p.id}` });
     }
     return lista;
-  }, [dados]);
+  }, [dados, sessao]);
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-3 border-b border-borda bg-superficie px-4 sm:px-6">
@@ -214,12 +231,12 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
         <Menu gatilho={(p) => (
           <button onClick={p.alternar} aria-expanded={p['aria-expanded']} aria-haspopup="menu" aria-label="Menu do perfil"
             className="flex items-center gap-2 rounded-full p-0.5 pr-0.5 hover:bg-superficie-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50 sm:pr-3">
-            <Avatar nome={sessao?.nome ?? 'Admin'} tamanho={36} />
+            <Avatar nome={sessao?.nome ?? 'Usuário'} tamanho={36} />
             {/* Nome e perfil ficam escondidos no celular; lá aparece só o avatar. */}
             <span className="hidden text-left sm:block">
               <span className="block text-[13px] font-semibold leading-tight text-tinta">{sessao?.nome}</span>
-              {/* SIMULADO: perfil fixo; nesta versão só administradores entram. */}
-              <span className="block text-[11px] leading-tight text-tinta-suave">Administrador</span>
+              {/* Etiqueta com o perfil da sessão (texto, não só cor: §9). */}
+              {sessao && <span className="mt-0.5 block"><Etiqueta tom="neutro">{NOME_PERFIL[sessao.perfil]}</Etiqueta></span>}
             </span>
           </button>
         )}>
@@ -230,6 +247,11 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
                 <p className="truncate text-[12px] text-tinta-suave">{sessao?.email}</p>
               </div>
               <div className="pt-1.5">
+                {/* NAVEGA: "Meu perfil" abre /perfil (liberado aos três perfis) e fecha o menu. */}
+                <Link href="/perfil" onClick={fechar} role="menuitem" className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-tinta hover:bg-superficie-alt focus-visible:bg-superficie-alt focus-visible:outline-none [&_svg]:h-4 [&_svg]:w-4 [&_svg]:text-tinta-suave">
+                  <UserRound aria-hidden />
+                  Meu perfil
+                </Link>
                 {/* APAGA: descarta tudo o que foi criado ou alterado no protótipo.
                  * GRAVA: recoloca os dados de demonstração originais (seed) na store, que os
                  * salva no localStorage. Depois fecha o menu e confirma com um aviso (toast).
