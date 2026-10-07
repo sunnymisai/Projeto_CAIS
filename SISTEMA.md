@@ -11,7 +11,11 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `node testes/navegador/d02-minhas-trilhas.mjs` `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs` ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Casos de lógica sem navegador: `node --experimental-strip-types lib/permissoes.casos.ts` e `lib/quiz.casos.ts`. Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs` ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+
+**Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts` e `lib/metricas.casos.ts`.
+
+**Padrão de comentários** (rode antes de todo push): `node testes/auditar-comentarios.mjs`, que deve terminar com "0 ponto(s) para revisar".
 
 **Contas de demonstração** (todas com a senha `Cais@2026`). Na tela de login, os botões "Entrar como" (Administrador, Profissional e Empresa) preenchem e-mail e senha das três primeiras contas abaixo; a Patrícia só entra digitando:
 
