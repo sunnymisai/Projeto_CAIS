@@ -2,12 +2,12 @@
    CASOS DE TESTE DAS PERMISSÕES
    O que é: script simples (sem biblioteca de testes) que confere podeAcessar, podeFazer e os filtros de lib/escopo.ts. Cada caso tem entrada, esperado e o porquê.
    Onde é usado: rodado à mão no terminal; nenhuma tela importa este arquivo.
-   Depende de: lib/permissoes.ts, lib/escopo.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
+   Depende de: lib/permissoes.ts (inclusive a guarda da trilha obrigatória), lib/escopo.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
    Contexto: §3 (Perfis), §5 (Permissões de projetos).
    Como rodar: node --experimental-strip-types lib/permissoes.casos.ts
    ============================================================================ */
 
-import { podeAcessar, podeFazer } from './permissoes.ts';
+import { podeAcessar, podeFazer, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO } from './permissoes.ts';
 import { projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
 import type { Dados, Pessoa, Tarefa } from './tipos.ts';
 
@@ -50,6 +50,20 @@ const patricia = { pessoaId: 'pes_patricia', perfil: 'empresa' as const };
 const admin = { pessoaId: 'pes_admin', perfil: 'admin' as const };
 const ids = (xs: { id: string }[]) => xs.map((x) => x.id).sort().join(',');
 
+
+// Trilha de boas-vindas (geral, publicada) com 3 etapas: 2 obrigatórias e 1 opcional no fim.
+// Progresso: Ana fez as 3; Bruno fez 1 (falta uma obrigatória); Carla fez 2 (só falta a opcional, que não trava).
+const trilhaGeral = (status: 'publicada' | 'rascunho', alcance: 'geral' | 'profissional' = 'geral') => ({
+  id: 'tri_x', titulo: 'x', descricao: '', alcance, empresaId: '', pessoaIds: [] as string[], status, prazoDias: 7,
+  etapas: [
+    { id: 'e1', titulo: 'e1', tipo: 'texto' as const, obrigatoria: true, notaMinima: 0 },
+    { id: 'e2', titulo: 'e2', tipo: 'texto' as const, obrigatoria: true, notaMinima: 0 },
+    { id: 'e3', titulo: 'e3', tipo: 'texto' as const, obrigatoria: false, notaMinima: 0 },
+  ],
+  progresso: { pes_ana: { concluidas: 3 }, pes_bruno: { concluidas: 1 }, pes_carla: { concluidas: 2 } },
+});
+const comTrilha = (t: ReturnType<typeof trilhaGeral>): Dados => ({ ...dados, trilhas: [t] });
+
 // Cada caso: descrição (o porquê), valor obtido e valor esperado.
 const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'admin abre /empresas (cadastro é do admin)', obtido: podeAcessar('admin', '/empresas'), esperado: true },
@@ -86,6 +100,20 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'empresa Vértice só enxerga a própria empresa', obtido: ids(empresasVisiveis(marcos, dados)), esperado: 'emp_vertice' },
   { porque: 'Ana enxerga a si e aos colegas de projeto, não a Carla', obtido: ids(pessoasVisiveis(ana, dados)), esperado: 'pes_ana,pes_bruno' },
   { porque: 'sessão de pessoa inexistente não vê projeto (empresa)', obtido: ids(projetosVisiveis({ pessoaId: 'pes_fantasma', perfil: 'empresa' }, dados)), esperado: '' },
+  { porque: 'sem nenhuma trilha, nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_bruno', dados), esperado: false },
+  { porque: 'Bruno fez só 1 de 2 obrigatórias da trilha geral publicada: pendente', obtido: temTrilhaObrigatoriaPendente('pes_bruno', comTrilha(trilhaGeral('publicada'))), esperado: true },
+  { porque: 'Ana concluiu tudo: nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_ana', comTrilha(trilhaGeral('publicada'))), esperado: false },
+  { porque: 'Carla fez as 2 obrigatórias (falta só a opcional): nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_carla', comTrilha(trilhaGeral('publicada'))), esperado: false },
+  { porque: 'trilha em rascunho não trava ninguém', obtido: temTrilhaObrigatoriaPendente('pes_bruno', comTrilha(trilhaGeral('rascunho'))), esperado: false },
+  { porque: 'trilha de alcance "profissional" não entra na regra conservadora', obtido: temTrilhaObrigatoriaPendente('pes_bruno', comTrilha(trilhaGeral('publicada', 'profissional'))), esperado: false },
+  { porque: 'pessoa nova sem registro de progresso começa do zero: pendente', obtido: temTrilhaObrigatoriaPendente('pes_novo', { ...comTrilha(trilhaGeral('publicada')), pessoas: [...dados.pessoas, pessoa('pes_novo', 'profissional')] }), esperado: true },
+  { porque: 'perfil empresa não está no público geral de profissionais: nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_marcos', comTrilha(trilhaGeral('publicada'))), esperado: false },
+  { porque: 'EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO nasce desligada (bloco D liga)', obtido: EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO, esperado: false },
+  { porque: '/minhas-trilhas fica liberada com trilha pendente', obtido: rotaLiberadaComTrilhaPendente('/minhas-trilhas'), esperado: true },
+  { porque: '/minhas-trilhas/tri_1?x=1 fica liberada (subrota e query)', obtido: rotaLiberadaComTrilhaPendente('/minhas-trilhas/tri_1?x=1'), esperado: true },
+  { porque: '/painel fica liberado com trilha pendente', obtido: rotaLiberadaComTrilhaPendente('/painel'), esperado: true },
+  { porque: '/projetos fica bloqueada com trilha pendente', obtido: rotaLiberadaComTrilhaPendente('/projetos'), esperado: false },
+  { porque: '/painelx NÃO casa com /painel (fronteira de segmento)', obtido: rotaLiberadaComTrilhaPendente('/painelx'), esperado: false },
 ];
 
 // Confere cada caso e imprime OK/FALHOU; sai com código 1 se algum falhar.

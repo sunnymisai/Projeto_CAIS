@@ -2,15 +2,14 @@
    RECUPERARSENHAFORM.TSX — RECUPERAÇÃO DE SENHA (3 PASSOS, SIMULADA)
    O que é: o cartão da tela /recuperar-senha. Passo 1: e-mail. Passo 2: "e-mail enviado" (com o botão de demonstração que abre o link). Passo 3: nova senha e confirmação, com as regras em tempo real.
    Onde é usado: app/recuperar-senha/page.tsx (dentro de <Suspense>, porque lê a URL com useSearchParams).
-   Depende de: lib/auth (definirSenha), lib/senha (senhaValida), lib/toast (useToast), lib/useFormulario, lib/utils (EMAIL_REGEX), components/ui/RegrasSenha, components/ui/basicos (Aviso), components/input, components/button, components/CaisLogo e next/navigation.
+   Depende de: lib/auth (definirSenha), lib/senha (senhaValida), lib/toast (useToast), lib/useFormulario, lib/utils (EMAIL_REGEX), components/ui/RegrasSenha, components/ui/basicos (Aviso), components/CartaoAcesso, components/input, components/button e next/navigation.
    Contexto: §15 item 1 (Login → Esqueci a senha → Recuperação de senha), §7 (a recuperação de verdade é do back-end) e docs/notas-next16.md §2 (useSearchParams + Suspense).
    ============================================================================ */
 "use client";
 
-import { ReactNode, useCallback, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Mail, MailCheck, ArrowRight, ArrowLeft, LinkIcon, TriangleAlert } from 'lucide-react';
+import { Mail, MailCheck, ArrowRight, LinkIcon, TriangleAlert } from 'lucide-react';
 import { definirSenha } from '@/lib/auth';
 import { senhaValida } from '@/lib/senha';
 import { useToast } from '@/lib/toast';
@@ -18,48 +17,9 @@ import { useFormulario } from '@/lib/useFormulario';
 import { EMAIL_REGEX } from '@/lib/utils';
 import { Aviso } from '@/components/ui/basicos';
 import RegrasSenha from '@/components/ui/RegrasSenha';
+import { Cartao, VoltarAoLogin } from './CartaoAcesso';
 import Input from './input';
 import Button from './button';
-import { CaisMark } from './CaisLogo';
-
-// Classes do link de texto (mesmo visual dos links do login).
-const LINK_CLASS =
-  'rounded-sm font-semibold text-primaria underline-offset-4 transition-colors hover:text-primaria-forte hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50';
-
-/**
- * Casca visual do cartão (a mesma do login): selo da marca, título e subtítulo.
- * @param props.titulo - título (h1).
- * @param props.subtitulo - frase de apoio.
- * @param props.children - o conteúdo do passo.
- * @returns o cartão.
- */
-function Cartao({ titulo, subtitulo, children }: { titulo: string; subtitulo: ReactNode; children: ReactNode }) {
-  return (
-    <div className="animate-card-in w-full max-w-[440px] rounded-[28px] border border-borda bg-superficie p-7 shadow-card sm:p-10">
-      <div className="flex flex-col items-center text-center">
-        {/* No celular o logo já aparece no topo da página, então o selo fica só no desktop. */}
-        <div className="mb-6 hidden h-16 w-16 items-center justify-center rounded-2xl bg-primaria-suave lg:flex">
-          <CaisMark size={32} />
-        </div>
-        <h1 className="font-space text-[28px] font-semibold leading-tight tracking-tight text-tinta">{titulo}</h1>
-        <p className="mt-2 text-[15px] text-tinta-suave">{subtitulo}</p>
-      </div>
-      <div className="mt-8">{children}</div>
-    </div>
-  );
-}
-
-/** Link "Voltar para o login", repetido no rodapé de todos os passos. */
-function VoltarAoLogin() {
-  return (
-    <p className="mt-6 border-t border-borda pt-5 text-center text-sm text-tinta-suave">
-      {/* NAVEGA: volta para a tela de login. */}
-      <Link href="/login" className={`${LINK_CLASS} inline-flex items-center gap-1.5`}>
-        <ArrowLeft className="h-4 w-4" aria-hidden />Voltar para o login
-      </Link>
-    </p>
-  );
-}
 
 /**
  * Passo 1: pede o e-mail e "envia o link".

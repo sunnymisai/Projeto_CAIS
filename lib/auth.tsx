@@ -1,13 +1,13 @@
 /* ============================================================================
    AUTH (AUTENTICAÇÃO)
-   O que é: guarda quem está logado (a sessão), oferece entrar() e sair() e guarda as SENHAS SIMULADAS (definirSenha e conferirSenha).
+   O que é: guarda quem está logado (a sessão), oferece entrar(), iniciarSessao() e sair() e guarda as SENHAS SIMULADAS (definirSenha e conferirSenha).
 
    !!! SIMULADO, NUNCA PARA PRODUÇÃO !!!
    As senhas ficam em TEXTO PURO no localStorage ('cais-senhas-demo'), só para o protótipo
    funcionar sem back-end. Guardar, conferir e trocar senha é responsabilidade do back-end
    da PROGLOGIC (§7). Nada daqui pode ir para produção.
 
-   Onde é usado: app/providers.tsx (monta o AuthProvider), app/(sistema)/layout.tsx (protege as rotas), app/(sistema)/painel/page.tsx, app/sem-permissao/page.tsx, components/LoginForm.tsx (useAuth e CONTAS_DEMO), components/RecuperarSenhaForm.tsx (definirSenha), components/shell/Topbar.tsx e components/projetos/DetalheTarefa.tsx.
+   Onde é usado: app/providers.tsx (monta o AuthProvider), app/(sistema)/layout.tsx (protege as rotas), app/(sistema)/painel/page.tsx, app/sem-permissao/page.tsx, components/LoginForm.tsx (useAuth e CONTAS_DEMO), components/RecuperarSenhaForm.tsx (definirSenha), components/PrimeiroAcessoForm.tsx (definirSenha e iniciarSessao), components/shell/Topbar.tsx e components/projetos/DetalheTarefa.tsx.
    Depende de: React (Context, useState, useEffect, useCallback), lib/tipos.ts (Perfil), lib/store.tsx (lerPessoasSalvas: quem existe e em que status), localStorage e sessionStorage do navegador.
    Contexto: §3 (Perfis), §7 (autenticação no back é da PROGLOGIC), §12 e §15 item 1 (Login, recuperação de senha e primeiro acesso).
    ============================================================================ */
@@ -161,6 +161,8 @@ interface AuthCtx {
    * @example const r = await entrar(email, senha, true); if (!r.ok) mostrarErro(r.motivo)
    */
   entrar: (email: string, senha: string, lembrar: boolean) => Promise<ResultadoLogin>;
+  /** Abre a sessão de uma pessoa sem pedir senha (só no fim do primeiro acesso, quando ela acabou de criá-la). */
+  iniciarSessao: (pessoa: { id: string; nome: string; email: string; perfil: Perfil }, lembrar: boolean) => void;
   /** Desloga e apaga a sessão do navegador. */
   sair: () => void;
 }
@@ -184,9 +186,22 @@ function lerSessao(): Sessao | null {
 }
 
 /**
+ * Grava a sessão no navegador.
+ * @param s - a sessão a guardar.
+ * @param lembrar - true usa o localStorage ("Lembrar-me": continua logado depois de fechar o navegador); false usa o sessionStorage.
+ */
+// GRAVA: escreve a sessão no localStorage ou no sessionStorage.
+// TODO(API): guardar o token devolvido pela API (de preferência em cookie httpOnly definido pelo back).
+function guardarSessao(s: Sessao, lembrar: boolean) {
+  try {
+    (lembrar ? localStorage : sessionStorage).setItem(CHAVE, JSON.stringify(s));
+  } catch { /* navegação privada: sessão só em memória */ }
+}
+
+/**
  * Provedor da autenticação. Envolve o app inteiro (montado em app/providers.tsx).
  * @param children - a árvore que vai poder chamar `useAuth()`.
- * @returns o Provider com sessão, `pronto`, `entrar` e `sair`.
+ * @returns o Provider com sessão, `pronto`, `entrar`, `iniciarSessao` e `sair`.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessao, setSessao] = useState<Sessao | null>(null);
@@ -214,13 +229,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!s) return { ok: false, motivo: 'credenciais' };
     // Os três perfis entram; o que cada um vê é decidido depois, por rota (lib/permissoes.ts).
     // GRAVA: salva a sessão no navegador (localStorage ou sessionStorage).
-    // TODO(API): guardar o token devolvido pela API (de preferência em cookie httpOnly definido pelo back).
-    try {
-      // "Lembrar-me" → continua logado depois de fechar o navegador
-      (lembrar ? localStorage : sessionStorage).setItem(CHAVE, JSON.stringify(s));
-    } catch { /* navegação privada: sessão só em memória */ }
+    guardarSessao(s, lembrar);
     setSessao(s);
     return { ok: true };
+  }, []);
+
+  /**
+   * Abre a sessão de uma pessoa SEM pedir senha: usada logo depois de ela definir a senha
+   * no primeiro acesso (a senha acabou de ser conferida pela própria tela).
+   * @param pessoa - quem entra (id, nome, e-mail e perfil do cadastro).
+   * @param lembrar - true guarda no localStorage (sobrevive a fechar o navegador).
+   * @example iniciarSessao({ id: p.id, nome: p.nome, email: p.email, perfil: p.perfil }, false)
+   */
+  // GRAVA: salva a sessão no navegador, como o login.
+  // ⚠️ ATENÇÃO: só chame depois de uma prova real de identidade (hoje: o convite + a senha criada).
+  // TODO(API): a API devolve o token já na resposta do "definir senha" do convite.
+  const iniciarSessao = useCallback((pessoa: { id: string; nome: string; email: string; perfil: Perfil }, lembrar: boolean) => {
+    const s: Sessao = { pessoaId: pessoa.id, nome: pessoa.nome, email: pessoa.email, perfil: pessoa.perfil, token: `demo.${Date.now()}` };
+    guardarSessao(s, lembrar);
+    setSessao(s);
   }, []);
 
   /** Desloga: limpa a sessão da memória e dos dois armazenamentos. */
@@ -234,12 +261,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessao(null);
   }, []);
 
-  return <Ctx.Provider value={{ sessao, pronto, entrar, sair }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ sessao, pronto, entrar, iniciarSessao, sair }}>{children}</Ctx.Provider>;
 }
 
 /**
  * Hook para ler a sessão e chamar entrar/sair em qualquer tela.
- * @returns `{ sessao, pronto, entrar, sair }`.
+ * @returns `{ sessao, pronto, entrar, iniciarSessao, sair }`.
  * @example const { sessao, sair } = useAuth();
  */
 export function useAuth() {

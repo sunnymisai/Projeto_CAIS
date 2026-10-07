@@ -9,6 +9,11 @@ Cada entrada lista o que foi criado, modificado e removido.
 - Modificado: `lib/auth.tsx` (senhas simuladas `cais-senhas-demo` com `definirSenha` e `conferirSenha`; o login agora confere o cadastro salvo e só deixa entrar pessoa "ativa"; `SENHA_DEMO` exportada), `lib/store.tsx` (`lerPessoasSalvas`, leitura das pessoas sem o provedor, porque o AuthProvider fica fora do DadosProvider), `app/login/page.tsx` (usa `AcessoLayout`), `components/LoginForm.tsx` ("Esqueceu a senha?" leva a `/recuperar-senha`), `components/BrandPanel.tsx` (só o cabeçalho), `app/(sistema)/design-system/page.tsx` (seção de `RegrasSenha`).
 - Removido: a lista `CONTAS` e a conferência de senha fixa no código.
 
+### C06: primeiro acesso por convite
+- Criado: `app/primeiro-acesso/page.tsx` e `components/PrimeiroAcessoForm.tsx` (nome e e-mail somente leitura, senha com `RegrasSenha`, aceite obrigatório dos termos/LGPD; estados carregando, erro e formulário), `components/CartaoAcesso.tsx` (cartão e "Voltar para o login", extraídos do `RecuperarSenhaForm`), `components/shell/TrilhaPendente.tsx` e `lib/convite.ts` (`linkDeConvite`, `copiarTexto` com tratamento de falha do clipboard).
+- Modificado: `lib/auth.tsx` (`iniciarSessao`: abre a sessão sem senha no fim do convite), `lib/permissoes.ts` (`temTrilhaObrigatoriaPendente`, `rotaLiberadaComTrilhaPendente` e `EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false`), `lib/permissoes.casos.ts` (de 34 para 48 casos), `lib/metricas.ts` (imports com `.ts`, para o Node achar o módulo), `app/(sistema)/layout.tsx` (guarda da trilha obrigatória, desligada), `app/(sistema)/pessoas/page.tsx` ("Copiar link de convite" para status convidado), `components/RecuperarSenhaForm.tsx` (usa `CartaoAcesso`).
+- Pendência: `TODO(PROGLOGIC)` para o texto dos termos/LGPD e para o que conta como "trilha obrigatória".
+
 ## Bloco C: três perfis (branch `feat/tres-perfis`)
 
 ### C01: regras de permissão e escopo (só `lib/`)

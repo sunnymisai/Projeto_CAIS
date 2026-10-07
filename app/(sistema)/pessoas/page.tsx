@@ -2,7 +2,7 @@
    APP/(SISTEMA)/PESSOAS/PAGE.TSX
    O que é: tela de cadastro de pessoas dos três perfis (lista com filtros + ficha em modal).
    Onde é usado: rota /pessoas (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts), pelo card "Profissionais" do painel (app/(sistema)/painel/page.tsx) e pelo topo (components/shell/Topbar.tsx): a busca global e o aviso de sobrecarga abrem a ficha direto com /pessoas?abrir=<id>.
-   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), trilhasDaPessoa (lib/metricas.ts), lib/utils.ts, tipo Perfil (lib/tipos.ts), componentes de components/ui e components/shell e useSearchParams/useRouter do Next.
+   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), trilhasDaPessoa (lib/metricas.ts), copiarTexto e linkDeConvite (lib/convite.ts), lib/utils.ts, tipo Perfil (lib/tipos.ts), componentes de components/ui e components/shell e useSearchParams/useRouter do Next.
    Contexto: docs/contexto-cais.md §11 (Regras de cadastro), §3 (Perfis), §10 (Anatomia de toda tela); docs/notas-next16.md §2 (useSearchParams + Suspense).
    ============================================================================ */
 // "use client": a tela usa estado, eventos e useSearchParams, que só existem no navegador
@@ -11,11 +11,12 @@
 
 import { Suspense, useCallback, useMemo, useState, KeyboardEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, Search, Users, X, Mail } from 'lucide-react';
+import { Plus, Search, Users, X, Mail, Link2 } from 'lucide-react';
 import { useDados, Pessoa } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import { useFormulario } from '@/lib/useFormulario';
 import { trilhasDaPessoa } from '@/lib/metricas';
+import { copiarTexto, linkDeConvite } from '@/lib/convite';
 import { CabecalhoPagina, BarraFiltros } from '@/components/shell/Pagina';
 import Button from '@/components/button';
 import Input from '@/components/input';
@@ -294,6 +295,20 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
     onFechar();
   };
 
+  /**
+   * Copia o link de convite da pessoa convidada (ela abre /primeiro-acesso e define a senha).
+   * Se o navegador não deixar copiar (contexto sem https ou permissão negada), mostra o link no aviso para copiar à mão.
+   */
+  // SIMULADO: não envia e-mail nenhum; quem copia o link manda por conta própria.
+  // TODO(API): a API envia o convite por e-mail; este botão vira "Reenviar convite".
+  const copiarConvite = async () => {
+    // Só existe para pessoa já cadastrada.
+    if (!pessoa) return;
+    const link = linkDeConvite(pessoa.id);
+    if (await copiarTexto(link)) avisar(`Link de convite de ${pessoa.nome.split(' ')[0]} copiado.`);
+    else avisar(`Não foi possível copiar automaticamente. Copie o link: ${link}`, 'erro');
+  };
+
   // Horas já alocadas hoje: aparecem como dica no campo de carga máxima.
   const carga = pessoa ? d.cargaDaPessoa(pessoa.id) : 0;
 
@@ -306,10 +321,16 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
           * Inativar/Reativar aparece só para pessoa já salva e que não seja Administrador.
           * Não há botão Excluir de propósito: o histórico precisa ficar (§11).
           */}
-        {pessoa && pessoa.perfil !== 'admin' && (
-          // mr-auto empurra o botão para a esquerda, longe de Salvar, para evitar clique por engano.
-          <Button variante="fantasma" className="mr-auto" onClick={alternarAtivo}>{pessoa.status === 'inativo' ? 'Reativar' : 'Inativar'}</Button>
-        )}
+        {/* mr-auto empurra os botões para a esquerda, longe de Salvar, para evitar clique por engano. */}
+        <div className="mr-auto flex flex-wrap gap-2">
+          {pessoa && pessoa.perfil !== 'admin' && (
+            <Button variante="fantasma" onClick={alternarAtivo}>{pessoa.status === 'inativo' ? 'Reativar' : 'Inativar'}</Button>
+          )}
+          {/* Convite só faz sentido enquanto a pessoa ainda não fez o primeiro acesso (status 'convidado'). */}
+          {pessoa && pessoa.status === 'convidado' && (
+            <Button variante="secundario" onClick={copiarConvite}><Link2 className="h-4 w-4" aria-hidden />Copiar link de convite</Button>
+          )}
+        </div>
         <Button variante="secundario" onClick={onFechar}>Cancelar</Button>
         <Button onClick={salvar} isLoading={salvando}>{pessoa ? 'Salvar alterações' : 'Salvar pessoa'}</Button>
       </>}>

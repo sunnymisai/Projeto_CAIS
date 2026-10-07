@@ -9,11 +9,12 @@
      /acessos, /minhas-trilhas e /minhas-tarefas. Os parênteses em
      "(sistema)" agrupam pastas sem aparecer na URL.
    Depende de: lib/auth.tsx (useAuth → sessao e pronto), next/navigation
-     (useRouter, usePathname), lib/permissoes.ts (podeAcessar), components/shell/Sidebar.tsx,
-     components/shell/Topbar.tsx e components/CaisLogo.tsx (CaisMark).
+     (useRouter, usePathname), lib/permissoes.ts (podeAcessar e a guarda da trilha obrigatória),
+     lib/store.tsx (useDados, para saber a trilha pendente), components/shell/Sidebar.tsx,
+     components/shell/Topbar.tsx, components/shell/TrilhaPendente.tsx e components/CaisLogo.tsx (CaisMark).
    Contexto: §3 (perfis), §10 (anatomia de toda tela: só o conteúdo rola),
-     §15 item 1 (shell da aplicação) e docs/notas-next16.md §4 (rotas
-     públicas e protegidas).
+     §12 fluxo 1 (trilha obrigatória libera o sistema), §15 item 1 (shell da
+     aplicação) e docs/notas-next16.md §4 (rotas públicas e protegidas).
    ============================================================================ */
 
 // "use client": a sessão fica no localStorage e só existe no navegador.
@@ -24,7 +25,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/components/shell/Sidebar';
 import Topbar from '@/components/shell/Topbar';
 import { useAuth } from '@/lib/auth';
-import { podeAcessar } from '@/lib/permissoes';
+import { useDados } from '@/lib/store';
+import { podeAcessar, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO } from '@/lib/permissoes';
+import TrilhaPendente from '@/components/shell/TrilhaPendente';
 import { CaisMark } from '@/components/CaisLogo';
 
 /**
@@ -48,6 +51,7 @@ import { CaisMark } from '@/components/CaisLogo';
  */
 export default function LayoutSistema({ children }: { children: ReactNode }) {
   const { sessao, pronto } = useAuth();
+  const dados = useDados();
   const router = useRouter();
   const caminho = usePathname();
   // Controla o menu lateral no celular (no desktop ele fica sempre visível).
@@ -85,6 +89,15 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     );
   }
 
+  // Guarda da trilha obrigatória (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas*.
+  // Só vale com EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO ligada (hoje false: o bloco D liga) e depois que a store
+  // carregou (dados.pronto), senão a tela piscaria o bloqueio antes de saber se há pendência.
+  const trilhaBloqueia = EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO
+    && dados.pronto
+    && sessao.perfil === 'profissional'
+    && !rotaLiberadaComTrilhaPendente(caminho)
+    && temTrilhaObrigatoriaPendente(sessao.pessoaId, dados);
+
   return (
     // h-screen + overflow-hidden: a casca tem exatamente a altura da janela e
     // não rola. Assim o menu e o topo ficam sempre no lugar (§10).
@@ -105,7 +118,8 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
           * tabIndex={-1} permite receber foco pelo link "pular para o
           * conteúdo" sem entrar na ordem normal do Tab. */}
         <main id="conteudo" tabIndex={-1} className="rolagem flex-1 overflow-y-auto focus:outline-none">
-          {children}
+          {/* Bloqueio da trilha pendente no lugar da página; o menu e o topo continuam à mostra para a pessoa se mover. */}
+          {trilhaBloqueia ? <TrilhaPendente /> : children}
         </main>
       </div>
     </div>

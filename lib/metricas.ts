@@ -6,8 +6,11 @@
    Contexto: §4 (alcance das trilhas), §5 (equipe e tarefas), §6 (dashboards).
    ============================================================================ */
 
-import type { Dados, Trilha } from './tipos';
-import { hojeISO } from './utils';
+// ⚠️ ATENÇÃO: os imports levam a extensão .ts de propósito (tsconfig: allowImportingTsExtensions):
+// lib/permissoes.ts importa publicoDaTrilha daqui e é testado com Node (permissoes.casos.ts),
+// que só acha o módulo com a extensão. Tirar o ".ts" quebra o teste, não o app.
+import type { Dados, Trilha } from './tipos.ts';
+import { hojeISO } from './utils.ts';
 
 /* Cálculos derivados usados no painel e nas fichas. Nada aqui é salvo:
    tudo é recalculado a partir dos dados, como faria a API. */

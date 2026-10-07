@@ -27,6 +27,7 @@ npm run dev        # http://localhost:3000
 | `/` | Homepage pública: apresenta o CAIS à empresa (topo, pilares, como funciona, perguntas e formulário de interesse simulado) |
 | `/login` | Login (redireciona para `?voltar=`, só caminho interno, ou `/painel`) |
 | `/recuperar-senha` | Recuperação de senha SIMULADA em 3 passos: e-mail → "link enviado" (botão de demonstração "Abrir o link recebido") → `?token=demo&email=...` com nova senha e regras em tempo real. A mensagem de sucesso é a mesma exista ou não o e-mail |
+| `/primeiro-acesso?convite=<pessoaId>` | Primeiro acesso por convite (SIMULADO): mostra nome e e-mail, pede senha com regras em tempo real e aceite dos termos/LGPD; ao salvar ativa a pessoa e entra no `/painel`. Convite inexistente, usado ou de pessoa inativa mostra erro com botão para o login. O link é copiado na ficha de pessoa (status "convidado") |
 | `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); empresa e profissional ainda "Em construção" |
 | `/empresas` | Lista e ficha de empresa (CNPJ validado, CEP via ViaCEP) |
 | `/pessoas` | Lista e ficha de pessoa (campos por perfil, convite, inativar) |
@@ -44,7 +45,7 @@ As regras ficam em funções puras, sem React, e podem ser testadas com Node:
 
 - `lib/permissoes.ts`: `podeAcessar(perfil, caminho)` (prefixo mais longo vence; rota não listada = só admin) e `podeFazer(perfil, acao, contexto)`.
 - `lib/escopo.ts`: filtros pela sessão (`projetosVisiveis`, `tarefasVisiveis`, `alocacoesVisiveis`, `empresasVisiveis`, `pessoasVisiveis`, `podeVerProjeto`).
-- `lib/permissoes.casos.ts`: 34 casos. Rode `node --experimental-strip-types lib/permissoes.casos.ts`.
+- `lib/permissoes.casos.ts`: 48 casos (inclui a guarda da trilha obrigatória). Rode `node --experimental-strip-types lib/permissoes.casos.ts`.
 
 | Rota | Admin | Empresa | Profissional |
 |---|---|---|---|
@@ -63,6 +64,8 @@ Botões sem permissão são **escondidos** (não desabilitados); campos sem perm
 
 Parâmetros úteis: `/projetos/[id]?aba=equipe|tarefas|geral&tarefa=<id>` e `/empresas?abrir=<id>`.
 
+**Guarda da trilha obrigatória (§12).** `temTrilhaObrigatoriaPendente(pessoaId, dados)` (em `lib/permissoes.ts`) diz se o profissional ainda tem etapa obrigatória por concluir numa trilha geral publicada. O layout de `(sistema)` só aplica o bloqueio ("Conclua sua trilha de boas-vindas para liberar o sistema", em qualquer rota fora de `/painel` e `/minhas-trilhas*`) quando `EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO` é `true`. Hoje é `false`: as telas de trilha do profissional nascem no bloco D, que liga a constante.
+
 ## Onde ligar a API da PROGLOGIC
 
 A autenticação e os dados passam por dois arquivos:
@@ -79,11 +82,11 @@ app/(sistema)/        telas internas (layout protege a rota e monta o shell)
 components/home/      seções da homepage pública (Topo, Hero, Problema, Pilares, Perguntas, Formulário, Rodapé)
 components/marca/     TresPilares (diagrama usado no login e na homepage)
 components/ui/        design system: basicos, form, Modal, Menu, Tabela, Graficos, RegrasSenha
-components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), LoginForm, RecuperarSenhaForm
+components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), CartaoAcesso, LoginForm, RecuperarSenhaForm, PrimeiroAcessoForm
 components/paineis/   PainelAdmin, PainelEmpresa, PainelProfissional (o /painel escolhe pelo perfil)
 components/shell/     Sidebar (menu filtrado por perfil), Topbar (busca Ctrl+K e avisos com escopo, perfil), Pagina, EmConstrucao
 components/projetos/  Quadro, CartaoTarefa, DetalheTarefa, Vistas, Equipe, FormProjeto
-lib/                  tipos, seed, store, auth, permissoes, escopo, toast, metricas, useFormulario, utils
+lib/                  tipos, seed, store, auth, senha, convite, permissoes, escopo, toast, metricas, useFormulario, utils
 ```
 
 ## Ainda simulado ou fora desta versão
@@ -92,7 +95,9 @@ lib/                  tipos, seed, store, auth, permissoes, escopo, toast, metri
 - WebSocket do quadro em tempo real.
 - Anexos e upload de logo e foto.
 - Aba Arquivos do projeto.
-- Primeiro acesso do profissional.
+- Envio real do convite: hoje só se copia o link (o "token" do convite é o próprio id da pessoa).
+- Textos oficiais dos termos de uso e da política de privacidade (LGPD) do primeiro acesso.
+- Trava da trilha obrigatória desligada (`EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false`) até o bloco D.
 - Painéis dos perfis Empresa e Profissional (hoje "Em construção").
 - Telas `/carga`, `/acessos`, `/minhas-trilhas`, `/minhas-tarefas` e `/perfil` (hoje "Em construção").
 - Permissão no servidor: as regras de perfil só existem no navegador.

@@ -1,12 +1,13 @@
 /* ============================================================================
    PERMISSÕES POR PERFIL
    O que é: funções puras que dizem quais rotas cada perfil abre (podeAcessar) e quais ações cada perfil pode fazer (podeFazer).
-   Onde é usado: lib/permissoes.casos.ts (testes com Node) e, nas partes seguintes, app/(sistema)/layout.tsx, components/shell/Sidebar.tsx e as telas de projetos.
-   Depende de: apenas o tipo Perfil de lib/tipos.ts (sem React, para rodar em Node).
-   Contexto: §3 (Perfis), §5 (Permissões de projetos, "a confirmar com a PROGLOGIC") e §7 (a segurança real é do back-end).
+   Onde é usado: lib/permissoes.casos.ts (testes com Node), app/(sistema)/layout.tsx (porteiro e guarda de trilha obrigatória), components/shell/Sidebar.tsx, as telas de projetos e app/(sistema)/acessos (quadro "O que cada perfil pode fazer").
+   Depende de: tipos de lib/tipos.ts e publicoDaTrilha de lib/metricas.ts (sem React, para rodar em Node).
+   Contexto: §3 (Perfis), §5 (Permissões de projetos, "a confirmar com a PROGLOGIC"), §7 (a segurança real é do back-end) e §12 (fluxo 1: trilha obrigatória libera o sistema).
    ============================================================================ */
 
-import type { Perfil } from './tipos.ts';
+import type { Dados, Perfil } from './tipos.ts';
+import { publicoDaTrilha } from './metricas.ts';
 
 /*
  * ⚠️ ATENÇÃO: isto é CONVENIÊNCIA DE INTERFACE (esconder o que a pessoa não
@@ -128,4 +129,56 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
       if (perfil === 'admin') return true;
       return contexto.enxergaProjeto === true;
   }
+}
+
+/* ============================================================================
+   GUARDA DA TRILHA OBRIGATÓRIA (§12, fluxo 1: "conclui e libera o sistema")
+   ============================================================================ */
+
+/**
+ * Liga/desliga a guarda da trilha obrigatória no primeiro acesso do profissional.
+ * `false` por enquanto: as telas de trilha do profissional (/minhas-trilhas) só nascem
+ * no bloco D, que vai ligar esta constante. Com `false`, ninguém fica preso.
+ * ⚠️ ATENÇÃO: ligar sem a tela /minhas-trilhas pronta trancaria o profissional sem saída;
+ * app/(sistema)/layout.tsx é quem lê esta constante.
+ * TODO(PROGLOGIC): confirmar se a trava vale para toda trilha ou só para a de boas-vindas.
+ */
+export const EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false;
+
+/**
+ * Diz se a pessoa ainda precisa concluir uma trilha obrigatória.
+ * Regra conservadora (a "Trilha" não tem um campo "obrigatória"; só as etapas têm):
+ * conta a trilha PUBLICADA de alcance "geral" (a de boas-vindas) em que a pessoa faz
+ * parte do público e que ainda tem alguma etapa obrigatória por concluir.
+ * As etapas são feitas em ordem (§4: a obrigatória trava as próximas), então
+ * "concluídas = N" significa que as N primeiras estão feitas.
+ * @param pessoaId - id da pessoa (da sessão).
+ * @param dados - todos os dados (de `useDados()`).
+ * @returns true se existe trilha obrigatória pendente.
+ * @example temTrilhaObrigatoriaPendente('pes_felipe', dados) // true: 0 de 5 na trilha de boas-vindas
+ */
+// TODO(PROGLOGIC): confirmar quais trilhas travam o sistema (hoje: só as gerais publicadas).
+export function temTrilhaObrigatoriaPendente(pessoaId: string, dados: Dados): boolean {
+  return dados.trilhas.some((t) => {
+    // Só trilha publicada e geral entra na regra (rascunho não aparece para ninguém, §4).
+    if (t.status !== 'publicada' || t.alcance !== 'geral') return false;
+    // Quem não está no público da trilha não deve nada a ela (ex.: pessoa inativa).
+    if (!publicoDaTrilha(t, dados).includes(pessoaId)) return false;
+    const feitas = t.progresso[pessoaId]?.concluidas ?? 0;
+    // Pendente = alguma etapa obrigatória depois das já concluídas.
+    return t.etapas.some((e, i) => i >= feitas && e.obrigatoria);
+  });
+}
+
+/**
+ * Diz se a rota continua liberada enquanto a trilha obrigatória está pendente.
+ * Só /minhas-trilhas (e o que vem depois dela) e /painel; o resto mostra o aviso de bloqueio.
+ * @param caminho - caminho da URL (com ou sem ?query e #âncora).
+ * @returns true se a pessoa pode abrir mesmo com trilha pendente.
+ * @example rotaLiberadaComTrilhaPendente('/minhas-trilhas/tri_1') // true
+ */
+export function rotaLiberadaComTrilhaPendente(caminho: string): boolean {
+  const limpo = caminho.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+  // Fronteira de segmento (igual a podeAcessar): "/painelx" NÃO conta como "/painel".
+  return ['/minhas-trilhas', '/painel'].some((p) => limpo === p || limpo.startsWith(p + '/'));
 }
