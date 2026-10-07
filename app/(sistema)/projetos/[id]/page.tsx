@@ -1,3 +1,22 @@
+/* ============================================================================
+   APP/(SISTEMA)/PROJETOS/[ID]/PAGE.TSX (FICHA DO PROJETO)
+   O que é: a ficha de um projeto com três abas (Visão geral, Equipe,
+     Tarefas), as vistas quadro/lista/cronograma e o detalhe da tarefa.
+   Onde é usado: rota /projetos/[id] (ex.: /projetos/p1?aba=equipe&tarefa=t3).
+     Chegam aqui: os cartões de app/(sistema)/projetos/page.tsx; o painel
+     (app/(sistema)/painel/page.tsx, com ?tarefa= nos próximos prazos); a busca
+     e os avisos de atraso do topo (components/shell/Topbar.tsx, com ?tarefa=);
+     e o FormProjeto ao criar um projeto (com ?aba=equipe).
+   Depende de: next/navigation (useParams, useSearchParams, useRouter),
+     lib/store.tsx (useDados), lib/toast.tsx (useToast), lib/metricas.ts,
+     lib/utils.ts e components/projetos/ (Quadro, DetalheTarefa, Vistas,
+     Equipe, FormProjeto), além de components/ui/.
+   Contexto: §5 (Projetos: quatro níveis, três vistas, tarefa com responsável
+     e prazo, detalhe abre por cima do quadro), §12 fluxos 3 e 4, §13 e
+     docs/notas-next16.md §2 (params e searchParams).
+   ============================================================================ */
+
+// "use client": usa estado, useParams/useSearchParams e useDados.
 "use client";
 
 import { Suspense, useCallback, useMemo, useState } from 'react';
@@ -20,76 +39,156 @@ import Equipe from '@/components/projetos/Equipe';
 import FormProjeto from '@/components/projetos/FormProjeto';
 import { cx, dataBR, diasEntre, hojeISO, novoId, somaDias } from '@/lib/utils';
 
+/** As três abas da ficha; o valor vai na URL como ?aba=. */
 type Aba = 'geral' | 'equipe' | 'tarefas';
+/** As três formas de ver as tarefas (§5): quadro (kanban), lista e cronograma. */
 type Vista = 'quadro' | 'lista' | 'cronograma';
 
+/**
+ * Página da rota /projetos/[id].
+ * Só embrulha a ficha num <Suspense>.
+ * ⚠️ ATENÇÃO: a FichaProjeto usa useSearchParams; sem este <Suspense>, o
+ * `npm run build` falha com "useSearchParams() should be wrapped in a
+ * suspense boundary" (notas-next16 §2).
+ *
+ * @returns a ficha do projeto.
+ */
 export default function PaginaProjeto() {
   return <Suspense><FichaProjeto /></Suspense>;
 }
 
+/**
+ * Ficha do projeto: cabeçalho, abas e o conteúdo da aba ativa.
+ *
+ * Parâmetros lidos da URL:
+ * - [id] (pedaço do caminho) → qual projeto mostrar.
+ * - ?aba= → qual aba está aberta: "geral", "equipe" ou "tarefas" (padrão).
+ * - ?tarefa= → id da tarefa cujo detalhe está aberto por cima do quadro.
+ * Guardar aba e tarefa na URL (e não só em useState) permite copiar o link,
+ * recarregar a página ou voltar pelo navegador sem perder onde estava, e
+ * deixa outras telas abrirem a ficha já numa aba ou tarefa.
+ *
+ * @returns a ficha, ou o esqueleto (carregando), ou "não encontrado".
+ *
+ * @example
+ * // Abre o projeto p1 na aba Equipe:
+ * //   /projetos/p1?aba=equipe
+ * // Abre o projeto p1 nas Tarefas, com o detalhe da tarefa t3 por cima:
+ * //   /projetos/p1?tarefa=t3
+ */
 function FichaProjeto() {
+  // Num Client Component não dá para usar `await params` (isso é só em
+  // Server Component). Aqui se usa o hook useParams, que já devolve o valor
+  // pronto: { id: 'p1' } para /projetos/p1 (notas-next16 §2).
   const { id } = useParams<{ id: string }>();
+  // useSearchParams lê a parte "?aba=...&tarefa=..." da URL. É só leitura:
+  // para mudar, usa-se router.replace (ver navegar, abaixo).
   const params = useSearchParams();
   const router = useRouter();
   const d = useDados();
 
+  // Sem ?aba= na URL, abre na aba Tarefas (a mais usada no dia a dia).
   const aba = (params.get('aba') as Aba) || 'tarefas';
+  // null quando não há ?tarefa= (nenhum detalhe aberto).
   const tarefaAberta = params.get('tarefa');
+  // A vista (quadro/lista/cronograma) fica só no estado: não vai para a URL,
+  // então recarregar a página volta para o quadro.
   const [vista, setVista] = useState<Vista>('quadro');
+  // Controlam os modais: alocar pessoa, editar projeto e nova tarefa.
   const [alocando, setAlocando] = useState(false);
   const [editando, setEditando] = useState(false);
   const [novaTarefa, setNovaTarefa] = useState(false);
+  // Filtros das tarefas: responsável, prioridade e etiqueta ('' = todos).
   const [fResp, setFResp] = useState('');
   const [fPrior, setFPrior] = useState('');
   const [fEtiq, setFEtiq] = useState('');
 
+  /**
+   * Troca a aba e/ou abre/fecha o detalhe de uma tarefa mexendo na URL.
+   * - `aba`: troca o ?aba=.
+   * - `tarefa: 'id'`: abre o detalhe (?tarefa=id).
+   * - `tarefa: null`: fecha o detalhe (remove ?tarefa=).
+   * - `tarefa` ausente: não mexe no detalhe.
+   *
+   * @example navegar({ aba: 'equipe' })   // → ?aba=equipe
+   * @example navegar({ tarefa: null })    // fecha o detalhe
+   */
   const navegar = useCallback((p: { aba?: Aba; tarefa?: string | null }) => {
+    // Começa de uma cópia dos parâmetros atuais para não perder os outros
+    // (ex.: trocar a aba mantém o ?tarefa= que já estava lá).
     const q = new URLSearchParams(params.toString());
     if (p.aba) q.set('aba', p.aba);
+    // null = "fechar" (apaga o parâmetro); texto = "abrir esta tarefa";
+    // undefined = não mexe.
     if (p.tarefa === null) q.delete('tarefa'); else if (p.tarefa) q.set('tarefa', p.tarefa);
+    // GRAVA: os novos parâmetros na URL. NAVEGA: na mesma página.
+    // replace (e não push): abrir/fechar abas e tarefas não enche o
+    // histórico do botão "voltar". scroll: false: não pula para o topo.
     router.replace(`/projetos/${id}?${q.toString()}`, { scroll: false });
   }, [params, router, id]);
 
+  // undefined se o id da URL não existe (projeto excluído ou link errado).
   const projeto = d.projeto(id);
+  // Todas as tarefas deste projeto; useMemo evita refiltrar a cada render.
   const tarefas = useMemo(() => d.tarefas.filter((t) => t.projetoId === id), [d.tarefas, id]);
+  // Tarefas que passam nos três filtros ao mesmo tempo (filtro vazio = passa).
   const filtradas = tarefas.filter((t) => (!fResp || t.responsavelId === fResp) && (!fPrior || t.prioridade === fPrior) && (!fEtiq || t.etiquetas.includes(fEtiq)));
 
+  // Estado "carregando" (§13): esqueleto no formato do quadro (4 colunas).
   if (!d.pronto) return (
     <div className="flex h-full flex-col p-4 sm:p-6 lg:p-8">
       <Esqueleto className="mb-2 h-4 w-24" /><Esqueleto className="mb-6 h-8 w-72" /><Esqueleto className="mb-4 h-10 w-80" />
       <div className="flex flex-1 gap-3">{[0, 1, 2, 3].map((i) => <Esqueleto key={i} className="h-full min-h-80 w-72 rounded-2xl" />)}</div>
     </div>
   );
+  // Estado de erro (§13): o id da URL não corresponde a nenhum projeto.
+  // Explica o que houve e oferece a saída (NAVEGA: para /projetos).
   if (!projeto) return (
     <div className="p-8"><EstadoVazio icone={<FolderX className="h-6 w-6" />} titulo="Projeto não encontrado" descricao="Ele pode ter sido excluído ou o endereço está errado."
       acao={<Button onClick={() => router.push('/projetos')}>Ver projetos</Button>} /></div>
   );
 
   const empresa = d.empresa(projeto.empresaId);
+  // Alocações deste projeto (quem trabalha nele, com papel e carga).
   const equipe = d.alocacoes.filter((a) => a.projetoId === projeto.id);
+  // Opções dos filtros, montadas a partir das tarefas existentes.
+  // new Set remove repetidos; .filter(Boolean) tira pessoas não encontradas.
   const responsaveis = [...new Set(tarefas.map((t) => t.responsavelId))].map((pid) => d.pessoa(pid)!).filter(Boolean);
   const etiquetas = [...new Set(tarefas.flatMap((t) => t.etiquetas))];
+  // Algum filtro preenchido? Mostra o botão "Limpar".
   const temFiltro = fResp || fPrior || fEtiq;
 
+  // O botão principal do cabeçalho muda conforme a aba (§10: título e ação
+  // principal): Equipe → "Alocar pessoa"; Tarefas → "Nova tarefa";
+  // Visão geral → "Editar projeto".
   const acao = aba === 'equipe' ? <Button onClick={() => setAlocando(true)}><UserPlus className="h-4 w-4" aria-hidden />Alocar pessoa</Button>
     : aba === 'tarefas' ? <Button onClick={() => setNovaTarefa(true)}><Plus className="h-4 w-4" aria-hidden />Nova tarefa</Button>
     : <Button variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" aria-hidden />Editar projeto</Button>;
 
   return (
+    // Só no quadro a página ganha h-full: o quadro ocupa a altura disponível
+    // e cada coluna rola por dentro. Nas outras vistas a altura é a do
+    // conteúdo e quem rola é a área do layout (§10).
     <div className={cx('mx-auto flex max-w-[1600px] flex-col p-4 sm:p-6 lg:p-8', aba === 'tarefas' && vista === 'quadro' && 'h-full')}>
       <CabecalhoPagina trilha={[{ rotulo: 'Projetos', href: '/projetos' }]}
         titulo={<span className="flex flex-wrap items-center gap-3">{projeto.nome}<Etiqueta tom={TOM_STATUS_PROJETO[projeto.status]} ponto>{ROTULO_STATUS_PROJETO[projeto.status]}</Etiqueta></span>}
         descricao={<>{empresa?.nomeFantasia} · entrega prevista em {dataBR(projeto.entrega)}</>}
         acao={acao} />
 
+      {/* GRAVA na URL: trocar de aba muda o ?aba= (via navegar). */}
       <Abas rotulo="Seções do projeto" ativa={aba} onChange={(a) => navegar({ aba: a })}
         abas={[{ id: 'geral', rotulo: 'Visão geral' }, { id: 'equipe', rotulo: 'Equipe', contagem: equipe.length }, { id: 'tarefas', rotulo: 'Tarefas', contagem: tarefas.length }]} />
 
+      {/* role="tabpanel" + aria-labelledby ligam este painel à aba ativa,
+        * para leitores de tela. No quadro: flex-1 ocupa o resto da altura e
+        * min-h-[560px] impede que fique baixo demais em telas pequenas. */}
       <div className={cx('mt-5', aba === 'tarefas' && vista === 'quadro' && 'flex min-h-[560px] flex-1 flex-col')} role="tabpanel" id={`painel-${aba}`} aria-labelledby={`aba-${aba}`}>
         {aba === 'geral' && <VisaoGeral projeto={projeto} onEditar={() => setEditando(true)} />}
 
         {aba === 'equipe' && (
           <>
+            {/* Projeto recém-criado (Planejado e sem ninguém): mostra o próximo
+              * passo, já que ele nasce nesta aba (§5). */}
             {projeto.status === 'planejado' && equipe.length === 0 && (
               <div className="mb-4"><Aviso tipo="info" titulo="Próximo passo: montar a equipe">Aloque as pessoas com papel, período e carga. Depois, crie as tarefas no quadro.</Aviso></div>
             )}
@@ -99,7 +198,11 @@ function FichaProjeto() {
 
         {aba === 'tarefas' && (
           <>
+            {/* Barra de vistas e filtros (sempre acima do conteúdo, §10).
+              * shrink-0: não encolhe quando o quadro abaixo ocupa a altura. */}
             <div className="mb-4 flex shrink-0 flex-wrap items-center gap-2">
+              {/* Seletor de vista feito com role="radiogroup"/"radio": para
+                * leitores de tela é uma escolha única entre três opções. */}
               <div role="radiogroup" aria-label="Vista das tarefas" className="inline-flex rounded-xl border border-borda bg-superficie-alt p-1">
                 {([['quadro', 'Quadro', LayoutGrid], ['lista', 'Lista', List], ['cronograma', 'Cronograma', GanttChart]] as const).map(([v, r, I]) => (
                   <button key={v} role="radio" aria-checked={vista === v} onClick={() => setVista(v)}
@@ -112,9 +215,16 @@ function FichaProjeto() {
               <div className="w-44"><Select aria-label="Filtrar por responsável" value={fResp} onChange={(e) => setFResp(e.target.value)} placeholder="Responsável" opcoes={responsaveis.map((p) => ({ valor: p.id, rotulo: p.nome }))} /></div>
               <div className="w-36"><Select aria-label="Filtrar por prioridade" value={fPrior} onChange={(e) => setFPrior(e.target.value)} placeholder="Prioridade" opcoes={Object.entries(ROTULO_PRIORIDADE).map(([valor, rotulo]) => ({ valor, rotulo }))} /></div>
               <div className="w-36"><Select aria-label="Filtrar por etiqueta" value={fEtiq} onChange={(e) => setFEtiq(e.target.value)} placeholder="Etiqueta" opcoes={etiquetas.map((e) => ({ valor: e, rotulo: e }))} /></div>
+              {/* "Limpar" zera os três filtros e mostra quantas tarefas
+                * aparecem do total ("Limpar · 3 de 12"). */}
               {temFiltro && <Button variante="fantasma" tamanho="sm" onClick={() => { setFResp(''); setFPrior(''); setFEtiq(''); }}>Limpar · {filtradas.length} de {tarefas.length}</Button>}
             </div>
 
+            {/* As três vistas recebem só as tarefas filtradas. Clicar numa
+              * tarefa chama navegar({ tarefa }) → GRAVA ?tarefa= na URL e o
+              * detalhe abre por cima, sem trocar de página (§5).
+              * min-h-0: deixa o quadro encolher dentro do flex e rolar por
+              * dentro, em vez de esticar a página. */}
             {vista === 'quadro' && <div className="min-h-0 flex-1"><Quadro projeto={projeto} tarefas={filtradas} onAbrir={(t) => navegar({ tarefa: t })} /></div>}
             {vista === 'lista' && <VistaLista projeto={projeto} tarefas={filtradas} onAbrir={(t) => navegar({ tarefa: t })} />}
             {vista === 'cronograma' && <VistaCronograma projeto={projeto} tarefas={filtradas} onAbrir={(t) => navegar({ tarefa: t })} />}
@@ -122,28 +232,51 @@ function FichaProjeto() {
         )}
       </div>
 
+      {/* Detalhe da tarefa: abre quando há ?tarefa= na URL E a tarefa existe
+        * (link antigo de tarefa excluída não abre nada). Fechar chama
+        * navegar({ tarefa: null }), que remove o ?tarefa= da URL. */}
       {tarefaAberta && d.tarefas.some((t) => t.id === tarefaAberta) && <DetalheTarefa tarefaId={tarefaAberta} onFechar={() => navegar({ tarefa: null })} />}
       {editando && <FormProjeto projeto={projeto} onFechar={() => setEditando(false)} />}
+      {/* Ao criar, a tarefa nova já abre no detalhe (onCriada → ?tarefa=id). */}
       {novaTarefa && <NovaTarefa projeto={projeto} onFechar={() => setNovaTarefa(false)} onCriada={(t) => navegar({ tarefa: t })} />}
     </div>
   );
 }
 
+/**
+ * Aba "Visão geral": escopo, andamento (tarefas × tempo), dados do projeto,
+ * troca de status e exclusão.
+ *
+ * @param props.projeto o projeto mostrado.
+ * @param props.onEditar abre o modal de edição (FormProjeto) na ficha.
+ * @returns o conteúdo da aba em duas colunas (uma no celular).
+ */
 function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => void }) {
   const d = useDados();
   const avisar = useToast();
   const router = useRouter();
+  // true = modal "Excluir este projeto?" aberto.
   const [excluir, setExcluir] = useState(false);
+  // progressoProjeto (lib/metricas.ts): prontas, total, atrasadas e pct.
   const pr = progressoProjeto(projeto.id, d);
   const lider = d.pessoa(projeto.liderId);
   const empresa = d.empresa(projeto.empresaId);
   const hoje = hojeISO();
+  // Tempo decorrido em %: dias desde o início ÷ duração total × 100.
+  // Math.max(1, ...) evita divisão por zero (início = entrega) e o
+  // Math.max(0, Math.min(100, ...)) prende o resultado entre 0% e 100%
+  // (antes do início dá 0; depois da entrega, 100).
   const decorrido = Math.max(0, Math.min(100, (diasEntre(projeto.inicio, hoje) / Math.max(1, diasEntre(projeto.inicio, projeto.entrega))) * 100));
+  // Tarefas por coluna deste projeto, para o gráfico de colunas.
+  // A última coluna é sempre verde (pronto); as outras usam cinza, roxo,
+  // âmbar e azul pela posição (Math.min(i, 3) repete o azul se houver mais).
   const porColuna = projeto.colunas.map((c, i) => ({
     rotulo: c.titulo, valor: d.tarefas.filter((t) => t.colunaId === c.id && t.projetoId === projeto.id).length,
     cor: i === projeto.colunas.length - 1 ? '#10B981' : ['#9CA0B3', '#7C5CFF', '#F5A524', '#2563EB'][Math.min(i, 3)],
   }));
 
+  // Pares [rótulo, valor] da lista de dados da lateral. "—" indica campo
+  // não informado.
   const dados: [string, React.ReactNode][] = [
     ['Empresa', empresa?.nomeFantasia],
     ['Contato', projeto.contatoNome || '—'],
@@ -172,6 +305,9 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
                 <div className="mb-1.5 flex justify-between text-[13px]"><span className="text-tinta-suave">Tempo decorrido</span><span className="font-semibold tabular-nums text-tinta">{Math.round(decorrido)}%</span></div>
                 <Progresso valor={decorrido} tom="sucesso" rotulo="Tempo decorrido" />
               </div>
+              {/* Alerta quando o tempo andou mais de 10 pontos à frente das
+                * entregas (ex.: 60% do prazo passou e só 40% está pronto).
+                * Só aparece se o projeto já tem tarefas. */}
               {pr.pct + 10 < decorrido && pr.total > 0 && <Aviso tipo="aviso">O tempo está andando mais rápido que as entregas.</Aviso>}
             </div>
             <Colunas itens={porColuna} altura={110} />
@@ -181,6 +317,8 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
 
       <aside className="space-y-6">
         <Card className="p-5">
+          {/* GRAVA: trocar o status salva o projeto na hora (sem botão
+            * "Salvar") e mostra um aviso confirmando. */}
           <Select label="Status do projeto" value={projeto.status}
             onChange={(e) => { d.salvar('projetos', { ...projeto, status: e.target.value as Projeto['status'] }); avisar(`Status alterado para ${ROTULO_STATUS_PROJETO[e.target.value as Projeto['status']]}.`); }}
             opcoes={Object.entries(ROTULO_STATUS_PROJETO).map(([valor, rotulo]) => ({ valor, rotulo }))} />
@@ -200,6 +338,11 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
         </Card>
       </aside>
 
+      {/* Confirmação de exclusão. APAGA: d.remover('projetos') remove o
+        * projeto e, em cascata (lib/store.tsx), as tarefas e as alocações
+        * dele. NAVEGA: depois volta para /projetos.
+        * ⚠️ ATENÇÃO: não tem desfazer; por isso a tela sugere mudar o status
+        * para Concluído em vez de excluir. */}
       <Modal aberto={excluir} onFechar={() => setExcluir(false)} tamanho="sm" titulo="Excluir este projeto?"
         rodape={<><Button variante="secundario" onClick={() => setExcluir(false)}>Cancelar</Button>
           <Button variante="perigo" onClick={() => { d.remover('projetos', projeto.id); avisar('Projeto excluído.'); router.push('/projetos'); }}>Excluir projeto</Button></>}>
@@ -209,31 +352,57 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
   );
 }
 
-/** Nova tarefa: título, responsável, prazo e coluna são obrigatórios (slide 21). */
+/**
+ * Modal "Nova tarefa": título, responsável, prazo e coluna são obrigatórios
+ * (§5: tarefa carrega responsável e prazo desde a criação).
+ *
+ * @param props.projeto projeto onde a tarefa será criada.
+ * @param props.onFechar fecha o modal.
+ * @param props.onCriada recebe o id da tarefa criada (a ficha usa para
+ *   abrir o detalhe dela logo em seguida).
+ * @returns o modal com o formulário.
+ */
 function NovaTarefa({ projeto, onFechar, onCriada }: { projeto: Projeto; onFechar: () => void; onCriada: (id: string) => void }) {
   const d = useDados();
   const avisar = useToast();
+  // Valores do formulário. Padrões: prazo daqui a 7 dias, primeira coluna
+  // do quadro ("A fazer") e prioridade média.
   const [v, setV] = useState({ titulo: '', responsavelId: '', prazo: somaDias(hojeISO(), 7), colunaId: projeto.colunas[0].id, prioridade: 'media' as Projeto['prioridade'] });
+  // Mensagens de erro por campo ({ titulo: 'Dê um título...' }).
   const [erros, setErros] = useState<Record<string, string>>({});
+  // Só quem está alocado no projeto pode ser responsável pela tarefa.
   const equipe = d.alocacoes.filter((a) => a.projetoId === projeto.id).map((a) => d.pessoa(a.pessoaId)!).filter(Boolean);
 
+  /**
+   * Valida os campos obrigatórios e, se estiver tudo certo, cria a tarefa,
+   * fecha o modal e abre o detalhe dela.
+   */
   const criar = () => {
+    // Junta todos os erros de uma vez, para a pessoa ver tudo que falta.
     const e: Record<string, string> = {};
     if (!v.titulo.trim()) e.titulo = 'Dê um título à tarefa.';
+    // Sem equipe não há quem escolher: a mensagem diz o que fazer antes.
     if (!v.responsavelId) e.responsavelId = equipe.length ? 'Escolha o responsável.' : 'Aloque alguém na equipe primeiro.';
     if (!v.prazo) e.prazo = 'Informe o prazo.';
     setErros(e);
+    // Algum erro? Para aqui e deixa as mensagens nos campos.
     if (Object.keys(e).length) return;
     const id = novoId('tar');
+    // GRAVA: a tarefa nova na store. "ordem" = quantas já existem na coluna
+    // escolhida, ou seja, ela entra no fim da coluna.
+    // TODO(API): vira um POST de tarefa (a store cuida disso).
     d.salvar('tarefas', { id, projetoId: projeto.id, colunaId: v.colunaId, titulo: v.titulo.trim(), descricao: '', responsavelId: v.responsavelId, prazo: v.prazo, prioridade: v.prioridade, etiquetas: [], checklist: [], comentarios: [], ordem: d.tarefas.filter((t) => t.colunaId === v.colunaId && t.projetoId === projeto.id).length });
     avisar('Tarefa criada.');
     onFechar();
+    // GRAVA na URL: ?tarefa=id, abrindo o detalhe para completar o resto.
     onCriada(id);
   };
 
   return (
     <Modal aberto onFechar={onFechar} tamanho="md" titulo="Nova tarefa" descricao="Responsável e prazo são obrigatórios desde a criação."
       rodape={<><Button variante="secundario" onClick={onFechar}>Cancelar</Button><Button onClick={criar}>Criar tarefa</Button></>}>
+      {/* noValidate: desliga os balões de erro do navegador; quem valida e
+        * mostra as mensagens em português é a função criar(). */}
       <form onSubmit={(e) => { e.preventDefault(); criar(); }} noValidate className="space-y-4">
         <Input compacto label="Título" required value={v.titulo} error={erros.titulo} placeholder="Ex.: Tela de login" onChange={(e) => setV({ ...v, titulo: e.target.value })} />
         <div className="grid grid-cols-2 gap-4">
@@ -245,6 +414,9 @@ function NovaTarefa({ projeto, onFechar, onCriada }: { projeto: Projeto; onFecha
             opcoes={Object.entries(ROTULO_PRIORIDADE).map(([valor, rotulo]) => ({ valor, rotulo }))} />
         </div>
         <p className="text-[12px] text-tinta-suave">Etiquetas, descrição e checklist você completa no detalhe, que abre logo depois de criar.</p>
+        {/* Botão invisível: faz o Enter dentro de um campo enviar o
+          * formulário, já que o botão "Criar tarefa" fica no rodapé do modal,
+          * fora do <form>. */}
         <button type="submit" hidden />
       </form>
     </Modal>
