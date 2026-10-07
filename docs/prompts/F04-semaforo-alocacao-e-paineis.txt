@@ -1,0 +1,31 @@
+[F04 · SEMÁFORO DE CARGA — PARTE 4: MODAL DE ALOCAÇÃO, EQUIPE, PAINÉIS E FICHA]
+
+Leia CLAUDE.md, docs/contexto-cais.md §5 e §12 (fluxo 3), lib/carga.ts,
+components/ui/Semaforo.tsx, components/projetos/Equipe.tsx,
+components/paineis/ e app/(sistema)/pessoas/page.tsx. Continue na branch
+`feat/semaforo-carga`. Modo de planejamento primeiro.
+
+1. Modal "Alocar pessoa" (Equipe.tsx)
+   - Troque o aviso único "passa de 40 h" por uma prévia do período escolhido:
+     LinhaDeSemanas "antes" e "depois" (simularAlocacao), atualizando ao mudar
+     pessoa, datas ou carga.
+   - Se alguma semana ficar vermelha, texto claro:
+     "Bruno fica acima do limite nas semanas de 13/10 e 20/10. Com 30 h/sem,
+      ele está livre a partir de 15/11." + botão "Usar 15/11 como início"
+     (proximaJanelaLivre, mantendo a duração em dias úteis; ajusta o fim).
+   - Continua aviso: "Alocar" funciona, salvo se BLOQUEAR_SOBRECARGA = true.
+   - No select de pessoa, cada opção traz o pico no período do projeto em
+     texto: "Bruno Lima · Front-end · acima do limite no período".
+2. Aba Equipe: a coluna Carga ganha IndicadorCarga com o pico da pessoa no
+   período DAQUELA alocação; o "!" antigo sai. (A empresa continua sem ver carga.)
+3. PainelAdmin: link "Ver carga da equipe" no card de carga.
+4. PainelProfissional, "Minha carga": LinhaDeSemanas das próximas 8 semanas e
+   a quebra por projeto da semana atual (troque o marcador deixado no D05).
+5. Ficha de pessoa (admin): seção "Disponibilidade" com a mesma linha.
+6. Atualize SISTEMA.md e CHANGELOG.md.
+
+Aceite: alocar Bruno noutro projeto mostra a sugestão de data e o botão
+aplica; alocar Diego após o sprint não acusa sobrecarga; teclado; 375 px.
+tsc, lint, build.
+Commit: `feat: semáforo na alocação, na equipe, nos painéis e na ficha`.
+Depois, faça o merge de `feat/semaforo-carga` se eu aprovar.

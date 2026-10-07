@@ -1,0 +1,24 @@
+[F02 · SEMÁFORO DE CARGA — PARTE 2: SEED E INTEGRAÇÃO COM A STORE]
+
+Leia CLAUDE.md, lib/carga.ts, lib/carga.casos.ts, lib/seed.ts, lib/store.tsx e
+components/paineis/PainelAdmin.tsx. Continue na branch `feat/semaforo-carga`.
+Modo de planejamento primeiro.
+
+1. lib/store.tsx: cargaDaPessoa passa a devolver as horas ATIVAS HOJE
+   (ocupacaoNoDia), mantendo a assinatura para não quebrar as telas. Comente a
+   mudança de comportamento e quem usa a função.
+2. lib/seed.ts — cenários que demonstrem o semáforo:
+   a) Diego: projeto curto "Sprint de acessibilidade" (Vértice) de hoje a
+      hoje+7 com 10 h/sem, e outra alocação de 30 h/sem começando em hoje+8
+      (o exemplo do time, §16);
+   b) Elisa (limite 30 h) ficando vermelha só em 2 semanas por sobreposição;
+   c) uma pessoa ativa totalmente livre nas próximas semanas.
+   Mantenha o cenário atual do Bruno (vermelho).
+3. Aumente em 1 a versão da chave do localStorage com `// ⚠️ ATENÇÃO:`.
+4. PainelAdmin, card "Alocação e carga": use a semana atual (ocupacaoNaSemana)
+   com o texto do nível ao lado de cada barra.
+5. Rode de novo lib/carga.casos.ts.
+
+Aceite: no painel do admin, Diego nunca aparece acima do limite; Bruno
+aparece; números coerentes com os casos. tsc, lint, build.
+Commit: `feat: semáforo integrado à store e cenários de demonstração`.

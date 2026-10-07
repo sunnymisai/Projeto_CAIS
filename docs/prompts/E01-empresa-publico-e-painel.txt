@@ -1,0 +1,29 @@
+[E01 · EMPRESA — PARTE 1: PÚBLICO DAS TRILHAS E PAINEL DA EMPRESA]
+
+Leia CLAUDE.md, docs/contexto-cais.md §3, §4 e §6, lib/metricas.ts,
+lib/escopo.ts e components/paineis/. Crie a branch `feat/empresa`.
+Modo de planejamento primeiro.
+
+1. Público das trilhas (lib/metricas.ts → publicoDaTrilha)
+   Hoje só profissionais entram. Pelo §4, a trilha GERAL vale para todas as
+   empresas e profissionais, e a DA EMPRESA vale para as pessoas ligadas a ela.
+   Inclua as pessoas de perfil 'empresa' ativas nesses dois alcances.
+   ⚠️ Isso muda números do painel do admin: ANTES de aplicar, me mostre os
+   números antes/depois com o seed e espere minha confirmação.
+2. components/paineis/PainelEmpresa.tsx ("entra, entende, sai", §3)
+   - Cabeçalho: nome fantasia da empresa da sessão e status no programa.
+   - Andamento dos projetos próprios: card por projeto com status, % pronto
+     (progressoProjeto), atrasadas e entrega.
+   - Quem está alocado e em quê: pessoa, papel, projeto e período. A empresa
+     NÃO vê a carga total nem outros projetos da pessoa (são de outros
+     clientes) — comente essa decisão de privacidade.
+   - Entregas: aprovadas (tarefas na última coluna) × aguardando revisão
+     (penúltima coluna), por projeto.
+   - Progresso da trilha do time: trilhas de alcance 'empresa' desta empresa
+     com concluíram, em andamento e não iniciaram.
+   Gráficos SVG existentes, sempre com resumo em texto.
+
+Aceite: Marcos vê só Vértice; Patrícia só Aurora; quatro estados por bloco
+(Aurora tem projeto ainda planejado: teste o vazio de entregas). Dois temas.
+tsc, lint, build.
+Commit: `feat: painel da empresa e público das trilhas`.

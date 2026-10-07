@@ -1,0 +1,27 @@
+[D02 · PROFISSIONAL — PARTE 2: MINHAS TRILHAS E DETALHE DA TRILHA]
+
+Leia CLAUDE.md, docs/contexto-cais.md §3 e §4, lib/metricas.ts, lib/escopo.ts
+e lib/trilhas.ts. Continue na branch `feat/profissional`.
+Modo de planejamento primeiro. CELULAR PRIMEIRO: desenhe em 375 px e depois
+expanda para o desktop.
+
+1. /minhas-trilhas (perfis profissional e empresa)
+   - Topo: "Continue de onde parou" com a próxima etapa em destaque (§4).
+   - Lista agrupada por alcance (geral, empresa, profissional) com a cor do §4
+     como acento (constante ALCANCE de lib/trilhas.ts) e o nome do alcance em texto.
+   - Card: título, barra de progresso com texto ("3 de 5 etapas"), nota do
+     quiz quando houver e prazo com situacaoDoPrazo: âmbar "Faltam 2 dias",
+     vermelho "Venceu em 10/10" (sempre com texto e ícone).
+   - Quatro estados. Vazio: "Nenhuma trilha atribuída a você ainda."
+2. /minhas-trilhas/[id]
+   - Cabeçalho com alcance, prazo e progresso.
+   - Lista de etapas (<ol>) com ícone do tipo (TIPOS_ETAPA) e estado:
+     concluída, atual, bloqueada. Bloqueada EXPLICA o motivo:
+     "Conclua 'Código de conduta' para liberar" (§4).
+   - Botão principal "Começar"/"Continuar"; no celular, fixo no rodapé com
+     área segura (safe-area) e alvo de toque de 44 px.
+   - Trilha fora do público da pessoa → /sem-permissao.
+
+Aceite: login como Ana, ver as trilhas certas (compare com o público que o
+admin vê); 375 px e desktop; teclado. tsc, lint, build.
+Commit: `feat: minhas trilhas e detalhe da trilha`.

@@ -1,0 +1,33 @@
+[F03 · SEMÁFORO DE CARGA — PARTE 3: COMPONENTES E TELA "CARGA DA EQUIPE"]
+
+Leia CLAUDE.md, docs/contexto-cais.md §10 e §13, lib/carga.ts, components/ui/
+e app/(sistema)/design-system/page.tsx. Continue na branch
+`feat/semaforo-carga`. Modo de planejamento primeiro.
+
+1. components/ui/Semaforo.tsx
+   - <IndicadorCarga nivel pct compacto? />: pílula com ícone + "85%"
+     (compacto) ou ícone + "85% · No limite". aria-label completo.
+   - <LinhaDeSemanas semanas onSelecionar? />: fileira de indicadores com a
+     data da segunda acima de cada um ("13/10").
+   - <LegendaSemaforo />: os quatro níveis.
+   - Documente os três em /design-system com todos os níveis, nos dois temas.
+2. Tela /carga (só admin; substitua o "Em construção")
+   - Matriz em <table>: linhas = profissionais ativos (<th scope="row">);
+     colunas = semanas (<th scope="col">), começando na atual; seletor 4/8/12
+     semanas; botões ← → e "Hoje". Célula = IndicadorCarga compacto com
+     aria-label "Bruno Lima, semana de 13/10: 113%, acima do limite".
+   - Nome e cabeçalho fixos (sticky); só a área da tabela rola na horizontal.
+   - Linha expansível (botão com aria-expanded) mostra uma sub-linha POR
+     PROJETO com a contribuição de cada um na semana — "cada colaborador em
+     cada projeto" (§16).
+   - Clique/Enter na célula abre painel lateral: % de cada dia útil da semana
+     e as alocações ativas (projeto, papel, carga, período) com link para a
+     aba Equipe do projeto.
+   - Filtros acima: área, projeto, nível ("só acima do limite"), busca por
+     nome. Contagem no rodapé. LegendaSemaforo visível.
+   - Celular: cards por pessoa com LinhaDeSemanas das próximas 4 semanas.
+   - Quatro estados. Vazio: "Nenhum profissional ativo" com link para Pessoas.
+
+Aceite: Diego nunca vermelho; Elisa vermelha só nas 2 semanas; navegação
+completa pelo teclado; 375 px; dois temas. tsc, lint, build.
+Commit: `feat: componentes do semáforo e tela de carga da equipe`.

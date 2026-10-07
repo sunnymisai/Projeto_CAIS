@@ -1,0 +1,31 @@
+[B04 · HOMEPAGE — PARTE 4: PERGUNTAS, FORMULÁRIO E RODAPÉ]
+
+Leia CLAUDE.md, docs/contexto-cais.md §3, §7 e §11, lib/useFormulario.ts e
+lib/utils.ts. Continue na branch `feat/homepage`. Modo de planejamento primeiro.
+
+1. Perguntas.tsx (id "perguntas"): <details>/<summary> (funciona sem
+   JavaScript), com: como a empresa participa; quem são os profissionais; como
+   a empresa acompanha o projeto; o que é a trilha da empresa; quanto custa
+   (texto genérico "fale com a coordenação"); LGPD e dados. Respostas que
+   precisam de validação recebem {/* TODO(PROGLOGIC): confirmar texto */}.
+2. FormularioInteresse.tsx (id "participar", Client Component):
+   - Campos: razão social*, CNPJ* (mascaraCNPJ + cnpjValido de lib/utils),
+     nome do contato*, e-mail*, telefone (mascaraTelefone), segmento (select)
+     e mensagem.
+   - useFormulario: erro aparece ao sair do campo e se atualiza enquanto corrige.
+   - Envio SIMULADO: 700 ms de espera, botão em estado de carregando,
+     toast de sucesso e, no lugar do formulário, a mensagem "Recebemos seu
+     interesse. A coordenação do programa entra em contato." com botão
+     "Enviar outro". Marque com `// SIMULADO:` e `// TODO(API):`.
+   - Erro de envio simulável (constante comentada) para mostrar o estado de erro.
+3. RodapeHome.tsx: logo negativa, "PROGLOGIC · Residência Técnica", links das
+   âncoras e "Entrar".
+4. Substitua o app/page.tsx provisório pela composição final das seções.
+5. Atualize SISTEMA.md (rota "/" e "/login") e CHANGELOG.md.
+
+Aceite: formulário inteiro operável pelo teclado, erros lidos pelo leitor de
+tela (aria-describedby, aria-invalid), quatro estados do formulário (vazio,
+com erro de campo, enviando, enviado) e erro de envio. Dois temas, 375 px.
+tsc, lint, build.
+Commit: `feat: perguntas, formulário de interesse e rodapé da homepage`.
+Depois, faça o merge de `feat/homepage` na branch principal se eu aprovar.

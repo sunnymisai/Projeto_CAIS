@@ -1,0 +1,26 @@
+[G02 · PROJETOS — QUADRO EM TEMPO REAL (SIMULADO ENTRE ABAS)]
+
+Leia CLAUDE.md, docs/contexto-cais.md §5 (tempo real via WebSocket) e §7,
+lib/store.tsx e components/projetos/Quadro.tsx. Crie a branch
+`feat/tempo-real`. Modo de planejamento primeiro.
+
+O WebSocket é do back-end (PROGLOGIC). No front, vamos preparar a camada e
+simular o comportamento entre abas do mesmo navegador.
+
+1. lib/tempoReal.ts: interface CanalTempoReal { publicar(evento),
+   assinar(callback) → cancelar } e uma implementação SIMULADA com
+   BroadcastChannel ('cais-tempo-real'). Eventos: tarefa_movida,
+   tarefa_salva, tarefa_removida, comentario_novo. Cabeçalho explicando como
+   trocar pela implementação com WebSocket (`// TODO(API):`).
+2. lib/store.tsx: depois de cada ação que altera tarefas, publique o evento
+   (`// GRAVA:`); ao receber evento de outra aba, recarregue os dados do
+   armazenamento. Cuide para não entrar em laço (a aba que publicou ignora o
+   próprio evento) — explique isso no comentário.
+3. Quadro: o cartão movido por outra pessoa pisca um destaque suave (desligado
+   com prefers-reduced-motion) e um aviso aria-live educado anuncia
+   "Ana moveu 'Tela de login' para Revisão".
+4. Indicador discreto "Ao vivo" no topo do quadro.
+
+Aceite: duas abas abertas no mesmo projeto; mover na primeira atualiza a
+segunda sem recarregar. tsc, lint, build. SISTEMA.md e CHANGELOG.md.
+Commit: `feat: quadro em tempo real simulado entre abas`.

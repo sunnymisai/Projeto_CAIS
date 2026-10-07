@@ -1,0 +1,28 @@
+[C05 · ACESSO — RECUPERAÇÃO DE SENHA]
+
+Leia CLAUDE.md, docs/contexto-cais.md §15 (bloco 1), lib/auth.tsx,
+components/LoginForm.tsx e app/login/page.tsx. Crie a branch
+`feat/fluxos-de-acesso`. Modo de planejamento primeiro.
+
+1. Senhas simuladas (lib/auth.tsx)
+   - Hoje as senhas estão fixas no código. Crie um armazenamento simulado
+     (chave 'cais-senhas-demo' no localStorage), acessado SÓ por funções
+     dentro de lib/auth.tsx: definirSenha(email, senha) e conferirSenha(email, senha).
+   - Qualquer pessoa ativa do seed entra com Cais@2026 até trocar a senha.
+   - Cabeçalho com aviso em caixa alta: SIMULADO, NUNCA PARA PRODUÇÃO; senha
+     é responsabilidade do back-end (§7).
+   - Crie lib/senha.ts com regrasDaSenha(senha) → lista de regras
+     { texto, cumprida } (mínimo 8 caracteres, uma maiúscula, um número),
+     reutilizável aqui e no primeiro acesso.
+2. app/recuperar-senha/page.tsx (mesmo layout de duas colunas do login)
+   - Passo 1: e-mail → "Enviar link". A mensagem de sucesso é a MESMA exista
+     ou não o e-mail (comente o motivo: não revelar quem tem conta).
+   - Passo 2 (SIMULADO): aviso "Ambiente de demonstração" com o botão
+     "Abrir o link recebido" → /recuperar-senha?token=demo&email=…
+   - Passo 3: nova senha e confirmação, com a lista de regras em tempo real
+     (ícone E texto, nunca só cor; aria-live educado). Salvar → toast → /login.
+3. Ligue o link "Esqueceu a senha?" do LoginForm a /recuperar-senha.
+
+Aceite: trocar a senha da Ana e entrar com a nova; a antiga deixa de
+funcionar; fluxo completo pelo teclado e em 375 px. tsc, lint, build.
+Commit: `feat: recuperação de senha simulada`.

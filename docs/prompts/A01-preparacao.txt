@@ -1,0 +1,27 @@
+[A01 · PREPARAÇÃO E LINHA DE BASE]
+
+Você está no projeto CAIS v4 (Next.js 16 + React 19 + TypeScript + Tailwind v4).
+Esta tarefa NÃO cria funcionalidade. Ela garante uma base que compila e está
+versionada antes das próximas tarefas. Responda sempre em português do Brasil,
+explicando como para estudantes do 2º período de ADS.
+
+Faça, nesta ordem, e me mostre o resultado de cada passo:
+
+1. Leia AGENTS.md, CLAUDE.md e SISTEMA.md (só leitura).
+2. Rode `git status`. Se houver alterações não commitadas, liste-as e pergunte
+   se devo commitar. Não descarte nada.
+3. Rode `npm install`, `npx tsc --noEmit`, `npm run lint` e `npm run build`.
+4. Se algo falhar, explique a causa em linguagem simples e proponha a correção
+   mínima. Só aplique depois que eu aprovar.
+5. Confirme que existem: app/(sistema)/{painel,empresas,pessoas,trilhas,
+   projetos,design-system}; lib/{store,auth,metricas,seed,tipos,toast,
+   useFormulario,utils,trilhas}; components/{ui,shell,projetos}. Liste o que faltar.
+6. Leia node_modules/next/dist/docs/ e escreva docs/notas-next16.md (crie a
+   pasta docs/) explicando, de forma didática e com exemplos curtos, o que mudou
+   no Next 16 sobre: rotas públicas e protegidas, redirect, searchParams em
+   páginas, metadados, Server vs. Client Components e middleware/proxy.
+   As próximas tarefas vão consultar esse arquivo.
+7. Crie a branch `chore/linha-de-base` e commite com
+   `chore: linha de base do v4 e notas do Next 16`.
+
+Ao final, me dê uma tabela "funciona / não funciona" com o estado do projeto.

@@ -1,0 +1,26 @@
+[H01 · REVISÃO FINAL (DEFINIÇÃO DE PRONTO)]
+
+Leia CLAUDE.md e docs/contexto-cais.md §13 e §14. Rode ao fim de cada bloco
+ou antes de toda apresentação. NÃO corrija nada ainda.
+
+Para cada rota do SISTEMA.md, monte uma tabela rota × critério com
+✓ / ✗ / ◐ e uma nota curta:
+1. Quatro estados (carregando, vazio, erro, com dado).
+2. 375 px sem rolagem horizontal (obrigatório nas telas do Profissional).
+3. Navegável só pelo teclado, foco visível, sem armadilha de foco.
+4. Ícones sozinhos com aria-label; gráficos com resumo em texto.
+5. Só tokens de cor. Rode: grep -rnE "#[0-9a-fA-F]{3,8}\b" app components
+   e liste os que não forem logo ou pilares.
+6. Respeita permissões (lib/permissoes.ts) — teste com os quatro logins.
+7. Padrão de comentários: cabeçalho, JSDoc e rótulos GRAVA/APAGA/NAVEGA nos
+   pontos que alteram dados ou navegam.
+8. Sem console.log esquecido e sem código comentado "para depois".
+9. Sem erro no console do navegador.
+
+Depois rode npx tsc --noEmit, npm run lint, npm run build e os arquivos
+lib/*.casos.ts.
+
+Entregue a tabela e a lista de problemas ordenada por gravidade (bloqueia /
+atrapalha / cosmético), com proposta de correção para cada um. Espere eu
+escolher o que corrigir. Ao final das correções, atualize SISTEMA.md (seção
+"Ainda simulado ou fora desta versão") e CHANGELOG.md.

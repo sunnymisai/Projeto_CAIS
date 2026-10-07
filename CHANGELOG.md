@@ -2,6 +2,10 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Registro e prompts no repositório (master)
+- Criado: `docs/prompts/` (os 34 arquivos dos prompts, do 00-GUIA ao H01, copiados de `Desktop/promptsCAIS/prompts-cais`) e `docs/ONDE-PARAMOS.md` (situação de cada bloco, como retomar, pendências e decisões).
+- Modificado: `SISTEMA.md` (link para os dois).
+
 ## Painel da empresa para a apresentação (branch `feat/painel-empresa`)
 - Criado: `components/paineis/Bloco.tsx` (moldura de bloco com os estados e o link "Ver todas", agora compartilhada pelos painéis), `testes/navegador/paineis-todos-perfis.mjs` (o painel de cada perfil abre com conteúdo, também em 375 px).
 - Modificado: `components/paineis/PainelEmpresa.tsx` (era "Em construção"; agora andamento dos projetos, quem está no time, entregas e trilha do time; o E01 aprofunda), `components/paineis/PainelProfissional.tsx` (usa o `Bloco` compartilhado), `SISTEMA.md`.

@@ -1,0 +1,28 @@
+[C02 · TRÊS PERFIS — PARTE 2: LOGIN E PROTEÇÃO DE ROTA]
+
+Leia CLAUDE.md, lib/auth.tsx, lib/permissoes.ts, components/LoginForm.tsx e
+app/(sistema)/layout.tsx. Continue na branch `feat/tres-perfis`.
+Modo de planejamento primeiro.
+
+1. lib/auth.tsx
+   - Remova o bloqueio `perfil !== 'admin'` e o motivo 'perfil' do resultado.
+   - Contas de demonstração (todas com Cais@2026, marcadas `// SIMULADO:`):
+     admin@cais.com.br (admin), ana.souza@cais.example (profissional),
+     marcos@vertice.example (empresa Vértice) e patricia@aurora.example
+     (empresa Aurora). Confirme que os pessoaId batem com lib/seed.ts.
+2. components/LoginForm.tsx
+   - Remova a mensagem de "perfil sem acesso".
+   - Troque o botão "Preencher" por um seletor discreto "Entrar como…" com as
+     quatro contas (preenche e-mail e senha). Marque `// SIMULADO:` e deixe
+     claro que sai quando a API existir.
+3. app/(sistema)/layout.tsx
+   - Troque a checagem fixa de admin por podeAcessar(sessao.perfil, caminho).
+     Sem sessão → /login?voltar=…; sem permissão → /sem-permissao.
+4. app/sem-permissao/page.tsx: explique em português por que a pessoa não
+   pode ver a página e ofereça "Voltar ao painel" além de "Entrar com outra conta".
+5. Enquanto as telas de cada perfil não existem, /painel para empresa e
+   profissional pode mostrar o painel atual — a parte 3 resolve isso.
+
+Aceite: os quatro logins entram; profissional digitando /empresas cai em
+/sem-permissao; admin continua igual. tsc, lint, build.
+Commit: `feat: login dos três perfis e proteção de rota por permissão`.

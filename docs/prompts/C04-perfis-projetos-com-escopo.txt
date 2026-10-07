@@ -1,0 +1,25 @@
+[C04 · TRÊS PERFIS — PARTE 4: PROJETOS E QUADRO RESPEITANDO O PERFIL]
+
+Leia CLAUDE.md, docs/contexto-cais.md §5, lib/permissoes.ts, lib/escopo.ts,
+app/(sistema)/projetos/ e components/projetos/. Continue na branch
+`feat/tres-perfis`. Modo de planejamento primeiro.
+
+1. /projetos lista só projetosVisiveis. "+ Novo projeto" só para quem
+   podeFazer 'editar_projeto'.
+2. /projetos/[id]: projeto fora do escopo (inclusive digitado na URL) →
+   /sem-permissao.
+3. Esconda (não só desabilite) cada botão que o perfil não pode usar: nova
+   tarefa, nova lista, renomear/excluir lista, alocar, editar projeto.
+   Explique num comentário por que esconder é melhor que desabilitar aqui.
+4. Quadro: profissional só arrasta cartões dos quais é responsável; os outros
+   mostram um cadeado com aria-label "Só o responsável pode mover". Empresa não
+   arrasta. No celular, o "mover para…" do detalhe segue a mesma regra.
+5. DetalheTarefa: quem não pode editar vê os campos como TEXTO somente
+   leitura (não inputs desabilitados — explique: o leitor de tela anuncia
+   melhor). Comentários continuam liberados para quem enxerga o projeto.
+6. Atualize SISTEMA.md (contas, rotas, permissões) e CHANGELOG.md.
+
+Aceite: Ana arrasta só as tarefas dela; Marcos vê só Vértice e só comenta;
+Patrícia vê só Aurora; admin igual a antes. tsc, lint, build.
+Commit: `feat: projetos e quadro respeitando permissões por perfil`.
+Depois, faça o merge de `feat/tres-perfis` se eu aprovar.

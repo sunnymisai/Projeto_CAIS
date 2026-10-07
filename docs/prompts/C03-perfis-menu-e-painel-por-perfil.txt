@@ -1,0 +1,26 @@
+[C03 · TRÊS PERFIS — PARTE 3: MENU, TOPO E PAINEL POR PERFIL]
+
+Leia CLAUDE.md, docs/contexto-cais.md §6 e §10, components/shell/
+(navegacao.ts, Sidebar.tsx, Topbar.tsx) e app/(sistema)/painel/page.tsx.
+Continue na branch `feat/tres-perfis`. Modo de planejamento primeiro.
+
+1. Painel por perfil ("o painel muda conforme quem olha", §6)
+   - Mova o conteúdo atual de painel/page.tsx para
+     components/paineis/PainelAdmin.tsx sem mudar o comportamento.
+   - Crie PainelEmpresa.tsx e PainelProfissional.tsx como esqueleto com
+     EstadoVazio "Em construção" (blocos D e E preenchem).
+   - painel/page.tsx só escolhe o componente pelo perfil da sessão.
+2. navegacao.ts: cada item ganha `perfis: Perfil[]`. Menus:
+   - Admin: o atual + "Carga da equipe" (/carga) e "Acessos" (/acessos) —
+     crie as duas rotas com EstadoVazio "Em construção".
+   - Profissional: Painel, Minhas trilhas, Minhas tarefas, Projetos.
+   - Empresa: Painel, Projetos, Trilha da empresa (/minhas-trilhas).
+   Crie /minhas-trilhas e /minhas-tarefas com EstadoVazio "Em construção".
+   A Sidebar filtra pelo perfil.
+3. Topbar: Etiqueta com o perfil ao lado do nome; menu do perfil ganha
+   "Meu perfil" (/perfil, com EstadoVazio por enquanto). A busca Ctrl+K só
+   retorna o que lib/escopo permite ao perfil.
+
+Aceite: cada um dos quatro logins vê só o próprio menu; nenhum item leva a
+404; admin continua com o painel de antes. tsc, lint, build.
+Commit: `feat: menu, topo e painel escolhidos pelo perfil`.

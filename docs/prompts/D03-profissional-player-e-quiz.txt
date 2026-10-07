@@ -1,0 +1,35 @@
+[D03 · PROFISSIONAL — PARTE 3: PLAYER DE ETAPA E QUIZ]
+
+Leia CLAUDE.md, docs/contexto-cais.md §4, §12 (fluxo 1) e §13, lib/tipos.ts,
+lib/metricas.ts e lib/permissoes.ts. Continue na branch `feat/profissional`.
+Modo de planejamento primeiro. Celular primeiro.
+
+1. lib/quiz.ts (função pura, sem React, imports relativos, comentada linha a linha)
+   - corrigirQuiz(perguntas, respostas) → { nota 0–100, acertos, total,
+     porPergunta: { acertou, correta, marcada }[] }
+   - resultadoDoQuiz(nota, notaMinima, tentativasUsadas, tentativasMax)
+     → 'aprovado' | 'reprovado_pode_tentar' | 'reprovado_sem_tentativas'
+   - lib/quiz.casos.ts com casos (tudo certo, tudo errado, nota no limite,
+     última tentativa) rodando com `node --experimental-strip-types`.
+2. /minhas-trilhas/[id]/etapa/[etapaId]
+   - Texto: renderiza. Vídeo e áudio: <video>/<audio> nativos com controles;
+     sem URL, mostra "conteúdo de demonstração". PDF, apresentação e link:
+     card com "Abrir em nova aba" (rel="noopener noreferrer").
+   - "Marcar como concluída" → GRAVA o progresso via useDados().salvar.
+   - Anterior / próxima; próxima bloqueada até concluir.
+   - Etapa bloqueada acessada pela URL → volta ao detalhe com a explicação.
+3. Quiz
+   - Celular: uma pergunta por vez com "Pergunta 2 de 5". Desktop: todas.
+   - Alternativas como radiogroup acessível (setas do teclado, fieldset/legend).
+   - Enviar → resultado com a nota, a nota mínima e a revisão de cada
+     resposta (certa/errada com ícone e texto).
+   - Reprovado com tentativas: "Tentar de novo" (embaralhe a ordem das
+     alternativas; explique por quê). Sem tentativas: "Fale com a coordenação".
+   - Aprovado: conclui a etapa e grava nota e tentativas.
+4. Última etapa concluída → tela de parabéns e volta para /minhas-trilhas.
+5. Ligue EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = true (criada no C06) e confirme
+   que o primeiro acesso de um profissional agora cai na trilha obrigatória.
+
+Aceite: Ana faz uma trilha inteira, reprova uma vez e passa; o painel do ADMIN
+mostra o progresso atualizado. Teclado, 375 px. tsc, lint, build.
+Commit: `feat: player de etapa e quiz com nota mínima e tentativas`.

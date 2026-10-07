@@ -1,0 +1,38 @@
+[C01 · TRÊS PERFIS — PARTE 1: REGRAS DE PERMISSÃO E ESCOPO (só lib/)]
+
+Leia CLAUDE.md, docs/contexto-cais.md §3, §5 e §7, lib/tipos.ts, lib/auth.tsx
+e lib/metricas.ts. Crie a branch `feat/tres-perfis`. Modo de planejamento primeiro.
+
+Hoje só o Administrador entra. Esta parte cria SÓ as regras, em funções puras,
+sem mexer em telas. As partes seguintes usam estas funções.
+
+1. lib/permissoes.ts
+   - ROTAS_POR_PERFIL: prefixo de rota → perfis permitidos.
+       /painel, /projetos, /perfil ......... admin, empresa, profissional
+       /empresas, /pessoas, /trilhas,
+       /design-system, /carga, /acessos .... admin
+       /minhas-trilhas ...................... empresa, profissional
+       /minhas-tarefas ...................... profissional
+   - podeAcessar(perfil, caminho): boolean (prefixo mais longo vence; rota
+     não listada = só admin, por segurança — explique no comentário).
+   - podeFazer(perfil, acao, contexto): boolean, com as ações:
+       'criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista',
+       'alocar', 'editar_projeto' → só admin
+       'mover_tarefa' → admin sempre; profissional só se for o responsável
+       'comentar_tarefa' → qualquer perfil que enxerga o projeto
+   - Cada regra comentada com a seção do contexto e `// TODO(PROGLOGIC): confirmar`.
+2. lib/escopo.ts (filtros de dados pela sessão)
+   - projetosVisiveis(sessao, dados): admin todos; empresa os de empresaId
+     igual ao da pessoa; profissional os que têm alocação dela.
+   - tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis.
+   - podeVerProjeto(sessao, projetoId, dados).
+   - Cabeçalho explicando que isto é conveniência de interface: a segurança
+     real é do back-end da PROGLOGIC (§7).
+3. Ambos os arquivos sem React e com imports relativos, para poderem ser
+   testados com Node. Crie lib/permissoes.casos.ts com pelo menos 12 casos
+   (entrada, esperado, por quê) cobrindo os três perfis e rode com
+   `node --experimental-strip-types lib/permissoes.casos.ts`. Se a versão do
+   Node não suportar, me pergunte antes de instalar qualquer pacote.
+
+Aceite: casos passando; nenhuma tela alterada; tsc, lint, build.
+Commit: `feat: regras de permissão e escopo por perfil`.

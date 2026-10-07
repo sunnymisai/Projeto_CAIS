@@ -1,0 +1,31 @@
+[C06 · ACESSO — PRIMEIRO ACESSO POR CONVITE]
+
+Leia CLAUDE.md, docs/contexto-cais.md §11, §12 (fluxo 1) e §15, lib/auth.tsx,
+lib/senha.ts, lib/metricas.ts e app/(sistema)/pessoas/page.tsx. Continue na
+branch `feat/fluxos-de-acesso`. Modo de planejamento primeiro.
+
+1. Na ficha de pessoa (admin), quando o status for 'convidado', mostre
+   "Copiar link de convite" (SIMULADO: copia /primeiro-acesso?convite=<pessoaId>
+   e mostra um toast).
+2. app/primeiro-acesso/page.tsx
+   - Mostra nome e e-mail da pessoa (somente leitura), pede nova senha e
+     confirmação com regrasDaSenha e um aceite obrigatório dos termos de uso
+     e da LGPD.
+   - Ao salvar: definirSenha; status da pessoa vira 'ativo' via
+     useDados().salvar (`// GRAVA:`); cria a sessão; NAVEGA para /painel.
+   - Convite inexistente ou pessoa já ativa → estado de erro explicando, com
+     botão para /login.
+3. Guarda de trilha obrigatória (§12: "conclui e libera o sistema")
+   - Em lib/permissoes.ts: temTrilhaObrigatoriaPendente(pessoaId, dados).
+   - No layout de (sistema), se o perfil for profissional e houver pendência,
+     rotas fora de /minhas-trilhas* e /painel mostram "Conclua sua trilha de
+     boas-vindas para liberar o sistema" com botão para a trilha.
+   - Atrás da constante EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO, comentada. Deixe
+     `false` por enquanto: as telas de trilha do profissional só nascem no
+     bloco D, que vai ligá-la.
+4. Atualize SISTEMA.md e CHANGELOG.md.
+
+Aceite: convidar Felipe (status convidado no seed), abrir o link numa aba
+anônima, definir a senha e entrar; Felipe aparece como ativo para o admin.
+tsc, lint, build.
+Commit: `feat: primeiro acesso por convite`.

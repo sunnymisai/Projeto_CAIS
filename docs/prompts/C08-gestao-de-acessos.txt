@@ -1,0 +1,34 @@
+[C08 · CADASTROS — GESTÃO DE ACESSOS E VÍNCULO PESSOA-EMPRESA]
+
+Leia CLAUDE.md, docs/contexto-cais.md §3, §11 e §15 (bloco 3),
+app/(sistema)/pessoas/page.tsx, app/(sistema)/empresas/page.tsx,
+lib/permissoes.ts e lib/auth.tsx. Crie a branch `feat/acessos`.
+Modo de planejamento primeiro.
+
+1. Tela /acessos (só admin), seguindo a anatomia do §10:
+   - Tabela: pessoa, e-mail (login), perfil, empresa vinculada, status
+     (convidado, ativo, inativo) e último acesso (registre o último login em
+     lib/auth.tsx, SIMULADO).
+   - Filtros acima: perfil, status, empresa; busca por nome ou e-mail.
+   - Ações por linha (menu existente): reenviar convite (copia o link),
+     redefinir senha (gera senha temporária Cais@2026, SIMULADO), mudar perfil
+     (com confirmação explicando o que a pessoa passa a ver e perder),
+     inativar/reativar (nunca excluir, §11).
+   - Bloco "O que cada perfil pode fazer": tabela somente leitura gerada a
+     partir de ROTAS_POR_PERFIL e das ações de podeFazer, para o time e a
+     PROGLOGIC validarem.
+2. Vínculo pessoa-empresa
+   - Na ficha da empresa, aba "Pessoas" com quem tem perfil Empresa vinculado
+     a ela e os profissionais alocados em projetos dela; botão "Vincular
+     pessoa" (perfil Empresa, empresa obrigatória, §11).
+   - Na ficha de pessoa, mostrar a empresa como link para a ficha da empresa.
+3. Atualize SISTEMA.md e CHANGELOG.md.
+
+Dica técnica: o AuthProvider fica FORA do DadosProvider (app/providers.tsx),
+então a checagem de pessoa inativa pode ficar no layout de (sistema), que tem
+acesso a useDados(): se a pessoa da sessão estiver inativa, encerre a sessão
+e mostre a mensagem no login. Proponha a melhor opção no plano.
+
+Aceite: inativar uma pessoa impede o login dela com mensagem clara; mudar
+Ana para empresa e voltar funciona; tudo pelo teclado. tsc, lint, build.
+Commit: `feat: gestão de acessos e vínculo pessoa-empresa`.

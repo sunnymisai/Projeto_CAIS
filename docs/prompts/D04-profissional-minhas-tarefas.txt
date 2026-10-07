@@ -1,0 +1,22 @@
+[D04 · PROFISSIONAL — PARTE 4: MINHAS TAREFAS]
+
+Leia CLAUDE.md, docs/contexto-cais.md §5 e §12 (fluxo 4), lib/escopo.ts,
+lib/permissoes.ts e components/projetos/DetalheTarefa.tsx. Continue na branch
+`feat/profissional`. Modo de planejamento primeiro. Celular primeiro.
+
+/minhas-tarefas ("vê o que é dele hoje", §12):
+1. Todas as tarefas em que a pessoa é responsável, de todos os projetos,
+   agrupadas em Atrasadas, Hoje, Esta semana e Depois. Tarefas na última
+   coluna do projeto ficam numa seção recolhida "Concluídas recentemente".
+2. Item: título, projeto (com a cor do projeto como acento e o nome em texto),
+   prazo, prioridade (Etiqueta) e progresso do checklist.
+3. Filtros acima: projeto e prioridade. Contagem no rodapé.
+4. Clique/Enter abre o DetalheTarefa existente por cima da lista (mesmo
+   padrão do quadro, com ?tarefa= na URL). Mudar o Status no detalhe move a
+   tarefa, respeitando podeFazer.
+5. Quatro estados. Vazio: "Nenhuma tarefa com você. Bom trabalho!" com link
+   para Projetos.
+
+Aceite: mover uma tarefa pela lista reflete no quadro do projeto e
+vice-versa; 375 px; teclado. tsc, lint, build.
+Commit: `feat: minhas tarefas do profissional`.

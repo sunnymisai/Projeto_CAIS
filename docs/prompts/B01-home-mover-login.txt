@@ -1,0 +1,27 @@
+[B01 · HOMEPAGE — PARTE 1: LIBERAR A RAIZ "/" (login vai para /login)]
+
+Leia CLAUDE.md, docs/notas-next16.md e docs/contexto-cais.md §15 (ponto 0 e 1).
+Crie a branch `feat/homepage`. Modo de planejamento primeiro.
+
+Objetivo desta parte: a raiz "/" vai virar a homepage pública. Aqui você SÓ
+muda a rota do login, sem criar a home ainda.
+
+1. Mova a tela de login de app/page.tsx para app/login/page.tsx sem mudar o
+   visual nem o comportamento.
+2. Crie um app/page.tsx provisório e simples (título "CAIS" e link "Entrar"
+   para /login), comentado como provisório até a parte 2.
+3. Ache TODAS as referências à raiz usada como login e troque por /login,
+   preservando o ?voltar=. Comece por:
+   grep -rnE "(href|replace|push)\(?=?[\"'\`]/[\"'\`?]|/\?voltar" app components lib
+   Pontos já conhecidos: app/(sistema)/layout.tsx (sem sessão),
+   components/shell/Topbar.tsx (sair), app/sem-permissao/page.tsx,
+   app/not-found.tsx e components/LoginForm.tsx (destino após o login).
+   Cada troca ganha `// NAVEGA:` explicando o novo destino.
+4. Me mostre a lista final de referências alteradas.
+
+Aceite:
+- /login mostra o login de antes; /painel sem sessão vai para
+  /login?voltar=%2Fpainel e, após entrar, volta para /painel.
+- "Sair" leva para /login; "Entrar com outra conta" em /sem-permissao leva para /login.
+- tsc, lint e build passando.
+Commit: `refactor: login movido para /login`.

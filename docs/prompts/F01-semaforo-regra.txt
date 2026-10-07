@@ -1,0 +1,63 @@
+[F01 · SEMÁFORO DE CARGA — PARTE 1: A REGRA (lib/carga.ts)]
+
+Leia CLAUDE.md, docs/contexto-cais.md §5 e §16, lib/tipos.ts, lib/store.tsx
+(cargaDaPessoa), lib/utils.ts e components/projetos/Equipe.tsx.
+Crie a branch `feat/semaforo-carga`. Modo de planejamento primeiro.
+
+O PROBLEMA: cargaDaPessoa soma todas as alocações que terminam a partir de
+hoje, mesmo as que nunca acontecem ao mesmo tempo. Quem está num projeto que
+acaba em 7 dias e é alocado noutro que começa no 8º dia aparece sobrecarregado.
+
+O CONCEITO (escreva com suas palavras no cabeçalho de lib/carga.ts)
+- A unidade é o DIA ÚTIL (segunda a sexta). Feriados ficam fora (TODO).
+- Alocação ATIVA num dia: inicio <= dia <= fim (datas inclusivas).
+- Ocupação do dia (%) = soma da `carga` semanal das alocações ativas da pessoa
+  naquele dia ÷ cargaMax da pessoa × 100.
+  Exemplo 1: Bruno (limite 40 h), Portal 30 h/sem + Estoque 15 h/sem no mesmo
+  dia → 45 ÷ 40 = 112,5% → vermelho.
+  Exemplo 2 (o caso do time, §16): 10 h/sem de hoje até hoje+7 e outro projeto
+  de 30 h/sem de hoje+8 em diante → nunca ativos no mesmo dia → máximo 75% →
+  nunca vermelho.
+- Ocupação da semana = o PICO (maior ocupação diária) entre os dias úteis.
+  Horas da semana = carga × dias úteis ativos ÷ 5, somadas (só para exibir).
+- Níveis (constante LIMIARES no topo do arquivo, comentada para o time ajustar):
+    livre    0%            cinza, círculo vazio, "Livre"
+    verde    >0% a 75%     sucesso, check, "Com folga"
+    amarelo  >75% a 100%   aviso, alerta, "No limite"
+    vermelho >100%         erro, triângulo, "Acima do limite"
+- Projeto 'concluido' não conta; 'pausado' conta (constante CONTAR_PAUSADOS =
+  true com TODO(PROGLOGIC)). Pessoa inativa e cargaMax 0 ficam fora.
+- BLOQUEAR_SOBRECARGA = false (§5: "é aviso, não bloqueio"), comentada.
+
+FUNÇÕES PURAS (sem React, imports relativos, JSDoc com exemplo em cada uma)
+- diasUteisEntre(inicio, fim): string[]
+- segundaDaSemana(dia): string
+- semanasEntre(inicio, fim): string[]           (lista de segundas)
+- nivelDaOcupacao(pct)
+- ocupacaoNoDia(pessoa, dia, dados, ignorarAlocacaoId?)
+    → { pct, horas, porProjeto: { projetoId, alocacaoId, papel, carga }[] }
+- ocupacaoNaSemana(pessoa, segunda, dados, ignorar?)
+    → { pct, nivel, diaDoPico, horasProporcionais, porProjeto, porDia }
+- linhaDoTempo(pessoa, deSegunda, qtdSemanas, dados)
+- picoNoPeriodo(pessoa, inicio, fim, dados, ignorar?) → { pct, nivel }
+- simularAlocacao(pessoa, nova: { inicio, fim, carga }, dados, ignorar?)
+    → por semana do período: { segunda, antes, depois }
+- proximaJanelaLivre(pessoa, carga, duracaoDiasUteis, aPartirDe, dados)
+    → primeira data em que a nova alocação cabe sem passar de 100% em nenhum
+      dia; procura até 365 dias; null se não achar.
+
+DATAS: strings AAAA-MM-DD, reaproveitando somaDias/diasEntre de lib/utils.ts.
+Para o dia da semana, crie a data ao meio-dia (new Date(iso + 'T12:00:00')) e
+explique num `// ⚠️ ATENÇÃO:` que isso evita o erro de fuso que transforma
+segunda em domingo.
+
+CASOS DE TESTE: lib/carga.casos.ts com pelo menos 12 casos (entrada, esperado,
+por quê): fim de semana; alocação de 1 dia; início = fim; sequência sem
+sobreposição (exemplo 2); sobreposição parcial; exatamente 100%; cargaMax 30;
+projeto concluído; projeto pausado; pessoa inativa; proximaJanelaLivre
+encontrando e não encontrando. Rode com
+`node --experimental-strip-types lib/carga.casos.ts`.
+
+Nesta parte NÃO mexa em telas nem no seed.
+Aceite: todos os casos passam; tsc, lint, build.
+Commit: `feat: regra do semáforo de carga por período`.

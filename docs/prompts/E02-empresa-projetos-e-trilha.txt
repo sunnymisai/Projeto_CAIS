@@ -1,0 +1,25 @@
+[E02 · EMPRESA — PARTE 2: PROJETOS EM LEITURA, COMENTÁRIOS E TRILHA]
+
+Leia CLAUDE.md, docs/contexto-cais.md §3 e §5, lib/permissoes.ts,
+app/(sistema)/projetos/[id]/page.tsx e components/projetos/. Continue na
+branch `feat/empresa`. Modo de planejamento primeiro.
+
+1. Confira que o C04 cobriu a empresa: /projetos só com os dela, quadro sem
+   arrastar e sem criar, DetalheTarefa em leitura com comentários liberados.
+   Corrija o que faltar.
+2. Aba Visão geral do projeto para a empresa: prazo, status, líder, progresso
+   e "Próximas entregas" (tarefas com prazo nos próximos 14 dias).
+3. Aba Equipe para a empresa: pessoa, papel e período, SEM carga horária
+   (mesma regra de privacidade do E01).
+4. Comentário feito pela empresa aparece com a Etiqueta "Empresa" ao lado do
+   nome, para o time identificar o cliente na conversa.
+5. /minhas-trilhas para a empresa reaproveita as telas do bloco D; confirme
+   que a trilha da empresa e a geral aparecem para Marcos.
+6. Topbar: para o perfil Empresa, nome da empresa ao lado do avatar.
+7. Atualize SISTEMA.md e CHANGELOG.md.
+
+Aceite: Marcos comenta numa tarefa do Portal de pedidos e o admin vê o
+comentário com a etiqueta; Marcos não vê carga de ninguém; URL de projeto da
+Aurora → /sem-permissao. tsc, lint, build.
+Commit: `feat: visão da empresa nos projetos e na trilha`.
+Depois, faça o merge de `feat/empresa` se eu aprovar.

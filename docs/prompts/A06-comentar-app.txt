@@ -1,0 +1,29 @@
+[A06 · COMENTAR O CÓDIGO EXISTENTE — app/]
+
+Leia CLAUDE.md (seção PADRÃO DE COMENTÁRIOS). Crie a branch
+`docs/comentarios-app`.
+
+Tarefa: aplicar o padrão de comentários aos arquivos de app/ (layout, page, providers, not-found, sem-permissao e todo app/(sistema)/).
+
+REGRA DE OURO: não altere nenhum comportamento, nome, import, classe CSS ou
+ordem de código. Só adicione ou melhore comentários.
+
+Para cada arquivo:
+- Cabeçalho no formato do CLAUDE.md.
+- JSDoc em toda função, hook, componente e interface/prop exportada.
+- Comentário acima de cada bloco de lógica explicando o porquê.
+- Rótulos GRAVA / APAGA / NAVEGA / ⚠️ ATENÇÃO / TODO(API) / SIMULADO onde couberem.
+- No layout de (sistema), explique a proteção de rota, o ?voltar= e por que
+  só a área de conteúdo rola.
+- Em app/layout.tsx, explique o script que aplica o tema antes de pintar.
+- Em painel/page.tsx (hoje sem nenhum comentário), comente cada card e de onde
+  vem cada número.
+
+Verificação obrigatória:
+1. Prove que só entraram comentários. Este comando deve sair vazio (ou com
+   linhas que você me justifique uma a uma):
+   git diff -U0 | grep '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -vE '^[+-]\s*(//|/\*|\*|\{/\*|\*/)' | grep -vE '^[+-]\s*$'
+2. npx tsc --noEmit, npm run lint e npm run build passando.
+3. Me mostre dois trechos antes/depois para eu validar o nível de detalhe.
+
+Commit: `docs: comenta app/ seguindo o padrão do time`.

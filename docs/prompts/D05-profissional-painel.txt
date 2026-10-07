@@ -1,0 +1,22 @@
+[D05 · PROFISSIONAL — PARTE 5: PAINEL DO PROFISSIONAL]
+
+Leia CLAUDE.md, docs/contexto-cais.md §6, components/paineis/,
+components/ui/Graficos.tsx e lib/metricas.ts. Continue na branch
+`feat/profissional`. Modo de planejamento primeiro. Celular primeiro.
+
+Preencha components/paineis/PainelProfissional.tsx com os quatro blocos do §6:
+1. Minhas trilhas e meu progresso: resumo (concluídas, em andamento, com prazo
+   perto) e a próxima etapa em destaque com botão.
+2. Minhas tarefas e meus prazos: as 5 próximas, com link "Ver todas".
+3. Minha carga da semana: total de horas da semana atual a partir das
+   alocações da pessoa e a lista de projetos com papel e carga. Deixe o
+   marcador {/* Semáforo de carga entra no bloco F */}.
+4. Meu histórico de entregas: tarefas concluídas por semana nas últimas 8
+   semanas (gráfico SVG existente) com resumo em texto para leitor de tela.
+Saudação com o primeiro nome e a data de hoje por extenso.
+
+Aceite: com Ana, os números batem com /minhas-trilhas e /minhas-tarefas;
+quatro estados por bloco; 375 px. tsc, lint, build.
+Atualize SISTEMA.md e CHANGELOG.md.
+Commit: `feat: painel do profissional`.
+Depois, faça o merge de `feat/profissional` se eu aprovar.

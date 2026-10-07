@@ -1,0 +1,24 @@
+[G01 · DASHBOARDS — FILTROS POR PERÍODO E EVOLUÇÃO DA TURMA]
+
+Leia CLAUDE.md, docs/contexto-cais.md §6 e §8 (Onda 4), components/paineis/,
+components/ui/Graficos.tsx e lib/metricas.ts. Crie a branch
+`feat/filtros-periodo`. Modo de planejamento primeiro.
+
+1. Componente components/ui/FiltroPeriodo.tsx: Últimos 7 dias, 30 dias,
+   90 dias, Este mês e Personalizado (início e fim, fim não antes do início).
+   O período escolhido vai para a URL (?de=&ate=) para poder ser compartilhado.
+   Documente em /design-system.
+2. Funções em lib/metricas.ts que recebem o período (sem quebrar as chamadas
+   atuais: o período é opcional e o padrão é o comportamento de hoje).
+3. Aplique o filtro nos três painéis, acima do conteúdo (§10):
+   - Admin: trilhas concluídas no período, tarefas concluídas no período por
+     empresa e o gráfico "Turma: evolução ao longo do tempo" (§6) — trilhas
+     concluídas por semana. Se esse gráfico já existir, só ligue ao filtro.
+   - Empresa: entregas aprovadas no período.
+   - Profissional: histórico de entregas no período.
+4. Todo gráfico com resumo em texto que muda junto com o período.
+
+Aceite: trocar o período atualiza números e gráficos; a URL abre no mesmo
+período; quatro estados (período sem dado = vazio explicando). tsc, lint,
+build. SISTEMA.md e CHANGELOG.md.
+Commit: `feat: filtros por período nos painéis`.

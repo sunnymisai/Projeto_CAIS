@@ -1,0 +1,22 @@
+[C07 · FUNDAÇÃO — MEU PERFIL E PREFERÊNCIAS]
+
+Leia CLAUDE.md, docs/contexto-cais.md §8 (Onda 1), lib/auth.tsx, lib/senha.ts,
+components/ThemeToggle.tsx e components/shell/Topbar.tsx. Crie a branch
+`feat/perfil`. Modo de planejamento primeiro.
+
+Tela /perfil, para os três perfis, com abas (componente de abas existente):
+1. Dados: nome, telefone e cargo editáveis; e-mail e perfil somente leitura
+   (explique: e-mail é o login, só o admin muda). Avatar com iniciais.
+   Salvar via useDados().salvar com toast.
+2. Preferências: tema (claro, escuro, seguir o sistema) usando a MESMA chave
+   'cais-tema' do ThemeToggle — refatore para um único lugar
+   (lib/tema.ts) em vez de duplicar a lógica; densidade da tabela (confortável
+   ou compacta) salva por pessoa.
+3. Segurança: trocar senha (senha atual + nova com regrasDaSenha), usando
+   conferirSenha/definirSenha de lib/auth.tsx.
+4. Para o profissional, um resumo somente leitura: área, nível, carga máxima
+   e habilidades (quem edita é o admin).
+
+Aceite: os três perfis abrem /perfil; trocar o tema aqui reflete no botão do
+topo e vice-versa; quatro estados; teclado; 375 px. tsc, lint, build.
+SISTEMA.md e CHANGELOG.md. Commit: `feat: tela de perfil e preferências`.

@@ -2,6 +2,8 @@
 
 Front-end em **Next.js 16 + React 19 + Tailwind v4**, seguindo o design system e o deck do projeto.
 
+> Onde o trabalho parou e como retomar: [`docs/ONDE-PARAMOS.md`](docs/ONDE-PARAMOS.md). Prompts do projeto: [`docs/prompts/`](docs/prompts/).
+
 ## Como rodar
 
 ```bash

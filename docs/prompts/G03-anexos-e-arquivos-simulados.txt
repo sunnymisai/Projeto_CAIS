@@ -1,0 +1,25 @@
+[G03 · PROJETOS — ANEXOS DA TAREFA E ABA ARQUIVOS (SIMULADOS)]
+
+Leia CLAUDE.md, docs/contexto-cais.md §5, lib/tipos.ts,
+components/projetos/DetalheTarefa.tsx e app/(sistema)/projetos/[id]/page.tsx.
+Crie a branch `feat/anexos`. Modo de planejamento primeiro.
+
+Upload real depende do back-end. Aqui guardamos SÓ os metadados do arquivo
+(nome, tipo, tamanho, quem enviou, quando), nunca o conteúdo — explique no
+comentário que o localStorage tem limite de poucos MB.
+
+1. lib/tipos.ts: Anexo = { id, nome, tipo, tamanho, autorId, data };
+   Tarefa ganha `anexos?: Anexo[]`. Aumente em 1 a versão da chave do
+   localStorage com `// ⚠️ ATENÇÃO:`.
+2. DetalheTarefa: área "Anexos" com botão e arrastar-e-soltar de arquivo
+   (input type=file nativo), lista com ícone por tipo, tamanho legível
+   ("1,2 MB") e remover (`// APAGA:`, com confirmação). Limite de 10 MB por
+   arquivo com mensagem de erro clara. Marque `// SIMULADO:`.
+3. Aba Arquivos do projeto: todos os anexos das tarefas do projeto, com
+   filtro por tipo e link para a tarefa de origem. Quatro estados.
+4. Permissões: anexar e remover seguem podeFazer (admin; profissional nas
+   próprias tarefas); empresa só vê.
+
+Aceite: anexar e remover pelo teclado; aba Arquivos lista certo; tsc, lint,
+build. SISTEMA.md e CHANGELOG.md.
+Commit: `feat: anexos e aba arquivos simulados`.

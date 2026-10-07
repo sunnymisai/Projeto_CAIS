@@ -1,0 +1,40 @@
+[B02 · HOMEPAGE — PARTE 2: ESTRUTURA, TOPO E HERO]
+
+Leia CLAUDE.md, docs/notas-next16.md, docs/contexto-cais.md §1, §9 e §15, e
+components/BrandPanel.tsx. Continue na branch `feat/homepage`.
+Modo de planejamento primeiro.
+
+Público da página: uma EMPRESA que está avaliando participar do programa.
+Ela precisa entender em segundos o que é o CAIS e o que ganha com ele.
+
+1. Estrutura
+   - app/page.tsx vira Server Component que só monta as seções. Cada seção é
+     um arquivo em components/home/. Só o que precisa de interação vira
+     Client Component pequeno. Explique essa divisão no cabeçalho de app/page.tsx.
+   - Metadados (title e description) conforme docs/notas-next16.md.
+   - Landmarks: <header>, <main>, <footer>, <nav aria-label="...">. Um único <h1>.
+2. Topo fixo (components/home/TopoHome.tsx)
+   - Logo (CaisLogo adaptável ao tema), âncoras para as seções (O programa ·
+     Como funciona · Para sua empresa · Perguntas), ThemeToggle e botão "Entrar".
+   - Se já houver sessão (useAuth), o botão vira "Ir para o sistema" (/painel).
+     Não redirecione automaticamente: a home continua visível.
+   - No celular as âncoras viram menu: botão com aria-expanded e
+     aria-controls, fecha com Esc e ao escolher um item, devolve o foco ao botão.
+3. Ilustração dos três pilares
+   - Extraia o diagrama do BrandPanel para components/marca/TresPilares.tsx
+     (props para tamanho e para ligar/desligar a animação). O BrandPanel passa
+     a usar esse componente. Sem SVG duplicado. Respeite prefers-reduced-motion.
+4. Hero (components/home/Hero.tsx)
+   - Fundo escuro "noite" como o BrandPanel, nos dois temas.
+   - Rótulo "Uma plataforma para", <h1> "formar, alocar e acompanhar",
+     subtítulo do §1.
+   - CTA primário "Quero trazer minha empresa" (âncora para #participar, que
+     nasce na parte 4) e secundário "Já tenho acesso" (/login).
+   - TresPilares à direita no desktop, abaixo do texto no celular.
+5. Rolagem suave para âncoras via CSS, desligada com prefers-reduced-motion.
+   Âncoras com scroll-margin para não ficarem atrás do topo fixo.
+
+Aceite: 375, 768, 1280 e 1440 px sem rolagem horizontal; dois temas; menu do
+celular operável só pelo teclado; tela de login continua igual com o
+TresPilares extraído. tsc, lint, build.
+Commit: `feat: homepage com topo, hero e diagrama dos pilares`.

@@ -1,0 +1,29 @@
+[B03 · HOMEPAGE — PARTE 3: SEÇÕES DE CONTEÚDO]
+
+Leia CLAUDE.md e docs/contexto-cais.md §1 a §6. Continue na branch
+`feat/homepage`. Modo de planejamento primeiro.
+
+Crie, em components/home/, uma seção por arquivo, com <h2> próprio, id de
+âncora e alternando bg-fundo e bg-superficie. Texto em português, tom direto,
+tirado do contexto (não invente números ou promessas).
+
+1. Problema.tsx (id "programa"): duas colunas "Como é hoje" × "Como fica com
+   o CAIS" (§2), fechando com a frase do rastro único. No celular, empilha.
+   Os itens de "como é hoje" usam ícone neutro, não vermelho (não é erro).
+2. Pilares.tsx: três cards (§1) com a cor de cada pilar (tokens pilar-roxo,
+   pilar-verde, pilar-ambar) usada só como acento (barra lateral ou ícone),
+   título e quatro itens.
+3. ComoFunciona.tsx (id "como-funciona"): linha do tempo em 4 passos
+   Empresa → Projeto → Alocação → Tarefa (§5), horizontal no desktop e
+   vertical no celular, com <ol>. Abaixo, bloco "A trilha da sua empresa" (§4:
+   regras internas, ferramentas e processos do cliente).
+4. ParaSuaEmpresa.tsx (id "empresa"): prévia ILUSTRATIVA do painel da empresa
+   (§6) montada com os componentes de components/ui (card, barra de progresso,
+   gráfico SVG, etiqueta), com dados fictícios e a legenda visível
+   "Imagem ilustrativa, com dados fictícios". aria-hidden no mock e um
+   parágrafo descrevendo o que a empresa vê, para o leitor de tela.
+5. Perfis.tsx: três cards (§3), destacando o da Empresa ("entra, entende, sai").
+
+Aceite: hierarquia de títulos correta (verifique com a árvore de
+acessibilidade do navegador), dois temas, 375 px. tsc, lint, build.
+Commit: `feat: seções de conteúdo da homepage`.

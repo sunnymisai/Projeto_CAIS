@@ -1,0 +1,37 @@
+[D01 · PROFISSIONAL — PARTE 1: MODELO DE DADOS E EDITOR DE QUIZ]
+
+Leia CLAUDE.md, docs/contexto-cais.md §4, lib/tipos.ts, lib/seed.ts,
+lib/store.tsx, lib/metricas.ts e app/(sistema)/trilhas/[id]/page.tsx.
+Crie a branch `feat/profissional`. Modo de planejamento primeiro, mostrando as
+mudanças de tipo antes de aplicar.
+
+Objetivo: preparar os dados para o profissional fazer trilhas com conteúdo e
+quiz de verdade. Mudanças mínimas e compatíveis com o que já existe.
+
+1. lib/tipos.ts
+   - Etapa ganha `conteudo?: { texto?: string; url?: string }`,
+     `perguntas?: Pergunta[]` e `tentativasMax?: number`.
+   - Pergunta = { id, enunciado, alternativas: string[], correta: number }.
+   - Trilha ganha `publicadaEm?: string`.
+   - progresso[pessoaId] ganha `tentativas?: number`. As etapas continuam
+     sendo concluídas EM ORDEM (concluidas = quantas das primeiras já foram feitas).
+2. lib/metricas.ts
+   - prazoDaPessoaNaTrilha(trilha, pessoa) = maior(publicadaEm,
+     pessoa.dataEntrada) + prazoDias, com `// TODO(PROGLOGIC): confirmar regra`.
+   - situacaoDoPrazo(...) → 'no_prazo' | 'perto' (3 dias ou menos) | 'vencido'.
+   - trilhasDaPessoaDetalhadas(pessoaId, dados) para as telas do profissional.
+3. lib/seed.ts: conteúdo de exemplo em todas as etapas e 3 a 5 perguntas em
+   cada quiz; publicadaEm nas trilhas publicadas.
+4. lib/store.tsx: aumente em 1 a versão da chave do localStorage
+   (ex.: 'cais-dados-v1' → 'cais-dados-v2') com `// ⚠️ ATENÇÃO:` explicando
+   que o seed mudou e os dados antigos do navegador serão descartados.
+5. Editor de trilha (admin): ao editar uma etapa, campos de texto e URL; se for
+   quiz, lista de perguntas (adicionar, remover, reordenar) com as
+   alternativas, marcação da correta (radio), nota mínima e tentativas.
+   Reaproveite components/ui. Validação: quiz publicado precisa de ao menos
+   uma pergunta com correta marcada.
+6. Ao publicar uma trilha, grave publicadaEm (`// GRAVA:`).
+
+Aceite: editor cria um quiz completo e salva; dados antigos não quebram a
+tela (o que faltar vira valor padrão). tsc, lint, build.
+Commit: `feat: conteúdo de etapa e quiz no modelo e no editor`.
