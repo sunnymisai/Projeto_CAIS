@@ -135,8 +135,16 @@ export interface Trilha {
   /**
    * pessoaId → quantas etapas concluiu, nota do quiz e tentativas usadas.
    * As etapas são concluídas EM ORDEM: `concluidas: 3` = as três primeiras.
+   * - `nota` e `tentativas`: resumo do ÚLTIMO quiz aprovado (o que o admin vê).
+   * - `quizzes`: o registro de CADA quiz (por etapaId), para as tentativas de um quiz
+   *   não contarem no outro. Opcional: dados antigos não têm.
    */
-  progresso: Record<string, { concluidas: number; nota?: number; tentativas?: number }>;
+  progresso: Record<string, {
+    concluidas: number;
+    nota?: number;
+    tentativas?: number;
+    quizzes?: Record<string, { tentativas: number; nota?: number; aprovado?: boolean }>;
+  }>;
   /**
    * Data (AAAA-MM-DD) da PRIMEIRA publicação; conta o prazo de quem já estava no programa.
    * Opcional: rascunho não tem, e dados antigos podem não ter.

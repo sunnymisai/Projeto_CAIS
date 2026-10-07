@@ -129,7 +129,7 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'trilha da Vértice inclui o Marcos (perfil Empresa vinculado à Vértice)', obtido: publicoDaTrilha({ ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice' }, dados).includes('pes_marcos'), esperado: true },
   { porque: 'trilha da Vértice NÃO inclui a Patrícia (é da Aurora)', obtido: publicoDaTrilha({ ...trilhaGeral('publicada'), alcance: 'empresa', empresaId: 'emp_vertice' }, dados).includes('pes_patricia'), esperado: false },
   { porque: 'administrador nunca entra no público da trilha geral', obtido: publicoDaTrilha(trilhaGeral('publicada'), dados).includes('pes_admin'), esperado: false },
-  { porque: 'EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO nasce desligada (bloco D liga)', obtido: EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO, esperado: false },
+  { porque: 'EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO ligada no D03 (o player de trilha existe)', obtido: EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO, esperado: true },
   { porque: '/minhas-trilhas fica liberada com trilha pendente', obtido: rotaLiberadaComTrilhaPendente('/minhas-trilhas'), esperado: true },
   { porque: '/minhas-trilhas/tri_1?x=1 fica liberada (subrota e query)', obtido: rotaLiberadaComTrilhaPendente('/minhas-trilhas/tri_1?x=1'), esperado: true },
   { porque: '/painel fica liberado com trilha pendente', obtido: rotaLiberadaComTrilhaPendente('/painel'), esperado: true },

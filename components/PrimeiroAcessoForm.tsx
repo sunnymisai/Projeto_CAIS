@@ -2,7 +2,7 @@
    PRIMEIROACESSOFORM.TSX — PRIMEIRO ACESSO POR CONVITE
    O que é: o cartão da tela /primeiro-acesso. Mostra nome e e-mail do convidado (somente leitura), pede nova senha com confirmação e o aceite dos termos e da LGPD; ao salvar, ativa a pessoa e abre a sessão.
    Onde é usado: app/primeiro-acesso/page.tsx (dentro de <Suspense>, porque lê ?convite= com useSearchParams).
-   Depende de: lib/store (useDados), lib/auth (definirSenha, useAuth.iniciarSessao), lib/senha (senhaValida), lib/useFormulario, components/ui/RegrasSenha, components/ui/basicos (Aviso, Esqueleto), components/CartaoAcesso, components/input, components/button, components/checkbox e next/navigation.
+   Depende de: lib/store (useDados), lib/auth (definirSenha, useAuth.iniciarSessao), lib/senha (senhaValida), lib/useFormulario, lib/permissoes (EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO e temTrilhaObrigatoriaPendente, para cair na trilha obrigatória), components/ui/RegrasSenha, components/ui/basicos (Aviso, Esqueleto), components/CartaoAcesso, components/input, components/button, components/checkbox e next/navigation.
    Contexto: §11 (convite por e-mail leva ao primeiro acesso), §12 fluxo 1 (convite → define senha → trilha obrigatória), §15 item 1 e docs/notas-next16.md §2 (useSearchParams + Suspense).
    ============================================================================ */
 "use client";
@@ -14,6 +14,7 @@ import { useDados } from '@/lib/store';
 import { definirSenha, useAuth } from '@/lib/auth';
 import { senhaValida } from '@/lib/senha';
 import { useFormulario } from '@/lib/useFormulario';
+import { EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO, temTrilhaObrigatoriaPendente } from '@/lib/permissoes';
 import { Aviso, Esqueleto } from '@/components/ui/basicos';
 import RegrasSenha from '@/components/ui/RegrasSenha';
 import { Cartao, VoltarAoLogin } from './CartaoAcesso';
@@ -137,7 +138,11 @@ export default function PrimeiroAcessoForm() {
     // GRAVA: abre a sessão (sessionStorage: some ao fechar o navegador).
     iniciarSessao({ id: pessoa.id, nome: pessoa.nome, email: pessoa.email, perfil: pessoa.perfil }, false);
     // NAVEGA: replace, para o "voltar" do navegador não reabrir o convite já usado.
-    router.replace('/painel');
+    // §12 fluxo 1: o profissional "define senha → cai na trilha obrigatória". Com trilha
+    // obrigatória pendente (e a trava ligada), vai direto para Minhas trilhas; senão, painel.
+    const vaiParaTrilha = EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO && pessoa.perfil === 'profissional'
+      && temTrilhaObrigatoriaPendente(pessoa.id, d);
+    router.replace(vaiParaTrilha ? '/minhas-trilhas' : '/painel');
   };
 
   return (

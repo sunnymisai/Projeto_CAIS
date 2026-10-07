@@ -9,7 +9,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `node testes/navegador/d02-minhas-trilhas.mjs`. Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `node testes/navegador/d02-minhas-trilhas.mjs` ou `d03-player-e-quiz.mjs`. Casos de lógica sem navegador: `node --experimental-strip-types lib/permissoes.casos.ts` e `lib/quiz.casos.ts`. Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
 **Contas de demonstração** (todas com a senha `Cais@2026`). Na tela de login, os botões "Entrar como" (Administrador, Profissional e Empresa) preenchem e-mail e senha das três primeiras contas abaixo; a Patrícia só entra digitando:
 
@@ -40,7 +40,7 @@ npm run dev        # http://localhost:3000
 | `/carga` | Admin: carga da equipe ("Em construção") |
 | `/minhas-trilhas` | Profissional e empresa: "Continue de onde parou" (próxima etapa em destaque) e as trilhas agrupadas por alcance, com progresso, nota e prazo (no prazo, perto, vencido) |
 | `/minhas-trilhas/[id]` | Detalhe da trilha para quem a cumpre: etapas concluídas, atual e bloqueadas (com o motivo), botão Começar/Continuar (fixo no rodapé no celular). Trilha fora do público, em rascunho ou inexistente vai para `/sem-permissao` |
-| `/minhas-trilhas/[id]/etapa/[etapaId]` | Player da etapa: "Em construção" até o D03 |
+| `/minhas-trilhas/[id]/etapa/[etapaId]` | Player da etapa: texto, vídeo e áudio nativos (com estado de erro), PDF/apresentação/link em nova aba, "Marcar como concluída", anterior/próxima (próxima só depois de concluir) e o quiz (uma pergunta por vez no celular, todas no desktop; nota, nota mínima, revisão de cada resposta, "Tentar de novo" com as alternativas embaralhadas, "Fale com a coordenação" sem tentativas). Etapa bloqueada aberta pela URL volta ao detalhe com `?bloqueada=` explicando o motivo. Ao concluir a última etapa, tela de parabéns |
 | `/minhas-tarefas` | Só profissional: "Em construção" |
 | `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
@@ -70,7 +70,7 @@ Botões sem permissão são **escondidos** (não desabilitados); campos sem perm
 
 Parâmetros úteis: `/projetos/[id]?aba=equipe|tarefas|geral&tarefa=<id>` e `/empresas?abrir=<id>`.
 
-**Guarda da trilha obrigatória (§12).** `temTrilhaObrigatoriaPendente(pessoaId, dados)` (em `lib/permissoes.ts`) diz se o profissional ainda tem etapa obrigatória por concluir numa trilha geral publicada. O layout de `(sistema)` só aplica o bloqueio ("Conclua sua trilha de boas-vindas para liberar o sistema", em qualquer rota fora de `/painel` e `/minhas-trilhas*`) quando `EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO` é `true`. Hoje é `false`: as telas de trilha do profissional nascem no bloco D, que liga a constante.
+**Guarda da trilha obrigatória (§12).** `temTrilhaObrigatoriaPendente(pessoaId, dados)` (em `lib/permissoes.ts`) diz se o profissional ainda tem etapa obrigatória por concluir numa trilha geral publicada. Com `EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = true` (ligada no D03), o layout de `(sistema)` bloqueia as rotas fora de `/painel` e `/minhas-trilhas*` ("Conclua sua trilha de boas-vindas para liberar o sistema"), e o primeiro acesso de um profissional leva direto para `/minhas-trilhas`. No seed, a Elisa (Boas-vindas em 3 de 5) fica presa até passar no quiz.
 
 **Tema e preferências.** `lib/tema.ts` é o único código que lê, aplica e grava o tema (chave `cais-tema`; "seguir o sistema" = sem chave). O botão sol/lua (`ThemeToggle`) e a aba Preferências usam o mesmo hook `useTema()`, então ficam sincronizados. O `<script>` inline de `app/layout.tsx` continua necessário (aplica o tema antes da hidratação, sem piscar) e repete a chave e os valores de propósito. A densidade das tabelas fica no cadastro da pessoa (`Pessoa.densidadeTabela`) e é lida por `lib/preferencias.ts` na `Tabela`.
 
@@ -111,9 +111,10 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Aba Arquivos do projeto.
 - Envio real do convite: hoje só se copia o link (o "token" do convite é o próprio id da pessoa).
 - Textos oficiais dos termos de uso e da política de privacidade (LGPD) do primeiro acesso.
-- Trava da trilha obrigatória desligada (`EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false`) até o bloco D.
 - Painéis dos perfis Empresa e Profissional (hoje "Em construção").
-- Telas `/carga`, `/minhas-tarefas` e o player de etapa (hoje "Em construção").
+- Telas `/carga` e `/minhas-tarefas` (hoje "Em construção").
+- Quiz sem tentativas: a pessoa vê "Fale com a coordenação", mas ainda não existe tela para o admin liberar uma nova tentativa (`TODO(PROGLOGIC)`). Para destravar no protótipo, apague o registro do quiz em `progresso[pessoa].quizzes` ou use "Restaurar dados de demonstração".
+- Vídeos e áudios do seed apontam para endereços `example.com`, que não existem: o player mostra o estado de erro com "Abrir em nova aba".
 - Público das trilhas: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`, com `TODO(PROGLOGIC)`). Por isso o Marcos e a Patrícia contam como "não iniciada" nos números do admin.
 - Redefinir senha na tela Acessos grava a senha temporária `Cais@2026` sem forçar a troca no próximo login (SIMULADO).
 - Permissão no servidor: as regras de perfil só existem no navegador.

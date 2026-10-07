@@ -5,8 +5,8 @@
      motivo do bloqueio; botão "Começar"/"Continuar" (fixo no rodapé no celular).
    Onde é usado: rota /minhas-trilhas/[id]. Chegam aqui: os cards e o botão
      "Ver etapas" de app/(sistema)/minhas-trilhas/page.tsx.
-   Depende de: next/navigation (useParams, useRouter), lib/auth.tsx (useAuth),
-     lib/store.tsx (useDados), lib/metricas.ts (trilhasDaPessoaDetalhadas),
+   Depende de: next/navigation (useParams, useRouter, useSearchParams para o ?bloqueada=),
+     lib/auth.tsx (useAuth), lib/store.tsx (useDados), lib/metricas.ts (trilhasDaPessoaDetalhadas),
      lib/trilhas.ts (ALCANCE, TIPOS_ETAPA, TENTATIVAS_PADRAO, hrefEtapa),
      components/trilhas/PrazoTrilha.tsx, components/button.tsx (classesBotao),
      components/ui/basicos.tsx e components/shell/Pagina.tsx.
@@ -18,8 +18,8 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, CircleCheck, Lock, Star } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
@@ -30,6 +30,7 @@ import { Card, Progresso, Esqueleto, Aviso } from '@/components/ui/basicos';
 import { classesBotao } from '@/components/button';
 import PrazoTrilha from '@/components/trilhas/PrazoTrilha';
 import { cx } from '@/lib/utils';
+import type { Etapa } from '@/lib/tipos';
 
 /**
  * Detalhe de uma trilha para quem a cumpre.
@@ -103,6 +104,14 @@ export default function DetalheMinhaTrilha() {
         </div>
       </Card>
 
+      {/* Veio de uma etapa bloqueada aberta pela URL (o player manda para cá com ?bloqueada=).
+        * ⚠️ ATENÇÃO: o <Suspense> é obrigatório para useSearchParams (notas-next16 §2). */}
+      {etapaAtual && (
+        <Suspense>
+          <AvisoEtapaBloqueada etapas={trilha.etapas} etapaAtual={etapaAtual.titulo} />
+        </Suspense>
+      )}
+
       {concluida && (
         <div className="mb-6"><Aviso tipo="sucesso" titulo="Trilha concluída">Você terminou todas as etapas{t.nota !== undefined ? ` com nota ${t.nota} no quiz` : ''}. Pode rever qualquer etapa quando quiser.</Aviso></div>
       )}
@@ -170,6 +179,28 @@ export default function DetalheMinhaTrilha() {
           </Link>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Aviso de etapa bloqueada: aparece quando a pessoa tentou abrir, pela URL, uma etapa
+ * adiante da atual (o player redireciona para cá com ?bloqueada=<etapaId>). Explica o motivo (§4).
+ * Fica num componente separado porque useSearchParams precisa estar dentro de <Suspense>.
+ * @param props.etapas as etapas da trilha (para achar o título da bloqueada).
+ * @param props.etapaAtual título da etapa que a pessoa precisa concluir.
+ * @returns o aviso, ou nada se a URL não tiver ?bloqueada= válido.
+ */
+function AvisoEtapaBloqueada({ etapas, etapaAtual }: { etapas: Etapa[]; etapaAtual: string }) {
+  const idBloqueada = useSearchParams().get('bloqueada');
+  const bloqueada = etapas.find((e) => e.id === idBloqueada);
+  if (!bloqueada) return null;
+  return (
+    // role="alert": anuncia o motivo assim que a página abre (a pessoa foi trazida para cá sem pedir).
+    <div className="mb-6" role="alert">
+      <Aviso tipo="aviso" titulo={`A etapa “${bloqueada.titulo}” ainda está bloqueada`}>
+        As etapas são feitas em ordem. Conclua “{etapaAtual}” para liberar as próximas.
+      </Aviso>
     </div>
   );
 }

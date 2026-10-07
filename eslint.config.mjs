@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Perfis temporários do Chrome dos testes de navegador (arquivos do próprio Chrome, não do projeto).
+    "testes/navegador/.perfis/**",
   ]),
 ]);
 

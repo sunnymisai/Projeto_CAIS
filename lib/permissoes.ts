@@ -143,7 +143,7 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
  * app/(sistema)/layout.tsx é quem lê esta constante.
  * TODO(PROGLOGIC): confirmar se a trava vale para toda trilha ou só para a de boas-vindas.
  */
-export const EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false;
+export const EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = true;
 
 /**
  * Diz se a pessoa ainda precisa concluir uma trilha obrigatória.
