@@ -56,6 +56,14 @@ export default function EditorTrilha() {
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   // Tipo escolhido no seletor "Tipo da nova etapa".
   const [novoTipo, setNovoTipo] = useState<TipoEtapa>('texto');
+  // Arrastar e soltar das etapas (HTML5 nativo, como o Quadro):
+  // - pegaPelaAlca: id da etapa cuja alça (⋮⋮) foi apertada. Só ela fica draggable,
+  //   para o arrastar não atrapalhar quem seleciona texto nos campos da linha.
+  // - arrastando: índice da etapa que está sendo arrastada (null = nenhuma).
+  // - alvo: posição onde ela vai entrar (0 = antes da primeira; length = depois da última).
+  const [pegaPelaAlca, setPegaPelaAlca] = useState<string | null>(null);
+  const [arrastando, setArrastando] = useState<number | null>(null);
+  const [alvo, setAlvo] = useState<number | null>(null);
 
   const t = d.trilhas.find((x) => x.id === id);
   // Estado "carregando" (§13): esqueleto enquanto a store lê os dados.
@@ -102,6 +110,27 @@ export default function EditorTrilha() {
     [e[i], e[i + dir]] = [e[i + dir], e[i]];
     atualizar({ etapas: e });
   };
+  /**
+   * Leva a etapa da posição `origem` para a posição de inserção `destino` (usado ao soltar).
+   * `destino` conta as posições ENTRE as etapas da lista original: 0 = antes da primeira,
+   * length = depois da última. Como a etapa sai da lista antes de entrar, destino depois
+   * da origem perde 1.
+   * GRAVA: a nova ordem na trilha.
+   * @param origem índice da etapa arrastada.
+   * @param destino posição de inserção na lista original.
+   * @example moverPara(0, 3) // 1ª etapa vai para depois da 3ª
+   */
+  const moverPara = (origem: number, destino: number) => {
+    const final = destino > origem ? destino - 1 : destino;
+    // Soltou no mesmo lugar: não grava nada.
+    if (final === origem) return;
+    const e = [...t.etapas];
+    const [movida] = e.splice(origem, 1);
+    e.splice(final, 0, movida);
+    atualizar({ etapas: e });
+  };
+  /** Limpa o estado do arrastar (no fim de qualquer arrasto, solto ou cancelado com Esc). */
+  const fimDoArrasto = () => { setArrastando(null); setAlvo(null); setPegaPelaAlca(null); };
 
   // Pendências que impedem publicar. Cada linha vira o texto do problema
   // quando a condição é verdadeira, ou `false` quando está tudo certo; o
@@ -181,10 +210,41 @@ export default function EditorTrilha() {
                     // Nome com maiúscula (T) para poder usar <T.icone /> como tag.
                     const T = TIPOS_ETAPA[e.tipo];
                     return (
-                      <li key={e.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-borda bg-fundo/50 p-3 sm:flex-nowrap">
-                        {/* Alça só visual (a ordem muda pelas setas); some no
-                          * celular (hidden sm:block). */}
-                        <GripVertical className="hidden h-4 w-4 shrink-0 text-tinta-fraca sm:block" aria-hidden />
+                      <li key={e.id}
+                        // Só fica arrastável enquanto a alça está apertada (ver pegaPelaAlca).
+                        draggable={pegaPelaAlca === e.id}
+                        // dragstart: guarda o id no dataTransfer (o Firefox exige algum dado) e permite só "mover".
+                        onDragStart={(ev) => { ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', e.id); setArrastando(i); }}
+                        // dragover: preventDefault libera o soltar aqui. Metade de cima da linha = entra
+                        // antes desta etapa; metade de baixo = entra depois.
+                        onDragOver={(ev) => {
+                          if (arrastando === null) return;
+                          ev.preventDefault();
+                          ev.dataTransfer.dropEffect = 'move';
+                          const r = ev.currentTarget.getBoundingClientRect();
+                          setAlvo(ev.clientY < r.top + r.height / 2 ? i : i + 1);
+                        }}
+                        // drop: GRAVA a nova ordem (moverPara) e limpa o estado.
+                        onDrop={(ev) => { ev.preventDefault(); if (arrastando !== null && alvo !== null) moverPara(arrastando, alvo); fimDoArrasto(); }}
+                        // dragend: roda sempre no fim, inclusive se soltou fora da lista ou apertou Esc.
+                        onDragEnd={fimDoArrasto}
+                        // relative: referência da linha roxa de "vai entrar aqui"; opacity-50: a etapa
+                        // arrastada fica apagada no lugar de origem enquanto se move.
+                        className={cx('relative flex flex-wrap items-center gap-3 rounded-xl border border-borda bg-fundo/50 p-3 sm:flex-nowrap', arrastando === i && 'opacity-50')}>
+                        {/* Linha roxa onde a etapa vai entrar: antes desta (alvo === i) ou, na
+                          * última, depois dela (alvo === length). -top/-bottom-[5px] centraliza a
+                          * linha no espaço de 8 px (space-y-2) entre as etapas. */}
+                        {arrastando !== null && alvo === i && <span aria-hidden className="pointer-events-none absolute -top-[5px] left-2 right-2 h-0.5 rounded-full bg-primaria" />}
+                        {arrastando !== null && i === t.etapas.length - 1 && alvo === t.etapas.length && <span aria-hidden className="pointer-events-none absolute -bottom-[5px] left-2 right-2 h-0.5 rounded-full bg-primaria" />}
+                        {/* Alça de arrastar (mouse). Apertar libera o arrastar da linha; soltar sem
+                          * arrastar desfaz. Teclado e celular usam as setas ↑↓ à direita (o arrastar
+                          * nativo do HTML5 não funciona no toque), por isso a alça some no celular
+                          * (hidden sm:flex) e fica fora da ordem do Tab (aria-hidden). */}
+                        <span aria-hidden title="Arraste para mudar a ordem"
+                          onPointerDown={() => setPegaPelaAlca(e.id)} onPointerUp={() => setPegaPelaAlca(null)}
+                          className="hidden shrink-0 cursor-grab items-center rounded p-0.5 text-tinta-fraca hover:bg-superficie-alt hover:text-tinta active:cursor-grabbing sm:flex">
+                          <GripVertical className="h-4 w-4" />
+                        </span>
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primaria-suave text-[13px] font-bold text-primaria">{i + 1}</span>
                         <div className="min-w-0 flex-1">
                           {/* Título editável "no lugar": parece texto e vira

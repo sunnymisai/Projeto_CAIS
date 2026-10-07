@@ -2,6 +2,9 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Editor de trilha: arrastar etapas (branch `feat/acessos`)
+- Modificado: `app/(sistema)/trilhas/[id]/page.tsx`. A alça ⋮⋮ das etapas, que era só desenho, agora reordena por arrastar e soltar (HTML5 nativo, como o Quadro). Só a alça inicia o arrasto, para não atrapalhar a seleção de texto nos campos. Uma linha roxa mostra onde a etapa vai entrar, e a etapa arrastada fica apagada. As setas ↑↓ continuam para teclado e celular.
+
 ## Revisão H01 do bloco C (branch `feat/acessos`)
 - Criado: tokens `--grafico-*` em `app/globals.css` (claro e escuro), `COR_GRAFICO` e `TONS_COLUNA` em `components/ui/Graficos.tsx`, componente `EstadoErro` em `components/ui/basicos.tsx` (documentado em `/design-system`).
 - Modificado: `lib/store.tsx` (confere o formato do que lê do navegador; expõe `erro` e `tentarDeNovo()`; com erro, não grava por cima dos dados; `restaurarDemonstracao` também tira do erro), `app/(sistema)/layout.tsx` (mostra o `EstadoErro` no lugar da tela e não sincroniza a sessão com dados danificados), `components/shell/Sidebar.tsx` (logo com `aria-label` e anel de foco no botão "Fechar menu"), `components/paineis/PainelAdmin.tsx`, `app/(sistema)/trilhas/page.tsx`, `app/(sistema)/projetos/[id]/page.tsx`, `components/projetos/Vistas.tsx` e `app/(sistema)/design-system/page.tsx` (cores dos gráficos por token, trocando com o tema; o cronograma usa `color-mix` no lugar do sufixo hex "33"), `components/ui/Graficos.tsx` (a rosca aplica a cor por `style`, que aceita `var()`).
