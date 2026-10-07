@@ -57,12 +57,13 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     // Ainda lendo a sessão do navegador: não decide nada, senão quem está
     // logado seria jogado para o login por uma fração de segundo.
     if (!pronto) return;
-    // NAVEGA: sem sessão → login. O ?voltar= guarda a tela pedida (ex.:
-    // /?voltar=%2Fprojetos%2Fp1) para o LoginForm trazer a pessoa de volta
-    // depois de entrar. encodeURIComponent protege as barras do caminho.
+    // NAVEGA: sem sessão → /login (a raiz "/" agora é a homepage pública).
+    // O ?voltar= guarda a tela pedida (ex.: /login?voltar=%2Fprojetos%2Fp1)
+    // para o LoginForm trazer a pessoa de volta depois de entrar.
+    // encodeURIComponent protege as barras do caminho.
     // replace (e não push) para o botão "voltar" do navegador não cair de
     // novo na tela protegida.
-    if (!sessao) router.replace(`/?voltar=${encodeURIComponent(caminho)}`);
+    if (!sessao) router.replace(`/login?voltar=${encodeURIComponent(caminho)}`);
     // NAVEGA: logado, mas não é admin → tela de acesso negado.
     else if (sessao.perfil !== 'admin') router.replace('/sem-permissao');
   }, [pronto, sessao, router, caminho]);

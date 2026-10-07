@@ -28,8 +28,12 @@ export default function NaoEncontrado() {
       <h1 className="font-space text-2xl font-semibold text-tinta">Página não encontrada</h1>
       <p className="mt-2 max-w-md text-sm text-tinta-suave">O endereço pode ter mudado ou o item foi removido. Volte ao painel e continue de lá.</p>
       {/* NAVEGA: para /painel. Se a pessoa não estiver logada, o layout de
-        * app/(sistema) a manda para o login e depois de volta ao painel. */}
+        * app/(sistema) a manda para /login?voltar=%2Fpainel e, depois de
+        * entrar, de volta ao painel. */}
       <Link href="/painel" className="mt-6 inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-white hover:bg-botao-hover">Ir para o painel</Link>
+      {/* NAVEGA: para a homepage pública "/". Útil para quem chegou de fora
+        * (ex.: link quebrado) e nem tem conta no sistema. */}
+      <Link href="/" className="mt-3 text-sm font-medium text-primaria hover:underline">Ir para a página inicial</Link>
     </main>
   );
 }

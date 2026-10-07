@@ -36,8 +36,9 @@ export default function SemPermissao() {
         * e Profissional (§16), este texto e a regra do layout mudam. */}
       <p className="mt-2 max-w-md text-sm text-tinta-suave">Esta parte do CAIS é exclusiva do perfil Administrador. Se precisa de acesso, fale com a coordenação do programa.</p>
       {/* APAGA: o clique chama sair(), que remove a sessão salva.
-        * NAVEGA: depois o link leva ao login ("/") para entrar com outra conta. */}
-      <Link href="/" onClick={sair} className="mt-6 inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-white hover:bg-botao-hover">Entrar com outra conta</Link>
+        * NAVEGA: depois o link leva ao login ("/login"; a raiz "/" agora é a
+        * homepage pública) para entrar com outra conta. */}
+      <Link href="/login" onClick={sair} className="mt-6 inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-white hover:bg-botao-hover">Entrar com outra conta</Link>
     </main>
   );
 }

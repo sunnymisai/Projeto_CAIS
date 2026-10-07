@@ -1,67 +1,30 @@
 /* ============================================================================
-   APP/PAGE.TSX (TELA DE LOGIN)
-   O que é: a página da rota "/" — tela de entrada no sistema.
-   Onde é usado: rota "/". Chegam aqui: o item "Sair" do menu de perfil
-     no topo (components/shell/Topbar.tsx), o link "Entrar com outra conta"
-     de /sem-permissao e o layout protegido app/(sistema)/layout.tsx, que manda para "/?voltar=..." quem não tem sessão.
-   Depende de: components/LoginForm.tsx (formulário e ?voltar=),
-     components/BrandPanel.tsx, components/CaisLogo.tsx e
-     components/ThemeToggle.tsx.
-   Contexto: §8 (Onda 1: login), §15 item 1 (autenticação e shell) e
-     docs/notas-next16.md §1 (Server Component) e §2 (useSearchParams + Suspense).
+   APP/PAGE.TSX (HOMEPAGE — PROVISÓRIA)
+   O que é: página pública da raiz "/". PROVISÓRIA: só título e link "Entrar"
+     até a homepage completa ser montada (prompts B02 a B04).
+   Onde é usado: rota "/". Chegam aqui visitantes de fora e o link
+     "Ir para a página inicial" da página 404 (app/not-found.tsx).
+   Depende de: next/link e components/CaisLogo.tsx.
+   Contexto: §15 item 0 (homepage como ponto de entrada público) e §16.
    ============================================================================ */
 
-import { Suspense } from 'react';
-import { LoginForm } from '@/components/LoginForm';
-import BrandPanel from '@/components/BrandPanel';
+import Link from 'next/link';
 import CaisLogo from '@/components/CaisLogo';
-import ThemeToggle from '@/components/ThemeToggle';
 
-/*
-  Layout:
-  - Telas grandes (lg+): duas colunas — painel de marca escuro à esquerda
-    e o formulário à direita.
-  - Celular/tablet: só o formulário, com o logo no topo.
-*/
 /**
- * Página de login (rota "/").
- * É Server Component (sem "use client"): só monta a estrutura; a parte que
- * reage ao usuário (digitar, entrar) mora no LoginForm, que é Client.
+ * Homepage provisória.
+ * Server Component (sem "use client"): só mostra texto e um link.
  *
- * @returns a tela de login em uma ou duas colunas, conforme a largura.
+ * @returns o nome do produto e um link para a tela de login.
  */
-export default function LoginPage() {
+export default function Home() {
   return (
-    // lg:grid-cols-[1.05fr_1fr]: a partir de 1024 px, duas colunas quase
-    // iguais (a da marca um pouco mais larga). Abaixo disso, uma coluna só.
-    <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      {/* BrandPanel se esconde sozinho no celular (classe interna dele). */}
-      <BrandPanel />
-
-      <section className="relative flex flex-col overflow-hidden bg-fundo">
-        {/* Brilho sutil atrás do card (pode apagar sem quebrar nada) */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute right-[-10%] top-[-15%] h-[520px] w-[520px] rounded-full bg-primaria/10 blur-3xl dark:bg-primaria/[0.07]"
-        />
-
-        {/* No celular: logo à esquerda e botão de tema à direita.
-          * No desktop (lg): o logo some (já aparece no BrandPanel) e o botão
-          * de tema vai para a direita (lg:justify-end). */}
-        <header className="relative flex items-center justify-between p-5 sm:p-8 lg:justify-end">
-          <CaisLogo size={30} className="lg:hidden" />
-          <ThemeToggle />
-        </header>
-
-        <div className="relative flex flex-1 items-center justify-center px-4 pb-12 sm:px-8">
-          {/* ⚠️ ATENÇÃO: o LoginForm lê ?voltar= com useSearchParams. Sem este
-            * <Suspense>, o `npm run build` falha com "useSearchParams() should
-            * be wrapped in a suspense boundary" (notas-next16 §2). */}
-          <Suspense>
-            <LoginForm />
-          </Suspense>
-        </div>
-      </section>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-fundo px-6 text-center">
+      <CaisLogo size={30} className="mb-10" />
+      <h1 className="font-space text-3xl font-semibold text-tinta">CAIS</h1>
+      <p className="mt-2 max-w-md text-sm text-tinta-suave">Uma plataforma para formar, alocar e acompanhar.</p>
+      {/* NAVEGA: para a tela de login, que saiu da raiz e agora fica em /login. */}
+      <Link href="/login" className="mt-6 inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-white hover:bg-botao-hover">Entrar</Link>
     </main>
   );
 }

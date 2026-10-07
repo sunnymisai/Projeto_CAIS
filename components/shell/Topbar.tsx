@@ -238,8 +238,9 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
                   Restaurar dados de demonstração
                 </ItemMenu>
                 {/* APAGA: sair() remove a sessão salva (localStorage e sessionStorage).
-                 * NAVEGA: replace('/') volta ao login sem deixar a tela atual no histórico do "voltar". */}
-                <ItemMenu perigo icone={<LogOut />} onClick={() => { sair(); router.replace('/'); }}>
+                 * NAVEGA: replace('/login') vai para o login (a raiz "/" agora é a homepage)
+                 * sem deixar a tela atual no histórico do "voltar". */}
+                <ItemMenu perigo icone={<LogOut />} onClick={() => { sair(); router.replace('/login'); }}>
                   Sair
                 </ItemMenu>
               </div>

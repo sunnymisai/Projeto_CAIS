@@ -2,7 +2,7 @@
    APP/LAYOUT.TSX (LAYOUT RAIZ)
    O que é: a "moldura" HTML de todas as páginas do CAIS (<html>, <head>, <body>).
    Onde é usado: pelo próprio Next.js, automaticamente, em TODAS as rotas
-     (login "/", área interna "(sistema)", "/sem-permissao" e página 404).
+     (homepage "/", login "/login", área interna "(sistema)", "/sem-permissao" e página 404).
    Depende de: app/globals.css (cores, fontes e tema), app/providers.tsx
      (sessão, dados e avisos) e o localStorage "cais-tema" gravado pelo
      components/ThemeToggle.tsx.

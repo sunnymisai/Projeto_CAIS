@@ -100,10 +100,17 @@ export const LoginForm = () => {
   const { entrar, sessao, pronto } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
-  // Lê ?voltar= da URL. O layout do sistema manda para "/?voltar=/projetos/p1"
+  // Lê ?voltar= da URL. O layout do sistema manda para "/login?voltar=/projetos/p1"
   // quando alguém sem sessão tenta abrir uma tela; depois do login a pessoa
   // volta para onde queria ir. Sem o parâmetro, vai para o painel.
-  const destino = params.get("voltar") || "/painel";
+  const voltar = params.get("voltar");
+  // Só aceita caminho interno ("/algo", mas não "//site.com", que o navegador
+  // trataria como outro site) e nunca o próprio /login (cairia em laço).
+  // Qualquer outro valor vira /painel.
+  const destino =
+    voltar && voltar.startsWith("/") && !voltar.startsWith("//") && !voltar.startsWith("/login")
+      ? voltar
+      : "/painel";
 
   // Já está logado? Vai direto para o sistema.
   // Roda quando a sessão termina de carregar (pronto) ou muda; não há o que limpar.
