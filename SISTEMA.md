@@ -16,14 +16,15 @@ Contas de outros perfis (`ana.souza@cais.example`, `marcos@vertice.example`, sen
 
 | Rota | Tela |
 |---|---|
-| `/` | Login (redireciona para `?voltar=` ou `/painel`) |
+| `/` | Homepage pública: apresenta o CAIS à empresa (topo, pilares, como funciona, perguntas e formulário de interesse simulado) |
+| `/login` | Login (redireciona para `?voltar=`, só caminho interno, ou `/painel`) |
 | `/painel` | Painel do administrador (trilhas, prazos, projetos, carga) |
 | `/empresas` | Lista e ficha de empresa (CNPJ validado, CEP via ViaCEP) |
 | `/pessoas` | Lista e ficha de pessoa (campos por perfil, convite, inativar) |
 | `/trilhas` e `/trilhas/[id]` | Lista e editor de trilha (etapas, público, progresso) |
 | `/projetos` e `/projetos/[id]` | Lista, ficha, equipe e tarefas (quadro, lista, cronograma) |
 | `/design-system` | Documentação viva dos componentes |
-| `/sem-permissao` e 404 | Páginas de erro |
+| `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
 
 Parâmetros úteis: `/projetos/[id]?aba=equipe|tarefas|geral&tarefa=<id>` e `/empresas?abrir=<id>`.
 
@@ -40,6 +41,8 @@ Hoje os dados ficam no `localStorage` (chave `cais-dados-v1`). O menu do perfil 
 
 ```
 app/(sistema)/        telas internas (layout protege a rota e monta o shell)
+components/home/      seções da homepage pública (Topo, Hero, Problema, Pilares, Perguntas, Formulário, Rodapé)
+components/marca/     TresPilares (diagrama usado no login e na homepage)
 components/ui/        design system: basicos, form, Modal, Menu, Tabela, Graficos
 components/shell/     Sidebar, Topbar (busca Ctrl+K, avisos, perfil), Pagina
 components/projetos/  Quadro, CartaoTarefa, DetalheTarefa, Vistas, Equipe, FormProjeto

@@ -5,7 +5,7 @@
    Onde é usado: rota "/". Chegam aqui visitantes de fora e o link
      "Ir para a página inicial" da página 404 (app/not-found.tsx).
    Depende de: as seções de components/home/ (TopoHome, Hero, Problema, Pilares,
-     ComoFunciona, ParaSuaEmpresa, Perfis).
+     ComoFunciona, ParaSuaEmpresa, Perfis, Perguntas, FormularioInteresse, RodapeHome).
    Contexto: §15 item 0 (homepage como ponto de entrada público) e §16;
      docs/notas-next16.md §1 (Server Component) e §5 (metadados).
 
@@ -15,7 +15,8 @@
      - Cada seção é um arquivo em components/home/. A maioria é Server
        Component (só texto e imagens: nenhum JavaScript vai ao navegador).
      - Só vira Client Component quem precisa de interação ou da sessão:
-       TopoHome (menu do celular, tecla Esc e useAuth).
+       TopoHome (menu do celular, tecla Esc e useAuth) e FormularioInteresse
+       (campos, validação e envio simulado).
    ============================================================================ */
 
 import type { Metadata } from 'next';
@@ -26,6 +27,9 @@ import Pilares from '@/components/home/Pilares';
 import ComoFunciona from '@/components/home/ComoFunciona';
 import ParaSuaEmpresa from '@/components/home/ParaSuaEmpresa';
 import Perfis from '@/components/home/Perfis';
+import Perguntas from '@/components/home/Perguntas';
+import FormularioInteresse from '@/components/home/FormularioInteresse';
+import RodapeHome from '@/components/home/RodapeHome';
 
 /**
  * Título e descrição da aba. `absolute` ignora o template "%s · CAIS" do
@@ -56,7 +60,10 @@ export default function Home() {
         <ComoFunciona />
         <ParaSuaEmpresa />
         <Perfis />
+        <Perguntas />
+        <FormularioInteresse />
       </main>
+      <RodapeHome />
     </div>
   );
 }
