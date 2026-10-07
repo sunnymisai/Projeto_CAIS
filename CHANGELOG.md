@@ -2,6 +2,12 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Ajustes no login (branch `feat/acessos`)
+- Modificado: `components/LoginForm.tsx` (o seletor "Entrar como…" virou três botões secundários do design system, um por perfil, que preenchem e-mail e senha; o campo de e-mail usa a máscara `mascaraEmail`), `lib/utils.ts` (`EMAIL_REGEX` mais rígido, valendo para todos os formulários: recusa acento, vírgula, ponto dobrado ou no fim, hífen na ponta do domínio e final com número; criada `mascaraEmail`, que tira espaços e passa para minúsculas), `SISTEMA.md` (contas de demonstração).
+- Corrigido: `next.config.ts` ganhou `allowedDevOrigins` (127.0.0.1 e os IPs da rede). Sem isso, o Next 16 bloqueia os scripts do `npm run dev` fora do `localhost`, e o login, os botões e as validações paravam de funcionar.
+- Criado: lista das contas de teste e da senha à vista, embaixo dos botões do login.
+- Removido: o `EMAIL_REGEX` duplicado dentro do `LoginForm` e o uso do `Select` no login.
+
 ## Bloco C: acessos (branch `feat/acessos`)
 
 ### C08: gestão de acessos e vínculo pessoa-empresa

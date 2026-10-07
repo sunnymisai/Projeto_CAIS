@@ -9,7 +9,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Contas de demonstração** (todas com a senha `Cais@2026`). Na tela de login, o seletor "Entrar como…" preenche e-mail e senha:
+**Contas de demonstração** (todas com a senha `Cais@2026`). Na tela de login, os botões "Entrar como" (Administrador, Profissional e Empresa) preenchem e-mail e senha das três primeiras contas abaixo; a Patrícia só entra digitando:
 
 | Perfil | E-mail | O que enxerga |
 |---|---|---|
@@ -18,7 +18,7 @@ npm run dev        # http://localhost:3000
 | Empresa Vértice (Marcos Vieira) | `marcos@vertice.example` | só os projetos da Vértice; só comenta |
 | Empresa Aurora (Patrícia Melo) | `patricia@aurora.example` | só os projetos da Aurora; só comenta |
 
-**Senhas (SIMULADAS, NUNCA PARA PRODUÇÃO).** Toda pessoa ativa do seed entra com `Cais@2026` até trocar a senha. As senhas trocadas ficam em texto puro no `localStorage` (chave `cais-senhas-demo`), acessadas só por `definirSenha(email, senha)` e `conferirSenha(email, senha)` em `lib/auth.tsx`. As regras de senha (8 caracteres, uma maiúscula, um número) ficam em `lib/senha.ts` (`regrasDaSenha`, `senhaValida`). O seletor "Entrar como…" sempre preenche `Cais@2026`: depois que a pessoa troca a senha, digite a nova. O login confere o cadastro salvo (`lerPessoasSalvas` em `lib/store.tsx`) e só deixa entrar quem está com status "ativo".
+**Senhas (SIMULADAS, NUNCA PARA PRODUÇÃO).** Toda pessoa ativa do seed entra com `Cais@2026` até trocar a senha. As senhas trocadas ficam em texto puro no `localStorage` (chave `cais-senhas-demo`), acessadas só por `definirSenha(email, senha)` e `conferirSenha(email, senha)` em `lib/auth.tsx`. As regras de senha (8 caracteres, uma maiúscula, um número) ficam em `lib/senha.ts` (`regrasDaSenha`, `senhaValida`). Os botões "Entrar como" sempre preenchem `Cais@2026`: depois que a pessoa troca a senha, digite a nova. O login confere o cadastro salvo (`lerPessoasSalvas` em `lib/store.tsx`) e só deixa entrar quem está com status "ativo".
 
 ## Rotas
 

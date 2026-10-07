@@ -1,9 +1,10 @@
 /* ============================================================================
    LOGINFORM.TSX — FORMULÁRIO DE LOGIN
    O que é: o cartão de login (e-mail, senha, "Lembrar-me"), com validação ao
-   sair do campo, mensagens de erro claras e seletor "Entrar como…" (demonstração).
+   sair do campo, mensagens de erro claras e três botões "Entrar como" que
+   preenchem e-mail e senha de uma conta de demonstração de cada perfil.
    Onde é usado: app/login/page.tsx (tela de login, ao lado do BrandPanel).
-   Depende de: lib/auth (useAuth, CONTAS_DEMO), components/ui/form (Select), next/navigation (useRouter,
+   Depende de: lib/auth (useAuth, CONTAS_DEMO, SENHA_DEMO), lib/utils (EMAIL_REGEX, mascaraEmail), lib/tipos (Perfil), next/navigation (useRouter,
    useSearchParams), lucide-react e dos componentes ./input, ./button,
    ./checkbox e ./CaisLogo.
    Contexto: §15 (organograma: Login → Shell; Esqueci a senha; Primeiro
@@ -14,9 +15,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, ArrowRight, CircleAlert } from "lucide-react";
-import { useAuth, CONTAS_DEMO } from "@/lib/auth";
-import { Select } from "@/components/ui/form";
+import { Mail, Lock, ArrowRight, CircleAlert, ShieldCheck, GraduationCap, Building2 } from "lucide-react";
+import { useAuth, CONTAS_DEMO, SENHA_DEMO } from "@/lib/auth";
+import { EMAIL_REGEX, mascaraEmail } from "@/lib/utils";
+import type { Perfil } from "@/lib/tipos";
 
 import Input from "./input";
 import Button from "./button";
@@ -47,9 +49,9 @@ const COPY = {
   inactive: "Esta conta está inativa e não pode entrar. Fale com o administrador do programa para reativá-la.",
   // Convite ainda não usado: a senha só existe depois do primeiro acesso.
   invited: "Você ainda não ativou a conta. Abra o link do convite que recebeu para criar a sua senha.",
-  demoLabel: "Entrar como…",
-  demoPlaceholder: "Escolha uma conta de demonstração",
-  demoHint: "Só no protótipo: preenche e-mail e senha. Você ainda clica em Entrar.",
+  demoLabel: "Entrar como",
+  demoHint: "Só no protótipo: o botão preenche e-mail e senha. Você ainda clica em Entrar.",
+  demoSenha: "Senha de todas (até alguém trocar a sua)",
 };
 
 /* ============================================================================
@@ -61,8 +63,14 @@ const COPY = {
 const FORGOT_PASSWORD_HREF = "/recuperar-senha";
 const CREATE_ACCOUNT_HREF = "#";
 
-// Formato mínimo de e-mail: algo@algo.xx (sem espaços e com final de 2+ letras).
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+// SIMULADO: um botão por perfil, na ordem do §3. Cada um usa a PRIMEIRA conta daquele
+// perfil em CONTAS_DEMO (na Empresa, o Marcos, da Vértice).
+// TODO(API): apagar junto com os botões quando a API real estiver ligada.
+const BOTOES_DEMO: { perfil: Perfil; rotulo: string; Icone: typeof ShieldCheck }[] = [
+  { perfil: "admin", rotulo: "Administrador", Icone: ShieldCheck },
+  { perfil: "profissional", rotulo: "Profissional", Icone: GraduationCap },
+  { perfil: "empresa", rotulo: "Empresa", Icone: Building2 },
+];
 
 /** Mensagens de erro por campo; campo sem erro fica sem a chave (undefined). */
 type Erros = { email?: string; password?: string };
@@ -242,10 +250,11 @@ export const LoginForm = () => {
           label={COPY.emailLabel}
           placeholder={COPY.emailPlaceholder}
           value={email}
-          // Ao digitar: atualiza o valor e revalida (se o campo já foi tocado).
+          // Ao digitar: aplica a máscara (sem espaços, minúsculas), atualiza e revalida (se o campo já foi tocado).
           onChange={(e) => {
-            setEmail(e.target.value);
-            revalidar("email", e.target.value);
+            const limpo = mascaraEmail(e.target.value);
+            setEmail(limpo);
+            revalidar("email", limpo);
           }}
           // Ao sair do campo: marca como tocado e valida (§11: erro ao sair do campo).
           onBlur={() => {
@@ -307,31 +316,62 @@ export const LoginForm = () => {
         </Button>
       </form>
 
-      {/* SIMULADO: seletor "Entrar como…" com as contas fictícias de lib/auth (CONTAS_DEMO).
-       * Ao escolher uma, preenche e-mail e senha e limpa erros antigos; não entra sozinho:
-       * a pessoa ainda clica em Entrar. Fica numa caixa tracejada e discreta, fora do <form>,
-       * para não ser confundido com um campo do login.
+      {/* SIMULADO: botões "Entrar como" com as contas fictícias de lib/auth (CONTAS_DEMO).
+       * Cada botão preenche e-mail e senha da conta daquele perfil e limpa erros antigos;
+       * não entra sozinho: a pessoa ainda clica em Entrar. Ficam numa caixa tracejada, fora
+       * do <form>, para não serem confundidos com o botão de envio.
        * TODO(API): remover esta caixa quando a API real estiver ligada. */}
       <div className="mt-6 rounded-xl border border-dashed border-borda bg-superficie-alt/60 px-4 py-3">
-        <Select
-          label={COPY.demoLabel}
-          placeholder={COPY.demoPlaceholder}
-          hint={COPY.demoHint}
-          // Não controlado: o select só dispara o preenchimento; o que vale são os campos de e-mail e senha.
-          defaultValue=""
-          disabled={loading}
-          opcoes={CONTAS_DEMO.map((c) => ({ valor: c.email, rotulo: c.rotulo }))}
-          onChange={(e) => {
-            const conta = CONTAS_DEMO.find((c) => c.email === e.target.value);
-            // Opção vazia (placeholder): não faz nada.
-            if (!conta) return;
-            // GRAVA: só o estado local do formulário (e-mail e senha digitados).
-            setEmail(conta.email);
-            setPassword(conta.senha);
-            setErros({});
-            setAuthError("");
-          }}
-        />
+        <p id="demo-titulo" className="text-[13px] font-semibold text-tinta">{COPY.demoLabel}</p>
+        {/* Três colunas de mesma largura; abaixo de 400 px (celular estreito) viram uma coluna só. */}
+        <div
+          role="group"
+          aria-labelledby="demo-titulo"
+          aria-describedby="demo-dica"
+          className="mt-2 grid grid-cols-1 gap-2 min-[400px]:grid-cols-3"
+        >
+          {BOTOES_DEMO.map(({ perfil, rotulo, Icone }) => {
+            const conta = CONTAS_DEMO.find((c) => c.perfil === perfil);
+            // ⚠️ ATENÇÃO: sem conta deste perfil em CONTAS_DEMO (lib/auth.tsx), o botão some.
+            if (!conta) return null;
+            return (
+              <Button
+                key={perfil}
+                variante="secundario"
+                tamanho="sm"
+                disabled={loading}
+                // GRAVA: só o estado local do formulário (e-mail e senha digitados).
+                // Zera o "tocado" para não mostrar erro velho nos campos recém-preenchidos.
+                onClick={() => {
+                  setEmail(conta.email);
+                  setPassword(conta.senha);
+                  setErros({});
+                  setTocado({ email: false, password: false });
+                  setAuthError("");
+                }}
+              >
+                <Icone aria-hidden="true" className="h-4 w-4" />
+                {rotulo}
+              </Button>
+            );
+          })}
+        </div>
+        <p id="demo-dica" className="mt-2 text-xs text-tinta-suave">{COPY.demoHint}</p>
+        {/* SIMULADO: as contas de teste à vista, para quem quiser digitar em vez de clicar.
+         * Lista todas as CONTAS_DEMO (inclusive a Patrícia, que não tem botão). */}
+        <dl className="mt-3 space-y-1 border-t border-borda pt-3 text-xs">
+          {CONTAS_DEMO.map((c) => (
+            <div key={c.email} className="flex flex-wrap justify-between gap-x-3">
+              <dt className="text-tinta-suave">{c.rotulo}</dt>
+              {/* select-all: um clique seleciona o e-mail inteiro, fácil de copiar. */}
+              <dd className="select-all font-mono text-tinta">{c.email}</dd>
+            </div>
+          ))}
+          <div className="flex flex-wrap justify-between gap-x-3">
+            <dt className="text-tinta-suave">{COPY.demoSenha}</dt>
+            <dd className="select-all font-mono text-tinta">{SENHA_DEMO}</dd>
+          </div>
+        </dl>
       </div>
 
       <p className="mt-6 border-t border-borda pt-5 text-center text-sm text-tinta-suave">

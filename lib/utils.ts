@@ -182,10 +182,29 @@ export function cnpjValido(v: string) {
 }
 
 /**
- * Formato básico de e-mail: algo@algo.xx (sem espaços, domínio com 2+ letras no fim).
- * Não garante que o e-mail exista — só que tem o formato certo.
+ * Formato de e-mail: nome@dominio.xx. Recusa o que a versão antiga deixava passar:
+ * - nome só com letras sem acento, números e . _ % + - (sem vírgula, espaço ou acento);
+ * - ponto não pode abrir nem fechar o nome, nem aparecer dobrado ("ana..souza");
+ * - domínio com pelo menos um ponto, sem ponto no fim e partes que não começam
+ *   nem terminam com hífen ("ana@-empresa.com");
+ * - final só com letras, 2 ou mais ("ana@empresa.c" e "ana@empresa.c0m" são recusados).
+ * Não garante que o e-mail exista, só que tem o formato certo.
+ * @example EMAIL_REGEX.test('ana.souza@cais.example') // true
+ * @example EMAIL_REGEX.test('ana@empresa')            // false (falta o .com)
  */
-export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+export const EMAIL_REGEX =
+  /^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
+
+/**
+ * Máscara de e-mail para o onChange: tira espaços (no meio ou nas pontas) e
+ * deixa tudo em minúsculas enquanto a pessoa digita. Não valida: isso é com EMAIL_REGEX.
+ * @param valor - o texto do campo.
+ * @returns o texto limpo.
+ * @example mascaraEmail(' Ana.Souza @Cais.example') // 'ana.souza@cais.example'
+ */
+export function mascaraEmail(valor: string): string {
+  return valor.replace(/\s+/g, '').toLowerCase();
+}
 
 /**
  * Normaliza texto para busca sem acento e sem caixa.
