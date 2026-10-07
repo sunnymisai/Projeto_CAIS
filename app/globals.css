@@ -175,3 +175,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .esqueleto, .animate-modal-in, .animate-fade-in { animation: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Homepage: rolagem suave ao clicar nas âncoras. Fica só na home (.home-raiz)
+   para não afetar o sistema interno, e só para quem não pediu menos movimento.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.home-raiz) { scroll-behavior: smooth; }
+}
