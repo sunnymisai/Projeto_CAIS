@@ -2,6 +2,13 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco C: três perfis (branch `feat/tres-perfis`)
+
+### C01: regras de permissão e escopo (só `lib/`)
+- Criado: `lib/permissoes.ts` (`ROTAS_POR_PERFIL`, `podeAcessar`, `podeFazer`), `lib/escopo.ts` (`projetosVisiveis`, `podeVerProjeto`, `tarefasVisiveis`, `alocacoesVisiveis`, `empresasVisiveis`, `pessoasVisiveis`) e `lib/permissoes.casos.ts` (34 casos; rode `node --experimental-strip-types lib/permissoes.casos.ts`).
+- Modificado: `tsconfig.json` ganhou `allowImportingTsExtensions` (só os arquivos acima usam `import ... from './x.ts'`, para o Node achar os módulos).
+- Nenhuma tela foi alterada. Regras ambíguas estão marcadas `// TODO(PROGLOGIC): confirmar`.
+
 ## Bloco B: homepage pública (branch `feat/homepage`)
 
 ### Criado

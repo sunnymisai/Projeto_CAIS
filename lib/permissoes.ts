@@ -1,0 +1,131 @@
+/* ============================================================================
+   PERMISSÕES POR PERFIL
+   O que é: funções puras que dizem quais rotas cada perfil abre (podeAcessar) e quais ações cada perfil pode fazer (podeFazer).
+   Onde é usado: lib/permissoes.casos.ts (testes com Node) e, nas partes seguintes, app/(sistema)/layout.tsx, components/shell/Sidebar.tsx e as telas de projetos.
+   Depende de: apenas o tipo Perfil de lib/tipos.ts (sem React, para rodar em Node).
+   Contexto: §3 (Perfis), §5 (Permissões de projetos, "a confirmar com a PROGLOGIC") e §7 (a segurança real é do back-end).
+   ============================================================================ */
+
+import type { Perfil } from './tipos.ts';
+
+/*
+ * ⚠️ ATENÇÃO: isto é CONVENIÊNCIA DE INTERFACE (esconder o que a pessoa não
+ * pode usar). Quem garante a permissão de verdade é o back-end da PROGLOGIC
+ * (§7). Quando a API existir, ela deve responder 403 e a tela só reflete isso.
+ * TODO(API): trocar estas regras locais pelas permissões devolvidas pela API.
+ */
+
+/**
+ * Prefixo de rota → perfis que podem abrir.
+ * ⚠️ ATENÇÃO: toda rota nova em app/(sistema)/ precisa entrar aqui; se esquecer,
+ * `podeAcessar` trata como "só admin" e os outros perfis caem em /sem-permissao.
+ */
+export const ROTAS_POR_PERFIL: Record<string, readonly Perfil[]> = {
+  // §3: as três visões compartilhadas (o painel muda conforme quem olha, §6).
+  // TODO(PROGLOGIC): confirmar
+  '/painel': ['admin', 'empresa', 'profissional'],
+  '/projetos': ['admin', 'empresa', 'profissional'],
+  '/perfil': ['admin', 'empresa', 'profissional'],
+  // §3/§15 item 3: cadastros e governança são do Administrador.
+  // TODO(PROGLOGIC): confirmar
+  '/empresas': ['admin'],
+  '/pessoas': ['admin'],
+  '/trilhas': ['admin'],
+  '/design-system': ['admin'],
+  '/carga': ['admin'],
+  '/acessos': ['admin'],
+  // §3: Empresa cumpre a trilha dela e Profissional cumpre as atribuídas.
+  // TODO(PROGLOGIC): confirmar
+  '/minhas-trilhas': ['empresa', 'profissional'],
+  // §3: só o Profissional "vê e move as próprias tarefas".
+  // TODO(PROGLOGIC): confirmar
+  '/minhas-tarefas': ['profissional'],
+};
+
+/**
+ * Diz se o perfil pode abrir o caminho.
+ * O prefixo MAIS LONGO que casa vence (ex.: "/projetos/prj_1" casa com "/projetos").
+ * Casa só em fronteira de segmento: "/projetosx" NÃO casa com "/projetos".
+ * Rota não listada = SÓ ADMIN. É o lado seguro: esquecer de cadastrar uma rota
+ * nova nega o acesso (erro visível) em vez de abrir sem querer (erro silencioso).
+ * @param perfil - perfil da sessão.
+ * @param caminho - caminho da URL (com ou sem ?query e #âncora).
+ * @returns true se o perfil pode acessar.
+ * @example podeAcessar('profissional', '/empresas') // false
+ */
+export function podeAcessar(perfil: Perfil, caminho: string): boolean {
+  // Tira ?query e #âncora e a barra final: só o caminho importa para a regra.
+  const limpo = caminho.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+  let melhor: string | null = null;
+  for (const prefixo of Object.keys(ROTAS_POR_PERFIL)) {
+    // Fronteira de segmento: igual ao prefixo ou começa com "prefixo/".
+    const casa = limpo === prefixo || limpo.startsWith(prefixo + '/');
+    // O prefixo mais longo é o mais específico, por isso vence.
+    if (casa && (melhor === null || prefixo.length > melhor.length)) melhor = prefixo;
+  }
+  // Rota não listada: só admin (explicado acima).
+  if (melhor === null) return perfil === 'admin';
+  return ROTAS_POR_PERFIL[melhor].includes(perfil);
+}
+
+/** Ações de projeto que dependem do perfil. */
+export type Acao =
+  | 'criar_tarefa'
+  | 'editar_tarefa'
+  | 'excluir_tarefa'
+  | 'editar_lista'
+  | 'alocar'
+  | 'editar_projeto'
+  | 'mover_tarefa'
+  | 'comentar_tarefa';
+
+/** Informação extra que algumas ações precisam para decidir. */
+export interface ContextoAcao {
+  /** id da pessoa logada (para 'mover_tarefa'). */
+  pessoaId?: string;
+  /** id do responsável da tarefa (para 'mover_tarefa'). */
+  responsavelId?: string;
+  /** true se a pessoa enxerga o projeto (para 'comentar_tarefa'; veja lib/escopo.ts). */
+  enxergaProjeto?: boolean;
+}
+
+/**
+ * Diz se o perfil pode fazer a ação.
+ * @param perfil - perfil da sessão.
+ * @param acao - o que a pessoa quer fazer.
+ * @param contexto - dados extras (quem é a pessoa, de quem é a tarefa, se vê o projeto).
+ * @returns true se pode.
+ * @example podeFazer('profissional', 'mover_tarefa', { pessoaId: 'pes_ana', responsavelId: 'pes_ana' }) // true
+ */
+export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {}): boolean {
+  switch (acao) {
+    // §5: criar/editar/excluir tarefa, editar lista (renomear/excluir coluna),
+    // alocar e editar projeto são só do Administrador (quem opera o programa, §3).
+    // TODO(PROGLOGIC): confirmar
+    case 'criar_tarefa':
+    case 'editar_tarefa':
+    case 'excluir_tarefa':
+    case 'editar_lista':
+    case 'alocar':
+    case 'editar_projeto':
+      return perfil === 'admin';
+
+    // §3/§5: "o profissional vê e move as próprias tarefas"; Empresa só acompanha.
+    // Sem pessoaId ou responsavelId no contexto o profissional NÃO move (lado seguro).
+    // TODO(PROGLOGIC): confirmar
+    case 'mover_tarefa':
+      if (perfil === 'admin') return true;
+      if (perfil === 'profissional') {
+        return !!contexto.pessoaId && contexto.pessoaId === contexto.responsavelId;
+      }
+      return false;
+
+    // §5: "Empresa vê as tarefas do projeto dela e comenta"; o profissional também
+    // comenta onde está. Vale para qualquer perfil que enxerga o projeto; o admin
+    // enxerga todos. Sem a informação de escopo, negamos (lado seguro).
+    // TODO(PROGLOGIC): confirmar
+    case 'comentar_tarefa':
+      if (perfil === 'admin') return true;
+      return contexto.enxergaProjeto === true;
+  }
+}

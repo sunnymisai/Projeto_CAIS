@@ -1,0 +1,99 @@
+/* ============================================================================
+   CASOS DE TESTE DAS PERMISSÕES
+   O que é: script simples (sem biblioteca de testes) que confere podeAcessar, podeFazer e os filtros de lib/escopo.ts. Cada caso tem entrada, esperado e o porquê.
+   Onde é usado: rodado à mão no terminal; nenhuma tela importa este arquivo.
+   Depende de: lib/permissoes.ts, lib/escopo.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
+   Contexto: §3 (Perfis), §5 (Permissões de projetos).
+   Como rodar: node --experimental-strip-types lib/permissoes.casos.ts
+   ============================================================================ */
+
+import { podeAcessar, podeFazer } from './permissoes.ts';
+import { projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
+import type { Dados, Pessoa, Tarefa } from './tipos.ts';
+
+// Mini base de dados só para os testes (espelha os ids do seed: Vértice e Aurora).
+const pessoa = (id: string, perfil: Pessoa['perfil'], empresaId = ''): Pessoa => ({
+  id, nome: id, email: `${id}@x`, telefone: '', cargo: '', perfil, status: 'ativo', dataEntrada: '2026-01-01',
+  area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId,
+});
+const tarefa = (id: string, projetoId: string, responsavelId: string): Tarefa => ({
+  id, projetoId, colunaId: 'c1', titulo: id, descricao: '', responsavelId, prazo: '2026-12-01', prioridade: 'media',
+  etiquetas: [], checklist: [], comentarios: [], ordem: 0,
+});
+const projeto = (id: string, empresaId: string) => ({
+  id, nome: id, tipo: '', empresaId, contatoNome: '', descricao: '', inicio: '2026-01-01', entrega: '2026-12-01',
+  prioridade: 'media' as const, liderId: '', status: 'andamento' as const, cor: 'roxo', colunas: [{ id: 'c1', titulo: 'A fazer' }],
+});
+const empresa = (id: string) => ({
+  id, razaoSocial: id, nomeFantasia: id, cnpj: '', segmento: '', porte: '', site: '', cep: '', logradouro: '', numero: '',
+  cidadeUf: '', contatoNome: '', contatoEmail: '', contatoTelefone: '', contatoCargo: '', status: 'ativa' as const, dataEntrada: '2026-01-01',
+});
+const aloc = (id: string, projetoId: string, pessoaId: string) => ({
+  id, projetoId, pessoaId, papel: '', inicio: '2026-01-01', fim: '2026-12-01', carga: 10, obs: '',
+});
+
+const dados: Dados = {
+  empresas: [empresa('emp_vertice'), empresa('emp_aurora')],
+  pessoas: [
+    pessoa('pes_admin', 'admin'), pessoa('pes_ana', 'profissional'), pessoa('pes_bruno', 'profissional'),
+    pessoa('pes_carla', 'profissional'), pessoa('pes_marcos', 'empresa', 'emp_vertice'), pessoa('pes_patricia', 'empresa', 'emp_aurora'),
+  ],
+  trilhas: [],
+  projetos: [projeto('prj_portal', 'emp_vertice'), projeto('prj_agenda', 'emp_aurora')],
+  alocacoes: [aloc('a1', 'prj_portal', 'pes_ana'), aloc('a2', 'prj_portal', 'pes_bruno'), aloc('a3', 'prj_agenda', 'pes_carla')],
+  tarefas: [tarefa('t1', 'prj_portal', 'pes_ana'), tarefa('t2', 'prj_portal', 'pes_bruno'), tarefa('t3', 'prj_agenda', 'pes_carla')],
+};
+
+const ana = { pessoaId: 'pes_ana', perfil: 'profissional' as const };
+const marcos = { pessoaId: 'pes_marcos', perfil: 'empresa' as const };
+const patricia = { pessoaId: 'pes_patricia', perfil: 'empresa' as const };
+const admin = { pessoaId: 'pes_admin', perfil: 'admin' as const };
+const ids = (xs: { id: string }[]) => xs.map((x) => x.id).sort().join(',');
+
+// Cada caso: descrição (o porquê), valor obtido e valor esperado.
+const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
+  { porque: 'admin abre /empresas (cadastro é do admin)', obtido: podeAcessar('admin', '/empresas'), esperado: true },
+  { porque: 'profissional NÃO abre /empresas', obtido: podeAcessar('profissional', '/empresas'), esperado: false },
+  { porque: 'empresa NÃO abre /pessoas', obtido: podeAcessar('empresa', '/pessoas'), esperado: false },
+  { porque: 'empresa abre /projetos/prj_x (prefixo /projetos)', obtido: podeAcessar('empresa', '/projetos/prj_x'), esperado: true },
+  { porque: 'profissional abre /minhas-tarefas', obtido: podeAcessar('profissional', '/minhas-tarefas'), esperado: true },
+  { porque: 'empresa NÃO abre /minhas-tarefas', obtido: podeAcessar('empresa', '/minhas-tarefas'), esperado: false },
+  { porque: 'empresa abre /minhas-trilhas', obtido: podeAcessar('empresa', '/minhas-trilhas'), esperado: true },
+  { porque: 'admin NÃO abre /minhas-tarefas (é só do profissional)', obtido: podeAcessar('admin', '/minhas-tarefas'), esperado: false },
+  { porque: 'rota não listada vale só para admin (profissional)', obtido: podeAcessar('profissional', '/qualquer-coisa'), esperado: false },
+  { porque: 'rota não listada vale só para admin (admin)', obtido: podeAcessar('admin', '/qualquer-coisa'), esperado: true },
+  { porque: '"/projetosx" não casa com o prefixo "/projetos" (fronteira de segmento)', obtido: podeAcessar('empresa', '/projetosx'), esperado: false },
+  { porque: '?voltar= e #âncora são ignorados', obtido: podeAcessar('profissional', '/projetos?x=1#a'), esperado: true },
+  { porque: 'profissional NÃO cria tarefa', obtido: podeFazer('profissional', 'criar_tarefa'), esperado: false },
+  { porque: 'empresa NÃO edita projeto', obtido: podeFazer('empresa', 'editar_projeto'), esperado: false },
+  { porque: 'admin edita projeto', obtido: podeFazer('admin', 'editar_projeto'), esperado: true },
+  { porque: 'profissional NÃO aloca', obtido: podeFazer('profissional', 'alocar'), esperado: false },
+  { porque: 'admin move qualquer tarefa', obtido: podeFazer('admin', 'mover_tarefa', { pessoaId: 'pes_admin', responsavelId: 'pes_ana' }), esperado: true },
+  { porque: 'profissional move a própria tarefa', obtido: podeFazer('profissional', 'mover_tarefa', { pessoaId: 'pes_ana', responsavelId: 'pes_ana' }), esperado: true },
+  { porque: 'profissional NÃO move tarefa de outro', obtido: podeFazer('profissional', 'mover_tarefa', { pessoaId: 'pes_ana', responsavelId: 'pes_bruno' }), esperado: false },
+  { porque: 'profissional sem contexto NÃO move (lado seguro)', obtido: podeFazer('profissional', 'mover_tarefa'), esperado: false },
+  { porque: 'empresa NÃO move tarefa', obtido: podeFazer('empresa', 'mover_tarefa', { pessoaId: 'pes_marcos', responsavelId: 'pes_marcos' }), esperado: false },
+  { porque: 'empresa que enxerga o projeto comenta', obtido: podeFazer('empresa', 'comentar_tarefa', { enxergaProjeto: true }), esperado: true },
+  { porque: 'empresa que NÃO enxerga o projeto não comenta', obtido: podeFazer('empresa', 'comentar_tarefa', { enxergaProjeto: false }), esperado: false },
+  { porque: 'admin vê todos os projetos', obtido: ids(projetosVisiveis(admin, dados)), esperado: 'prj_agenda,prj_portal' },
+  { porque: 'empresa Vértice (Marcos) vê só o projeto da Vértice', obtido: ids(projetosVisiveis(marcos, dados)), esperado: 'prj_portal' },
+  { porque: 'empresa Aurora (Patrícia) vê só o projeto da Aurora', obtido: ids(projetosVisiveis(patricia, dados)), esperado: 'prj_agenda' },
+  { porque: 'profissional Ana vê só o projeto em que está alocada', obtido: ids(projetosVisiveis(ana, dados)), esperado: 'prj_portal' },
+  { porque: 'Ana NÃO pode ver o projeto da Aurora (URL digitada)', obtido: podeVerProjeto(ana, 'prj_agenda', dados), esperado: false },
+  { porque: 'Marcos NÃO pode ver o projeto da Aurora', obtido: podeVerProjeto(marcos, 'prj_agenda', dados), esperado: false },
+  { porque: 'tarefas visíveis de Marcos são as do projeto da Vértice', obtido: ids(tarefasVisiveis(marcos, dados)), esperado: 't1,t2' },
+  { porque: 'alocações visíveis de Patrícia são só as da Aurora', obtido: ids(alocacoesVisiveis(patricia, dados)), esperado: 'a3' },
+  { porque: 'empresa Vértice só enxerga a própria empresa', obtido: ids(empresasVisiveis(marcos, dados)), esperado: 'emp_vertice' },
+  { porque: 'Ana enxerga a si e aos colegas de projeto, não a Carla', obtido: ids(pessoasVisiveis(ana, dados)), esperado: 'pes_ana,pes_bruno' },
+  { porque: 'sessão de pessoa inexistente não vê projeto (empresa)', obtido: ids(projetosVisiveis({ pessoaId: 'pes_fantasma', perfil: 'empresa' }, dados)), esperado: '' },
+];
+
+// Confere cada caso e imprime OK/FALHOU; sai com código 1 se algum falhar.
+let falhas = 0;
+for (const c of casos) {
+  const ok = c.obtido === c.esperado;
+  if (!ok) falhas++;
+  console.log(`${ok ? 'OK    ' : 'FALHOU'} ${c.porque}${ok ? '' : ` (obtido: ${String(c.obtido)}, esperado: ${String(c.esperado)})`}`);
+}
+console.log(`\n${casos.length - falhas} de ${casos.length} casos passaram.`);
+if (falhas > 0) process.exit(1);
