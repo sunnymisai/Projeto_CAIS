@@ -1,7 +1,7 @@
 /* ============================================================================
    STORE (CAMADA DE DADOS)
    O que é: o "banco de dados" do protótipo — guarda empresas, pessoas, trilhas, projetos, alocações e tarefas e expõe ações para ler, salvar e apagar.
-   Onde é usado: app/providers.tsx (monta o DadosProvider) e, via useDados(), nas telas de app/(sistema)/ (painel, empresas, pessoas, projetos, projetos/[id], trilhas, trilhas/[id]) e nos componentes components/projetos/* (Quadro, CartaoTarefa, DetalheTarefa, Equipe, FormProjeto, Vistas) e components/shell/Topbar.tsx.
+   Onde é usado: app/providers.tsx (monta o DadosProvider), lib/auth.tsx (lerPessoasSalvas, para o login saber quem existe) e, via useDados(), nas telas de app/(sistema)/ (painel, empresas, pessoas, projetos, projetos/[id], trilhas, trilhas/[id]) e nos componentes components/projetos/* (Quadro, CartaoTarefa, DetalheTarefa, Equipe, FormProjeto, Vistas) e components/shell/Topbar.tsx.
    Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO) e o localStorage do navegador.
    Contexto: §5 (Projetos, alocação e tarefas), §7 (back-end é da PROGLOGIC), §14 (no protótipo, "ligado à store"), §16 (semáforo de carga).
    ============================================================================ */
@@ -24,6 +24,24 @@ import { hojeISO } from './utils';
 // (todo mundo volta para a demonstração). Troque o "v1" só se o formato de
 // `Dados` mudar de um jeito incompatível com o que já está gravado.
 const CHAVE = 'cais-dados-v1';
+
+/**
+ * Lê as pessoas cadastradas direto do navegador, SEM precisar do DadosProvider.
+ * Existe porque o AuthProvider fica FORA do DadosProvider (app/providers.tsx) e
+ * o login precisa saber quem existe, qual o perfil e o status de cada pessoa.
+ * Se ainda não houver nada salvo, devolve as pessoas da demonstração.
+ * @returns a lista de pessoas (a mesma que as telas veem em `useDados().pessoas`).
+ * @example lerPessoasSalvas().find((p) => p.email === 'ana.souza@cais.example')
+ */
+// ⚠️ ATENÇÃO: usa a mesma CHAVE da store; se a chave mudar, o login passa a ver só o seed.
+// TODO(API): apagar; o login será feito pela API e não precisa da lista local de pessoas.
+export function lerPessoasSalvas(): Pessoa[] {
+  try {
+    const bruto = localStorage.getItem(CHAVE);
+    if (bruto) return (JSON.parse(bruto) as Dados).pessoas;
+  } catch { /* dados corrompidos ou localStorage bloqueado: cai na demonstração */ }
+  return criarSeed().pessoas;
+}
 
 /**
  * Nomes das coleções que podem ser salvas/apagadas pelas ações genéricas

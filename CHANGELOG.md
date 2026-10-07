@@ -2,6 +2,13 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco C: fluxos de acesso (branch `feat/fluxos-de-acesso`)
+
+### C05: recuperação de senha simulada
+- Criado: `lib/senha.ts` (`regrasDaSenha`, `senhaValida`), `components/ui/RegrasSenha.tsx` (lista de regras com ícone e texto, aria-live educado; documentada em `/design-system`), `components/AcessoLayout.tsx` (duas colunas compartilhada), `components/RecuperarSenhaForm.tsx` e `app/recuperar-senha/page.tsx` (3 passos + estado de link inválido).
+- Modificado: `lib/auth.tsx` (senhas simuladas `cais-senhas-demo` com `definirSenha` e `conferirSenha`; o login agora confere o cadastro salvo e só deixa entrar pessoa "ativa"; `SENHA_DEMO` exportada), `lib/store.tsx` (`lerPessoasSalvas`, leitura das pessoas sem o provedor, porque o AuthProvider fica fora do DadosProvider), `app/login/page.tsx` (usa `AcessoLayout`), `components/LoginForm.tsx` ("Esqueceu a senha?" leva a `/recuperar-senha`), `components/BrandPanel.tsx` (só o cabeçalho), `app/(sistema)/design-system/page.tsx` (seção de `RegrasSenha`).
+- Removido: a lista `CONTAS` e a conferência de senha fixa no código.
+
 ## Bloco C: três perfis (branch `feat/tres-perfis`)
 
 ### C01: regras de permissão e escopo (só `lib/`)

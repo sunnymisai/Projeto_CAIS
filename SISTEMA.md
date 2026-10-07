@@ -18,12 +18,15 @@ npm run dev        # http://localhost:3000
 | Empresa Vértice (Marcos Vieira) | `marcos@vertice.example` | só os projetos da Vértice; só comenta |
 | Empresa Aurora (Patrícia Melo) | `patricia@aurora.example` | só os projetos da Aurora; só comenta |
 
+**Senhas (SIMULADAS, NUNCA PARA PRODUÇÃO).** Toda pessoa ativa do seed entra com `Cais@2026` até trocar a senha. As senhas trocadas ficam em texto puro no `localStorage` (chave `cais-senhas-demo`), acessadas só por `definirSenha(email, senha)` e `conferirSenha(email, senha)` em `lib/auth.tsx`. As regras de senha (8 caracteres, uma maiúscula, um número) ficam em `lib/senha.ts` (`regrasDaSenha`, `senhaValida`). O seletor "Entrar como…" sempre preenche `Cais@2026`: depois que a pessoa troca a senha, digite a nova. O login confere o cadastro salvo (`lerPessoasSalvas` em `lib/store.tsx`) e só deixa entrar quem está com status "ativo".
+
 ## Rotas
 
 | Rota | Tela |
 |---|---|
 | `/` | Homepage pública: apresenta o CAIS à empresa (topo, pilares, como funciona, perguntas e formulário de interesse simulado) |
 | `/login` | Login (redireciona para `?voltar=`, só caminho interno, ou `/painel`) |
+| `/recuperar-senha` | Recuperação de senha SIMULADA em 3 passos: e-mail → "link enviado" (botão de demonstração "Abrir o link recebido") → `?token=demo&email=...` com nova senha e regras em tempo real. A mensagem de sucesso é a mesma exista ou não o e-mail |
 | `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); empresa e profissional ainda "Em construção" |
 | `/empresas` | Lista e ficha de empresa (CNPJ validado, CEP via ViaCEP) |
 | `/pessoas` | Lista e ficha de pessoa (campos por perfil, convite, inativar) |
@@ -75,7 +78,8 @@ Hoje os dados ficam no `localStorage` (chave `cais-dados-v1`). O menu do perfil 
 app/(sistema)/        telas internas (layout protege a rota e monta o shell)
 components/home/      seções da homepage pública (Topo, Hero, Problema, Pilares, Perguntas, Formulário, Rodapé)
 components/marca/     TresPilares (diagrama usado no login e na homepage)
-components/ui/        design system: basicos, form, Modal, Menu, Tabela, Graficos
+components/ui/        design system: basicos, form, Modal, Menu, Tabela, Graficos, RegrasSenha
+components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), LoginForm, RecuperarSenhaForm
 components/paineis/   PainelAdmin, PainelEmpresa, PainelProfissional (o /painel escolhe pelo perfil)
 components/shell/     Sidebar (menu filtrado por perfil), Topbar (busca Ctrl+K e avisos com escopo, perfil), Pagina, EmConstrucao
 components/projetos/  Quadro, CartaoTarefa, DetalheTarefa, Vistas, Equipe, FormProjeto

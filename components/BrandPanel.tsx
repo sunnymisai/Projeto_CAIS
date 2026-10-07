@@ -2,7 +2,7 @@
    BRANDPANEL.TSX — PAINEL DE MARCA DA TELA DE LOGIN
    O que é: o painel escuro do lado esquerdo do login (só em telas grandes),
    com o logo, a frase da marca e o desenho dos três pilares conectados.
-   Onde é usado: app/login/page.tsx (tela de login).
+   Onde é usado: components/AcessoLayout.tsx (login, recuperar senha e primeiro acesso).
    Depende de: ./CaisLogo, ./marca/TresPilares (o desenho dos pilares) e das
    cores --color-noite e --color-pilar-* de app/globals.css.
    Contexto: §1 (os três pilares e suas cores) e §9 (marca).

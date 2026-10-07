@@ -2,7 +2,7 @@
    APP/(SISTEMA)/DESIGN-SYSTEM/PAGE.TSX
    O que é: a documentação viva do design system do CAIS: cada componente aparece funcionando, com todos os seus estados.
    Onde é usado: rota /design-system (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts). Regra do time (CLAUDE.md): todo componente novo de components/ui deve ganhar uma seção aqui.
-   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal), components/button, components/input, components/checkbox, components/CaisLogo, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
+   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal, RegrasSenha), components/button, components/input, components/checkbox, components/CaisLogo, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
    Contexto: docs/contexto-cais.md §9 (Design system e marca: "documentado ao vivo"), §10 (Anatomia de toda tela) e §13 (Qualidade: os quatro estados).
    ============================================================================ */
 // "use client": as demonstrações usam estado (abas, modal, interruptor) e toast,
@@ -21,6 +21,7 @@ import { Card, Etiqueta, EtiquetaTarefa, Avatar, GrupoAvatares, Aviso, Abas, Pag
 import { BarraEmpilhada, Rosca, Colunas } from '@/components/ui/Graficos';
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
+import RegrasSenha from '@/components/ui/RegrasSenha';
 import { useToast } from '@/lib/toast';
 
 /* Documentação viva: cada componente aparece com seus estados, como pede
@@ -95,6 +96,8 @@ export default function DesignSystem() {
   const [pag, setPag] = useState(2);
   const [modal, setModal] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  // Senha digitada na demonstração das regras de senha (não é gravada em lugar nenhum).
+  const [senhaDemo, setSenhaDemo] = useState('');
 
   return (
     // max-w-[1200px] e respiro crescente (p-4 → lg:p-8) iguais às outras telas.
@@ -209,6 +212,14 @@ export default function DesignSystem() {
           <div className="mt-6">
             <Rot>Tamanho padrão (login)</Rot>
             <div className="max-w-sm"><Input label="E-mail" placeholder="nome@empresa.com" icon={<Mail className="h-4 w-4" />} /></div>
+          </div>
+          {/* RegrasSenha (components/ui/RegrasSenha.tsx): digite para ver as regras serem cumpridas. */}
+          <div className="mt-6">
+            <Rot>Regras da senha em tempo real (ícone e texto, nunca só cor)</Rot>
+            <div className="grid max-w-sm gap-3">
+              <Input compacto label="Digite uma senha" type="password" value={senhaDemo} onChange={(e) => setSenhaDemo(e.target.value)} />
+              <RegrasSenha senha={senhaDemo} />
+            </div>
           </div>
         </Secao>
 

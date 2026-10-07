@@ -12,6 +12,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, ArrowRight, CircleAlert } from "lucide-react";
 import { useAuth, CONTAS_DEMO } from "@/lib/auth";
@@ -50,9 +51,10 @@ const COPY = {
 /* ============================================================================
    2) LINKS — troque os "#" pelas rotas reais do app
    ============================================================================ */
-// TODO(API): trocar "#" pelas rotas de recuperação de senha e de cadastro
-// quando essas telas existirem (§15).
-const FORGOT_PASSWORD_HREF = "#";
+// "Esqueceu a senha?" leva à recuperação de senha simulada (app/recuperar-senha).
+// TODO(API): trocar "#" pela rota de cadastro/convite quando essa tela existir (§15);
+// o primeiro acesso só abre por convite (/primeiro-acesso?convite=...).
+const FORGOT_PASSWORD_HREF = "/recuperar-senha";
 const CREATE_ACCOUNT_HREF = "#";
 
 // Formato mínimo de e-mail: algo@algo.xx (sem espaços e com final de 2+ letras).
@@ -283,10 +285,10 @@ export const LoginForm = () => {
             onChange={(e) => setRemember(e.target.checked)}
             disabled={loading}
           />
-          {/* TODO(API): link de recuperação de senha (ainda "#"). */}
-          <a href={FORGOT_PASSWORD_HREF} className={`text-sm !font-medium ${linkClass}`}>
+          {/* NAVEGA: vai para /recuperar-senha (next/link, sem recarregar a página). */}
+          <Link href={FORGOT_PASSWORD_HREF} className={`text-sm !font-medium ${linkClass}`}>
             {COPY.forgotPassword}
-          </a>
+          </Link>
         </div>
 
         {/* isLoading troca o texto por "Entrando…" com spinner e desabilita o botão (evita envio duplo). */}
