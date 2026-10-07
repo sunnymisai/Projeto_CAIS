@@ -4,6 +4,10 @@ Cada entrada lista o que foi criado, modificado e removido.
 
 ## Bloco D: profissional (branch `feat/profissional`)
 
+### D04: minhas tarefas do profissional
+- Criado: `agruparMinhasTarefas`, `fimDaSemana` e `DIAS_CONCLUIDA_RECENTE` em `lib/metricas.ts`, `lib/metricas.casos.ts` (9 casos), `testes/navegador/d04-minhas-tarefas.mjs` (24 conferências).
+- Modificado: `app/(sistema)/minhas-tarefas/page.tsx` (era "Em construção"; agora grupos por prazo, concluídas recolhidas, filtros, contagem, detalhe por cima com `?tarefa=` e os quatro estados), `lib/seed.ts` (4 tarefas novas da Ana no Portal de pedidos: atrasada, hoje, esta semana e concluída; a chave continua `cais-dados-v2`, então quem tem dados salvos precisa de "Restaurar dados de demonstração" para vê-las), `SISTEMA.md`.
+
 ### D03: player de etapa e quiz com nota mínima e tentativas
 - Criado: `lib/quiz.ts` (`corrigirQuiz`, `resultadoDoQuiz`, `embaralhar`, `tentativasUsadas`, `concluirEtapa`, `registrarTentativa`; funções puras), `lib/quiz.casos.ts` (27 casos), `components/trilhas/ConteudoEtapa.tsx` (conteúdo por tipo, com estados de demonstração e de erro), `components/trilhas/QuizEtapa.tsx` (quiz acessível: radiogroup nativo, uma pergunta por vez no celular, resultado, revisão, nova tentativa embaralhada), `testes/navegador/d03-player-e-quiz.mjs` (32 conferências).
 - Modificado: `app/(sistema)/minhas-trilhas/[id]/etapa/[etapaId]/page.tsx` (era provisório; agora é o player), `app/(sistema)/minhas-trilhas/[id]/page.tsx` (aviso de etapa bloqueada com `?bloqueada=`), `lib/tipos.ts` (`progresso.quizzes`: tentativas e nota por quiz), `lib/permissoes.ts` (`EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = true`) e `lib/permissoes.casos.ts`, `components/PrimeiroAcessoForm.tsx` (profissional com trilha obrigatória pendente vai para `/minhas-trilhas`), `eslint.config.mjs` (ignora os perfis temporários dos testes), `SISTEMA.md`.

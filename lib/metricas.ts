@@ -1,15 +1,15 @@
 /* ============================================================================
    MÉTRICAS (CÁLCULOS DERIVADOS)
-   O que é: funções puras que calculam público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos e rótulos/cores de status e prioridade.
+   O que é: funções puras que calculam público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas" e rótulos/cores de status e prioridade.
    Onde é usado: app/(sistema)/painel, pessoas, projetos, projetos/[id], trilhas, trilhas/[id] e components/projetos/Equipe.tsx e Vistas.tsx.
-   Depende de: lib/tipos.ts (Dados, Perfil, Pessoa, Trilha) e lib/utils.ts (hojeISO, somaDias, diasEntre).
+   Depende de: lib/tipos.ts (Dados, Perfil, Pessoa, Prioridade, Projeto, Tarefa, Trilha) e lib/utils.ts (hojeISO, somaDias, diasEntre).
    Contexto: §4 (alcance das trilhas), §5 (equipe e tarefas), §6 (dashboards).
    ============================================================================ */
 
 // ⚠️ ATENÇÃO: os imports levam a extensão .ts de propósito (tsconfig: allowImportingTsExtensions):
 // lib/permissoes.ts importa publicoDaTrilha daqui e é testado com Node (permissoes.casos.ts),
 // que só acha o módulo com a extensão. Tirar o ".ts" quebra o teste, não o app.
-import type { Dados, Perfil, Pessoa, Trilha } from './tipos.ts';
+import type { Dados, Perfil, Pessoa, Prioridade, Projeto, Tarefa, Trilha } from './tipos.ts';
 import { diasEntre, hojeISO, somaDias } from './utils.ts';
 
 /* Cálculos derivados usados no painel e nas fichas. Nada aqui é salvo:
@@ -214,3 +214,72 @@ export const TOM_STATUS_PROJETO = { planejado: 'neutro', andamento: 'primaria', 
 export const ROTULO_PRIORIDADE = { baixa: 'Baixa', media: 'Média', alta: 'Alta' } as const;
 /** Tom de cada prioridade: alta usa a cor de erro para chamar atenção. */
 export const TOM_PRIORIDADE = { baixa: 'neutro', media: 'aviso', alta: 'erro' } as const;
+
+/* ---------------- Minhas tarefas (D04) ---------------- */
+
+/** Ordem de urgência da prioridade (menor = mais urgente), para ordenar dentro de um grupo. */
+const PESO_PRIORIDADE: Record<Prioridade, number> = { alta: 0, media: 1, baixa: 2 };
+
+/** Quantos dias para trás uma tarefa concluída ainda aparece em "Concluídas recentemente". */
+export const DIAS_CONCLUIDA_RECENTE = 7;
+
+/** As tarefas de uma pessoa separadas pelo prazo (§12 fluxo 4: "vê o que é dele hoje"). */
+export interface GruposDeTarefas {
+  atrasadas: Tarefa[];
+  hoje: Tarefa[];
+  /** De amanhã até domingo desta semana. */
+  semana: Tarefa[];
+  depois: Tarefa[];
+  /** Na última coluna do projeto, concluídas nos últimos DIAS_CONCLUIDA_RECENTE dias. */
+  concluidas: Tarefa[];
+}
+
+/**
+ * Domingo da semana de uma data (a semana vai de segunda a domingo).
+ * @param iso - data AAAA-MM-DD.
+ * @returns o domingo (AAAA-MM-DD); se a data já é domingo, ela mesma.
+ * @example fimDaSemana('2026-10-07') // '2026-10-11' (quarta → domingo)
+ */
+export function fimDaSemana(iso: string): string {
+  // getDay(): 0 = domingo, 1 = segunda... Meio-dia (T12) evita erro de fuso.
+  const diaDaSemana = new Date(iso + 'T12:00:00').getDay();
+  // Dias até domingo: domingo (0) → 0; segunda (1) → 6; sábado (6) → 1.
+  return somaDias(iso, (7 - diaDaSemana) % 7);
+}
+
+/**
+ * Separa as tarefas de uma pessoa em Atrasadas, Hoje, Esta semana, Depois e Concluídas recentemente.
+ * "Concluída" = está na ÚLTIMA coluna do projeto (mesma regra de progressoProjeto e do quadro).
+ * Dentro de cada grupo: prazo mais próximo primeiro e, no mesmo dia, prioridade alta antes.
+ * Concluídas: as mais recentes primeiro.
+ * @param tarefas - as tarefas da pessoa (já filtradas por responsável e escopo).
+ * @param projetos - os projetos (para saber a última coluna de cada um).
+ * @param hoje - data de referência (padrão: hoje); existe para facilitar teste.
+ * @returns os cinco grupos.
+ * @example agruparMinhasTarefas(tarefasDaAna, d.projetos).atrasadas.length // 1
+ */
+export function agruparMinhasTarefas(tarefas: Tarefa[], projetos: Projeto[], hoje: string = hojeISO()): GruposDeTarefas {
+  const g: GruposDeTarefas = { atrasadas: [], hoje: [], semana: [], depois: [], concluidas: [] };
+  const domingo = fimDaSemana(hoje);
+  const limiteConcluida = somaDias(hoje, -DIAS_CONCLUIDA_RECENTE);
+  for (const t of tarefas) {
+    const projeto = projetos.find((p) => p.id === t.projetoId);
+    // Tarefa de projeto que não existe mais: não mostra (não dá para abrir o detalhe).
+    if (!projeto) continue;
+    const pronta = t.colunaId === projeto.colunas[projeto.colunas.length - 1]?.id;
+    if (pronta) {
+      // Só as recentes; sem data de conclusão (dados antigos), usa o prazo como referência.
+      if ((t.concluidaEm ?? t.prazo) >= limiteConcluida) g.concluidas.push(t);
+      continue;
+    }
+    // Comparar texto funciona porque o formato é AAAA-MM-DD.
+    if (t.prazo < hoje) g.atrasadas.push(t);
+    else if (t.prazo === hoje) g.hoje.push(t);
+    else if (t.prazo <= domingo) g.semana.push(t);
+    else g.depois.push(t);
+  }
+  const porPrazo = (a: Tarefa, b: Tarefa) => a.prazo.localeCompare(b.prazo) || PESO_PRIORIDADE[a.prioridade] - PESO_PRIORIDADE[b.prioridade];
+  g.atrasadas.sort(porPrazo); g.hoje.sort(porPrazo); g.semana.sort(porPrazo); g.depois.sort(porPrazo);
+  g.concluidas.sort((a, b) => (b.concluidaEm ?? b.prazo).localeCompare(a.concluidaEm ?? a.prazo));
+  return g;
+}
