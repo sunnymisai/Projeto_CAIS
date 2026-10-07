@@ -43,6 +43,10 @@ const COPY = {
   emailInvalid: "Use um e-mail no formato nome@empresa.com.",
   passwordRequired: "Informe sua senha.",
   authFailed: "E-mail ou senha incorretos. Confira os dados e tente de novo.",
+  // Conta inativada (§11): só aparece para quem acertou a senha, ou quando a sessão aberta foi encerrada.
+  inactive: "Esta conta está inativa e não pode entrar. Fale com o administrador do programa para reativá-la.",
+  // Convite ainda não usado: a senha só existe depois do primeiro acesso.
+  invited: "Você ainda não ativou a conta. Abra o link do convite que recebeu para criar a sua senha.",
   demoLabel: "Entrar como…",
   demoPlaceholder: "Escolha uma conta de demonstração",
   demoHint: "Só no protótipo: preenche e-mail e senha. Você ainda clica em Entrar.",
@@ -107,6 +111,8 @@ export const LoginForm = () => {
   // quando alguém sem sessão tenta abrir uma tela; depois do login a pessoa
   // volta para onde queria ir. Sem o parâmetro, vai para o painel.
   const voltar = params.get("voltar");
+  // ?aviso=inativa: o layout do sistema encerrou a sessão de uma conta que foi inativada enquanto estava aberta.
+  const avisoDaUrl = params.get("aviso") === "inativa" ? COPY.inactive : "";
   // Só aceita caminho interno ("/algo", mas não "//site.com", que o navegador
   // trataria como outro site) e nunca o próprio /login (cairia em laço).
   // Qualquer outro valor vira /painel.
@@ -179,8 +185,8 @@ export const LoginForm = () => {
         router.replace(destino);
         return; // mantém o botão carregando até a troca de página
       }
-      // Login recusado: e-mail ou senha errados (o perfil não bloqueia mais: as rotas é que filtram).
-      setAuthError(COPY.authFailed);
+      // Login recusado: cada motivo tem a sua mensagem (senha errada, conta inativa ou convite pendente).
+      setAuthError(r.motivo === 'inativo' ? COPY.inactive : r.motivo === 'convidado' ? COPY.invited : COPY.authFailed);
       setShakeKey((k) => k + 1);
     } catch {
       // Falha de rede ou servidor (a promessa deu erro): mensagem diferente de "senha errada".
@@ -217,13 +223,13 @@ export const LoginForm = () => {
       </div>
 
       {/* Erro de autenticação (vindo da API) */}
-      {authError && (
+      {(authError || avisoDaUrl) && (
         <div
           role="alert"
           className="mt-6 flex items-start gap-2.5 rounded-xl border border-erro/30 bg-erro/10 px-3.5 py-3 text-sm text-erro"
         >
           <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{authError}</span>
+          <span>{authError || avisoDaUrl}</span>
         </div>
       )}
 

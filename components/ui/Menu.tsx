@@ -9,7 +9,7 @@
    ============================================================================ */
 "use client";
 
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { cx } from '@/lib/utils';
 
 /**
@@ -21,21 +21,42 @@ import { cx } from '@/lib/utils';
  * @param children função que recebe `fechar` e desenha os itens.
  * @param alinhar lado em que a caixa encosta no botão (padrão: direita).
  * @param largura classe Tailwind de largura da caixa (padrão w-56).
+ * @param flutuante quando true, a caixa usa posição fixa (position: fixed) calculada a partir do botão:
+ *   necessário dentro de tabelas, cujo contêiner rola (overflow) e cortaria a caixa. Fecha ao rolar ou redimensionar.
  * @returns o botão e, quando aberto, a caixa de opções.
  * @example
  * <Menu gatilho={(p) => <button onClick={p.alternar} aria-expanded={p['aria-expanded']}>Opções</button>}>
  *   {(fechar) => <ItemMenu onClick={() => { editar(); fechar(); }}>Editar</ItemMenu>}
  * </Menu>
  */
-export default function Menu({ gatilho, children, alinhar = 'direita', largura = 'w-56' }: {
+export default function Menu({ gatilho, children, alinhar = 'direita', largura = 'w-56', flutuante = false }: {
   gatilho: (p: { aberto: boolean; alternar: () => void; 'aria-expanded': boolean; 'aria-haspopup': 'menu' }) => ReactNode;
   children: (fechar: () => void) => ReactNode;
   alinhar?: 'direita' | 'esquerda';
   largura?: string;
+  flutuante?: boolean;
 }) {
   const [aberto, setAberto] = useState(false);
   // Envolve botão + caixa: serve para saber se um clique foi "dentro" ou "fora".
   const ref = useRef<HTMLDivElement>(null);
+  // Só no modo flutuante: a caixa e a posição (em px da janela) calculada ao abrir.
+  const caixa = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+
+  // Modo flutuante: ao abrir, mede o botão e a caixa para posicionar abaixo do botão (ou acima, se faltar espaço
+  // na janela). useLayoutEffect para posicionar antes de pintar (sem a caixa "pular"). Fecha ao rolar/redimensionar,
+  // pois a posição fixa ficaria desalinhada do botão.
+  useLayoutEffect(() => {
+    if (!aberto || !flutuante || !ref.current) return;
+    const b = ref.current.getBoundingClientRect();
+    const altura = caixa.current?.offsetHeight ?? 0;
+    const cabeEmbaixo = b.bottom + 8 + altura <= window.innerHeight;
+    setPos({ top: cabeEmbaixo ? b.bottom + 8 : Math.max(8, b.top - 8 - altura), right: Math.max(8, window.innerWidth - b.right) });
+    const fechar = () => setAberto(false);
+    window.addEventListener('scroll', fechar, true);
+    window.addEventListener('resize', fechar);
+    return () => { window.removeEventListener('scroll', fechar, true); window.removeEventListener('resize', fechar); };
+  }, [aberto, flutuante]);
 
   // Roda quando o menu abre: liga os ouvintes de clique fora e de Esc.
   // A limpeza (return) desliga os dois quando o menu fecha ou sai da tela.
@@ -57,9 +78,10 @@ export default function Menu({ gatilho, children, alinhar = 'direita', largura =
       {/* Chama a função do gatilho entregando o estado e o "alternar" (abre/fecha). */}
       {gatilho({ aberto, alternar: () => setAberto((v) => !v), 'aria-expanded': aberto, 'aria-haspopup': 'menu' })}
       {aberto && (
-        <div role="menu"
+        <div role="menu" ref={caixa}
+          style={flutuante ? { position: 'fixed', top: pos?.top ?? -9999, right: pos?.right ?? 0 } : undefined}
           // absolute + mt-2: a caixa flutua logo abaixo do botão; right-0/left-0 escolhe o lado.
-          className={cx('animate-modal-in absolute z-50 mt-2 overflow-hidden rounded-xl border border-borda bg-superficie p-1.5 shadow-card', largura, alinhar === 'direita' ? 'right-0' : 'left-0')}>
+          className={cx('animate-modal-in z-50 overflow-hidden rounded-xl border border-borda bg-superficie p-1.5 shadow-card', largura, !flutuante && cx('absolute mt-2', alinhar === 'direita' ? 'right-0' : 'left-0'))}>
           {/* Entrega ao conteúdo uma função que fecha o menu (ex.: depois de escolher um item). */}
           {children(() => setAberto(false))}
         </div>

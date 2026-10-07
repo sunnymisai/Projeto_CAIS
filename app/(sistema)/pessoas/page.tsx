@@ -10,6 +10,7 @@
 "use client";
 
 import { Suspense, useCallback, useMemo, useState, KeyboardEvent } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, Search, Users, X, Mail, Link2 } from 'lucide-react';
 import { useDados, Pessoa } from '@/lib/store';
@@ -146,7 +147,7 @@ function Pessoas() {
                       </Td>
                       <Td><Etiqueta tom={p.perfil === 'admin' ? 'primaria' : 'neutro'}>{PERFIS[p.perfil]}</Etiqueta></Td>
                       {/* A coluna muda conforme o perfil: Empresa mostra a empresa vinculada, Profissional mostra área e nível, Admin mostra o cargo. */}
-                      <Td className="text-tinta-suave">{p.perfil === 'empresa' ? d.empresa(p.empresaId)?.nomeFantasia : p.perfil === 'profissional' ? `${p.area} · ${p.nivel}` : p.cargo}</Td>
+                      <Td className="text-tinta-suave">{p.perfil === 'empresa' ? <LinkEmpresa empresaId={p.empresaId} /> : p.perfil === 'profissional' ? `${p.area} · ${p.nivel}` : p.cargo}</Td>
                       {/*
                         * Carga acima do máximo fica na cor de aviso (text-aviso). É alerta, não bloqueio.
                         * tabular-nums alinha os números na coluna.
@@ -179,6 +180,20 @@ function Pessoas() {
       )}
     </div>
   );
+}
+
+/**
+ * Nome da empresa como link para a ficha dela (/empresas?abrir=<id>).
+ * stopPropagation: o clique no link não abre também a ficha da pessoa (a linha da tabela é clicável).
+ * @param props.empresaId - id da empresa vinculada (pode ser vazio).
+ * @returns o link, ou "—" quando não há empresa.
+ */
+function LinkEmpresa({ empresaId }: { empresaId: string }) {
+  const d = useDados();
+  const e = empresaId ? d.empresa(empresaId) : undefined;
+  if (!e) return <span className="text-tinta-fraca">—</span>;
+  // NAVEGA: abre a ficha da empresa.
+  return <Link href={`/empresas?abrir=${e.id}`} onClick={(ev) => ev.stopPropagation()} className="rounded font-semibold text-primaria underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50">{e.nomeFantasia}</Link>;
 }
 
 /**
@@ -410,6 +425,10 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
                 hint={v.perfil === 'empresa' ? 'A pessoa só verá os projetos desta empresa.' : undefined}
                 // Empresas encerradas não aparecem: não faz sentido vincular alguém a elas.
                 opcoes={d.empresas.filter((e) => e.status !== 'encerrada').map((e) => ({ valor: e.id, rotulo: e.nomeFantasia }))} />
+              {/* Atalho para a ficha da empresa já salva (só quando a pessoa tem vínculo gravado). */}
+              {pessoa?.empresaId && d.empresa(pessoa.empresaId) && (
+                <p className="text-[13px] text-tinta-suave">Empresa atual: <LinkEmpresa empresaId={pessoa.empresaId} /></p>
+              )}
             </SecaoForm>
           )}
           {/* Admin só tem dados pessoais (§11); no lugar dos campos, um aviso explica o acesso total. */}

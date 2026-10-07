@@ -2,6 +2,14 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco C: acessos (branch `feat/acessos`)
+
+### C08: gestão de acessos e vínculo pessoa-empresa
+- Criado: `components/acessos/ModalMudarPerfil.tsx`, `MatrizDePermissoes.tsx`, `PessoasDaEmpresa.tsx`.
+- Modificado: `app/(sistema)/acessos/page.tsx` (era "Em construção"), `lib/auth.tsx` (recusa `inativo` e `convidado` no login, último acesso SIMULADO), `lib/permissoes.ts` (`ROTULO_DAS_ROTAS`, `ROTULO_DAS_ACOES`, `rotasDoPerfil`, `permissaoDaAcao`, `mudancaDeAcesso`) e `lib/permissoes.casos.ts` (62 casos), `app/(sistema)/layout.tsx` (encerra sessão de conta inativada e sincroniza perfil/nome), `components/LoginForm.tsx` (mensagens de conta inativa e convite pendente; `?aviso=inativa`), `components/ui/Menu.tsx` (prop `flutuante`, para não ser cortado pela rolagem da tabela), `app/(sistema)/empresas/page.tsx` (abas Dados e Pessoas na ficha), `app/(sistema)/pessoas/page.tsx` (empresa como link).
+- Decisões: checagem de inativa no login E no layout; mudar perfil preserva os dados de profissional (reversível); ninguém muda o próprio perfil nem rebaixa/inativa o último admin; admin não é inativado por esta tela (igual a /pessoas).
+- Pendências: `TODO(PROGLOGIC)` sobre limpar campos ao mudar de perfil.
+
 ## Bloco C: perfil e preferências (branch `feat/perfil`)
 
 ### C07: tela de perfil e preferências

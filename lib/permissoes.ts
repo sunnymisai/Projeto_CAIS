@@ -182,3 +182,96 @@ export function rotaLiberadaComTrilhaPendente(caminho: string): boolean {
   // Fronteira de segmento (igual a podeAcessar): "/painelx" NÃO conta como "/painel".
   return ['/minhas-trilhas', '/painel'].some((p) => limpo === p || limpo.startsWith(p + '/'));
 }
+
+/* ============================================================================
+   LEITURA DAS REGRAS PARA TELAS (Acessos: "O que cada perfil pode fazer")
+   ============================================================================ */
+
+/**
+ * Nome de cada rota de ROTAS_POR_PERFIL, em português, para mostrar à equipe.
+ * ⚠️ ATENÇÃO: toda rota nova de ROTAS_POR_PERFIL precisa de um nome aqui; o caso de teste
+ * "toda rota tem rótulo" (lib/permissoes.casos.ts) falha se esquecer.
+ */
+export const ROTULO_DAS_ROTAS: Record<string, string> = {
+  '/painel': 'Painel',
+  '/projetos': 'Projetos e quadro',
+  '/perfil': 'Meu perfil',
+  '/empresas': 'Empresas',
+  '/pessoas': 'Pessoas',
+  '/trilhas': 'Trilhas (editor)',
+  '/design-system': 'Design System',
+  '/carga': 'Carga da equipe',
+  '/acessos': 'Acessos',
+  '/minhas-trilhas': 'Minhas trilhas',
+  '/minhas-tarefas': 'Minhas tarefas',
+};
+
+/** Nome de cada ação de `podeFazer`, em português. */
+export const ROTULO_DAS_ACOES: Record<Acao, string> = {
+  criar_tarefa: 'Criar tarefa',
+  editar_tarefa: 'Editar tarefa',
+  excluir_tarefa: 'Excluir tarefa',
+  editar_lista: 'Renomear ou excluir lista (coluna)',
+  alocar: 'Alocar pessoas em projetos',
+  editar_projeto: 'Criar ou editar projeto',
+  mover_tarefa: 'Mover tarefa de coluna',
+  comentar_tarefa: 'Comentar em tarefa',
+};
+
+/**
+ * Todas as ações, na ordem em que aparecem na tabela de permissões.
+ * ⚠️ ATENÇÃO: ação nova em `Acao` precisa entrar aqui e em ROTULO_DAS_ACOES (o TypeScript cobra o rótulo).
+ */
+export const TODAS_AS_ACOES: Acao[] = ['criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista', 'alocar', 'editar_projeto', 'mover_tarefa', 'comentar_tarefa'];
+
+/**
+ * Prefixos de rota que o perfil pode abrir (na ordem de ROTAS_POR_PERFIL).
+ * @param perfil - o perfil.
+ * @returns lista de prefixos, ex.: ['/painel', '/projetos', '/perfil', ...].
+ * @example rotasDoPerfil('empresa').includes('/pessoas') // false
+ */
+export function rotasDoPerfil(perfil: Perfil): string[] {
+  return Object.keys(ROTAS_POR_PERFIL).filter((r) => ROTAS_POR_PERFIL[r].includes(perfil));
+}
+
+/**
+ * Resume uma ação para um perfil, sem inventar regra: pergunta a `podeFazer` duas vezes,
+ * uma com o contexto mais favorável (é o dono da tarefa e enxerga o projeto) e uma sem contexto.
+ * @param perfil - o perfil.
+ * @param acao - a ação.
+ * @returns 'sim' (sempre pode), 'nao' (nunca pode) ou 'condicional' (depende de ser dono/enxergar o projeto).
+ * @example permissaoDaAcao('profissional', 'mover_tarefa') // 'condicional' (só as próprias)
+ */
+export function permissaoDaAcao(perfil: Perfil, acao: Acao): 'sim' | 'nao' | 'condicional' {
+  const melhor = podeFazer(perfil, acao, { pessoaId: 'p', responsavelId: 'p', enxergaProjeto: true });
+  const semContexto = podeFazer(perfil, acao);
+  if (melhor && semContexto) return 'sim';
+  if (!melhor && !semContexto) return 'nao';
+  return 'condicional';
+}
+
+/** Explicação da condição, para as ações que podem ser 'condicional'. */
+export const CONDICAO_DA_ACAO: Partial<Record<Acao, string>> = {
+  mover_tarefa: 'só as próprias tarefas',
+  comentar_tarefa: 'só nos projetos que enxerga',
+};
+
+/**
+ * O que muda para uma pessoa quando o perfil dela troca de `de` para `para`.
+ * @param de - perfil atual.
+ * @param para - perfil novo.
+ * @returns `passaAVer` (telas novas), `deixaDeVer` (telas que perde), e as ações que `ganha` e `perde`.
+ * @example mudancaDeAcesso('profissional', 'empresa').deixaDeVer // ['/minhas-tarefas']
+ */
+export function mudancaDeAcesso(de: Perfil, para: Perfil) {
+  const antes = rotasDoPerfil(de);
+  const depois = rotasDoPerfil(para);
+  // "Pode" = 'sim' ou 'condicional'; quem passa de 'nao' para 'pode' ganha, e o inverso perde.
+  const pode = (p: Perfil, a: Acao) => permissaoDaAcao(p, a) !== 'nao';
+  return {
+    passaAVer: depois.filter((r) => !antes.includes(r)),
+    deixaDeVer: antes.filter((r) => !depois.includes(r)),
+    ganha: TODAS_AS_ACOES.filter((a) => !pode(de, a) && pode(para, a)),
+    perde: TODAS_AS_ACOES.filter((a) => pode(de, a) && !pode(para, a)),
+  };
+}

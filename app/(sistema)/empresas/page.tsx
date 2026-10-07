@@ -2,7 +2,7 @@
    APP/(SISTEMA)/EMPRESAS/PAGE.TSX
    O que é: tela de cadastro de empresas parceiras (lista com filtros + ficha em modal).
    Onde é usado: rota /empresas (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts), pelo card "Empresas ativas" do painel (app/(sistema)/painel/page.tsx) e pela busca global do topo (components/shell/Topbar.tsx), que abre a ficha direto com /empresas?abrir=<id>.
-   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), máscaras e validações de lib/utils.ts, componentes de components/ui e components/shell, API pública do ViaCEP (viacep.com.br) e useSearchParams/useRouter do Next.
+   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), máscaras e validações de lib/utils.ts, componentes de components/ui e components/shell, components/acessos/PessoasDaEmpresa (aba Pessoas da ficha), API pública do ViaCEP (viacep.com.br) e useSearchParams/useRouter do Next.
    Contexto: docs/contexto-cais.md §11 (Regras de cadastro), §10 (Anatomia de toda tela) e §9 (cor tem significado); docs/notas-next16.md §2 (useSearchParams + Suspense).
    ============================================================================ */
 // "use client": a tela usa estado (useState), eventos (onClick) e useSearchParams,
@@ -19,9 +19,10 @@ import { CabecalhoPagina, BarraFiltros } from '@/components/shell/Pagina';
 import Button from '@/components/button';
 import Input from '@/components/input';
 import { Select, SecaoForm } from '@/components/ui/form';
-import { Card, Etiqueta, EstadoVazio, EsqueletoLista, Paginacao, Avatar, Aviso } from '@/components/ui/basicos';
+import { Card, Etiqueta, EstadoVazio, EsqueletoLista, Paginacao, Avatar, Aviso, Abas } from '@/components/ui/basicos';
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
+import PessoasDaEmpresa from '@/components/acessos/PessoasDaEmpresa';
 import { cnpjValido, EMAIL_REGEX, hojeISO, mascaraCEP, mascaraCNPJ, mascaraTelefone, normalizar, novoId, soDigitos, dataBR } from '@/lib/utils';
 
 /**
@@ -196,6 +197,8 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
   // avisoCep guarda a mensagem quando o CEP não existe ou o ViaCEP não respondeu.
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [avisoCep, setAvisoCep] = useState('');
+  // Aba da ficha: 'dados' (formulário) ou 'pessoas' (vínculo pessoa-empresa, §11). Só existe para empresa já cadastrada.
+  const [aba, setAba] = useState<'dados' | 'pessoas'>('dados');
 
   /**
    * Regras de validação da ficha. Devolve um objeto { campo: mensagem } só com os campos com erro.
@@ -318,7 +321,14 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
         * noValidate desliga os balões de validação do navegador: usamos as nossas mensagens.
         * preventDefault impede o recarregamento da página ao enviar com Enter.
         */}
-      <form onSubmit={(e) => { e.preventDefault(); salvar(); }} noValidate className="space-y-7">
+      {/* Abas só na empresa já cadastrada: a nova ainda não tem pessoas para listar. */}
+      {empresa && (
+        <div className="mb-5"><Abas rotulo="Seções da empresa" ativa={aba} onChange={setAba}
+          abas={[{ id: 'dados', rotulo: 'Dados' }, { id: 'pessoas', rotulo: 'Pessoas', contagem: d.pessoas.filter((p) => p.perfil === 'empresa' && p.empresaId === empresa.id).length }]} /></div>
+      )}
+      {empresa && aba === 'pessoas' && <div role="tabpanel" id="painel-pessoas" aria-labelledby="aba-pessoas"><PessoasDaEmpresa empresa={empresa} /></div>}
+      {/* hidden (e não desmontar) mantém o que foi digitado ao trocar de aba. */}
+      <form onSubmit={(e) => { e.preventDefault(); salvar(); }} noValidate className="space-y-7" hidden={aba === 'pessoas'}>
         <SecaoForm titulo="Dados da empresa">
           <div className="grid gap-4 sm:grid-cols-2">
             <Input compacto label="Razão social" required placeholder="Nome registrado da empresa" {...f.campo('razaoSocial')} />

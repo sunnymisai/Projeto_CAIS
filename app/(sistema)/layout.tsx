@@ -20,7 +20,7 @@
 // "use client": a sessão fica no localStorage e só existe no navegador.
 "use client";
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/components/shell/Sidebar';
 import Topbar from '@/components/shell/Topbar';
@@ -50,12 +50,39 @@ import { CaisMark } from '@/components/CaisLogo';
  * @returns a tela de "verificando acesso" ou a casca com a página dentro.
  */
 export default function LayoutSistema({ children }: { children: ReactNode }) {
-  const { sessao, pronto } = useAuth();
+  const { sessao, pronto, sair, atualizarSessao } = useAuth();
   const dados = useDados();
   const router = useRouter();
   const caminho = usePathname();
   // Controla o menu lateral no celular (no desktop ele fica sempre visível).
   const [menuAberto, setMenuAberto] = useState(false);
+  // Lembra que a sessão foi encerrada porque a conta foi inativada: o porteiro abaixo usa isto
+  // para mandar ao login COM a mensagem, em vez do redirecionamento comum.
+  const encerradaPorInativa = useRef(false);
+
+  // Conta de quem está logado mudou no cadastro (feito em /acessos ou /pessoas)? Roda quando os dados
+  // carregam ou mudam; não tem limpeza.
+  // - Inativa: encerra a sessão (a pessoa que já estava com o sistema aberto é barrada na hora).
+  //   O login em si já recusa conta inativa (lib/auth.tsx); aqui cobrimos a sessão ABERTA.
+  // - Perfil, nome ou e-mail diferentes: copia para a sessão, que guarda só uma cópia.
+  // Escolha: o layout tem acesso a useDados() e o AuthProvider não (fica fora do DadosProvider).
+  // APAGA: sair() remove a sessão do navegador.
+  // TODO(API): a API responde 401/403 na próxima chamada e a tela reage a isso.
+  useEffect(() => {
+    if (!pronto || !sessao || !dados.pronto) return;
+    const p = dados.pessoa(sessao.pessoaId);
+    // Cadastro não encontrado: não mexe (a tela de perfil explica o erro).
+    if (!p) return;
+    if (p.status === 'inativo') {
+      encerradaPorInativa.current = true;
+      sair();
+      return;
+    }
+    if (p.perfil !== sessao.perfil || p.nome !== sessao.nome || p.email !== sessao.email) {
+      // GRAVA: atualiza a cópia na sessão.
+      atualizarSessao({ perfil: p.perfil, nome: p.nome, email: p.email });
+    }
+  }, [pronto, sessao, dados, sair, atualizarSessao]);
 
   // Porteiro das rotas. Roda depois de cada render em que mudar `pronto`,
   // `sessao` ou o `caminho` (trocar de página, sair, entrar). Não tem nada
@@ -70,7 +97,7 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     // encodeURIComponent protege as barras do caminho.
     // replace (e não push) para o botão "voltar" do navegador não cair de
     // novo na tela protegida.
-    if (!sessao) router.replace(`/login?voltar=${encodeURIComponent(caminho)}`);
+    if (!sessao) router.replace(encerradaPorInativa.current ? '/login?aviso=inativa' : `/login?voltar=${encodeURIComponent(caminho)}`);
     // NAVEGA: logado, mas o perfil não pode abrir esta rota → tela de acesso negado.
     else if (!podeAcessar(sessao.perfil, caminho)) router.replace('/sem-permissao');
   }, [pronto, sessao, router, caminho]);

@@ -34,7 +34,8 @@ npm run dev        # http://localhost:3000
 | `/trilhas` e `/trilhas/[id]` | Lista e editor de trilha (etapas, público, progresso) |
 | `/projetos` e `/projetos/[id]` | Lista, ficha, equipe e tarefas (quadro, lista, cronograma) |
 | `/design-system` | Documentação viva dos componentes |
-| `/carga` e `/acessos` | Admin: carga da equipe e gestão de acessos ("Em construção") |
+| `/acessos` | Admin: tabela de contas (pessoa, e-mail/login, perfil, empresa, status, último acesso) com filtros e menu por linha (reenviar convite, redefinir senha para `Cais@2026`, mudar perfil com explicação do que ganha e perde, inativar/reativar) e o quadro "O que cada perfil pode fazer", gerado de `ROTAS_POR_PERFIL` e `podeFazer` |
+| `/carga` | Admin: carga da equipe ("Em construção") |
 | `/minhas-trilhas` e `/minhas-tarefas` | Empresa e profissional (trilhas) e só profissional (tarefas): "Em construção" |
 | `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
@@ -45,7 +46,7 @@ As regras ficam em funções puras, sem React, e podem ser testadas com Node:
 
 - `lib/permissoes.ts`: `podeAcessar(perfil, caminho)` (prefixo mais longo vence; rota não listada = só admin) e `podeFazer(perfil, acao, contexto)`.
 - `lib/escopo.ts`: filtros pela sessão (`projetosVisiveis`, `tarefasVisiveis`, `alocacoesVisiveis`, `empresasVisiveis`, `pessoasVisiveis`, `podeVerProjeto`).
-- `lib/permissoes.casos.ts`: 48 casos (inclui a guarda da trilha obrigatória). Rode `node --experimental-strip-types lib/permissoes.casos.ts`.
+- `lib/permissoes.casos.ts`: 62 casos (inclui a guarda da trilha obrigatória e a leitura das regras para a tela Acessos). Rode `node --experimental-strip-types lib/permissoes.casos.ts`.
 
 | Rota | Admin | Empresa | Profissional |
 |---|---|---|---|
@@ -68,6 +69,10 @@ Parâmetros úteis: `/projetos/[id]?aba=equipe|tarefas|geral&tarefa=<id>` e `/em
 
 **Tema e preferências.** `lib/tema.ts` é o único código que lê, aplica e grava o tema (chave `cais-tema`; "seguir o sistema" = sem chave). O botão sol/lua (`ThemeToggle`) e a aba Preferências usam o mesmo hook `useTema()`, então ficam sincronizados. O `<script>` inline de `app/layout.tsx` continua necessário (aplica o tema antes da hidratação, sem piscar) e repete a chave e os valores de propósito. A densidade das tabelas fica no cadastro da pessoa (`Pessoa.densidadeTabela`) e é lida por `lib/preferencias.ts` na `Tabela`.
 
+**Conta inativa.** Duas barreiras: (1) o login (`lib/auth.tsx`) recusa conta inativa com mensagem clara (só depois de conferir a senha, para não revelar o status de contas alheias); (2) o layout de `(sistema)` encerra a sessão de quem foi inativado com o sistema aberto e leva ao `/login?aviso=inativa`. O mesmo layout copia perfil, nome e e-mail do cadastro para a sessão (assim "mudar perfil" vale na hora). O último acesso fica em `cais-ultimo-acesso` (SIMULADO).
+
+**Vínculo pessoa-empresa.** A ficha da empresa tem a aba "Pessoas" (pessoas com perfil Empresa, profissionais alocados nos projetos e "Vincular pessoa"); a ficha da pessoa mostra a empresa como link.
+
 ## Onde ligar a API da PROGLOGIC
 
 A autenticação e os dados passam por dois arquivos:
@@ -87,6 +92,7 @@ components/ui/        design system: basicos, form, Modal, Menu, Tabela, Grafico
 components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), CartaoAcesso, LoginForm, RecuperarSenhaForm, PrimeiroAcessoForm
 components/paineis/   PainelAdmin, PainelEmpresa, PainelProfissional (o /painel escolhe pelo perfil)
 components/shell/     Sidebar (menu filtrado por perfil), Topbar (busca Ctrl+K e avisos com escopo, perfil), Pagina, EmConstrucao
+components/acessos/   ModalMudarPerfil, MatrizDePermissoes, PessoasDaEmpresa (tela /acessos e aba Pessoas da empresa)
 components/perfil/    AbaDados, AbaPreferencias, AbaSeguranca (as abas de /perfil)
 components/projetos/  Quadro, CartaoTarefa, DetalheTarefa, Vistas, Equipe, FormProjeto
 lib/                  tipos, seed, store, auth, senha, convite, tema, preferencias, permissoes, escopo, toast, metricas, useFormulario, utils
@@ -102,5 +108,6 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Textos oficiais dos termos de uso e da política de privacidade (LGPD) do primeiro acesso.
 - Trava da trilha obrigatória desligada (`EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = false`) até o bloco D.
 - Painéis dos perfis Empresa e Profissional (hoje "Em construção").
-- Telas `/carga`, `/acessos`, `/minhas-trilhas` e `/minhas-tarefas` (hoje "Em construção").
+- Telas `/carga`, `/minhas-trilhas` e `/minhas-tarefas` (hoje "Em construção").
+- Redefinir senha na tela Acessos grava a senha temporária `Cais@2026` sem forçar a troca no próximo login (SIMULADO).
 - Permissão no servidor: as regras de perfil só existem no navegador.

@@ -7,7 +7,10 @@
    Como rodar: node --experimental-strip-types lib/permissoes.casos.ts
    ============================================================================ */
 
-import { podeAcessar, podeFazer, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO } from './permissoes.ts';
+import {
+  podeAcessar, podeFazer, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO,
+  ROTAS_POR_PERFIL, ROTULO_DAS_ROTAS, ROTULO_DAS_ACOES, TODAS_AS_ACOES, rotasDoPerfil, permissaoDaAcao, mudancaDeAcesso,
+} from './permissoes.ts';
 import { projetosVisiveis, podeVerProjeto, tarefasVisiveis, alocacoesVisiveis, empresasVisiveis, pessoasVisiveis } from './escopo.ts';
 import type { Dados, Pessoa, Tarefa } from './tipos.ts';
 
@@ -100,6 +103,20 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'empresa Vértice só enxerga a própria empresa', obtido: ids(empresasVisiveis(marcos, dados)), esperado: 'emp_vertice' },
   { porque: 'Ana enxerga a si e aos colegas de projeto, não a Carla', obtido: ids(pessoasVisiveis(ana, dados)), esperado: 'pes_ana,pes_bruno' },
   { porque: 'sessão de pessoa inexistente não vê projeto (empresa)', obtido: ids(projetosVisiveis({ pessoaId: 'pes_fantasma', perfil: 'empresa' }, dados)), esperado: '' },
+  { porque: 'toda rota de ROTAS_POR_PERFIL tem rótulo em português', obtido: Object.keys(ROTAS_POR_PERFIL).filter((r) => !ROTULO_DAS_ROTAS[r]).join(','), esperado: '' },
+  { porque: 'toda ação de TODAS_AS_ACOES tem rótulo em português', obtido: TODAS_AS_ACOES.filter((a) => !ROTULO_DAS_ACOES[a]).join(','), esperado: '' },
+  { porque: 'rotasDoPerfil(empresa) não inclui /pessoas', obtido: rotasDoPerfil('empresa').includes('/pessoas'), esperado: false },
+  { porque: 'rotasDoPerfil(admin) inclui /acessos', obtido: rotasDoPerfil('admin').includes('/acessos'), esperado: true },
+  { porque: 'rotasDoPerfil concorda com podeAcessar para o profissional', obtido: rotasDoPerfil('profissional').every((r) => podeAcessar('profissional', r)), esperado: true },
+  { porque: 'permissaoDaAcao: admin cria tarefa = sim', obtido: permissaoDaAcao('admin', 'criar_tarefa'), esperado: 'sim' },
+  { porque: 'permissaoDaAcao: profissional cria tarefa = nao', obtido: permissaoDaAcao('profissional', 'criar_tarefa'), esperado: 'nao' },
+  { porque: 'permissaoDaAcao: profissional move tarefa = condicional (só as próprias)', obtido: permissaoDaAcao('profissional', 'mover_tarefa'), esperado: 'condicional' },
+  { porque: 'permissaoDaAcao: empresa comenta = condicional (só no projeto que enxerga)', obtido: permissaoDaAcao('empresa', 'comentar_tarefa'), esperado: 'condicional' },
+  { porque: 'permissaoDaAcao: empresa move tarefa = nao', obtido: permissaoDaAcao('empresa', 'mover_tarefa'), esperado: 'nao' },
+  { porque: 'profissional → empresa: deixa de ver /minhas-tarefas', obtido: mudancaDeAcesso('profissional', 'empresa').deixaDeVer.join(','), esperado: '/minhas-tarefas' },
+  { porque: 'profissional → empresa: não passa a ver nenhuma tela nova', obtido: mudancaDeAcesso('profissional', 'empresa').passaAVer.join(','), esperado: '' },
+  { porque: 'empresa → admin: passa a ver as telas de cadastro', obtido: mudancaDeAcesso('empresa', 'admin').passaAVer.includes('/pessoas'), esperado: true },
+  { porque: 'admin → profissional: perde criar_tarefa e não ganha ação nenhuma', obtido: mudancaDeAcesso('admin', 'profissional').perde.includes('criar_tarefa') && mudancaDeAcesso('admin', 'profissional').ganha.length === 0, esperado: true },
   { porque: 'sem nenhuma trilha, nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_bruno', dados), esperado: false },
   { porque: 'Bruno fez só 1 de 2 obrigatórias da trilha geral publicada: pendente', obtido: temTrilhaObrigatoriaPendente('pes_bruno', comTrilha(trilhaGeral('publicada'))), esperado: true },
   { porque: 'Ana concluiu tudo: nada pendente', obtido: temTrilhaObrigatoriaPendente('pes_ana', comTrilha(trilhaGeral('publicada'))), esperado: false },

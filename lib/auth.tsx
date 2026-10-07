@@ -7,7 +7,7 @@
    funcionar sem back-end. Guardar, conferir e trocar senha é responsabilidade do back-end
    da PROGLOGIC (§7). Nada daqui pode ir para produção.
 
-   Onde é usado: app/providers.tsx (monta o AuthProvider), app/(sistema)/layout.tsx (protege as rotas), app/(sistema)/painel/page.tsx, app/sem-permissao/page.tsx, components/LoginForm.tsx (useAuth e CONTAS_DEMO), components/RecuperarSenhaForm.tsx (definirSenha), components/PrimeiroAcessoForm.tsx (definirSenha e iniciarSessao), components/shell/Topbar.tsx e components/projetos/DetalheTarefa.tsx.
+   Onde é usado: app/providers.tsx (monta o AuthProvider), app/(sistema)/layout.tsx (protege as rotas), app/(sistema)/painel/page.tsx, app/sem-permissao/page.tsx, components/LoginForm.tsx (useAuth e CONTAS_DEMO), components/RecuperarSenhaForm.tsx (definirSenha), components/PrimeiroAcessoForm.tsx (definirSenha e iniciarSessao), app/(sistema)/acessos/page.tsx (lerUltimosAcessos, definirSenha e SENHA_DEMO), components/shell/Topbar.tsx e components/projetos/DetalheTarefa.tsx.
    Depende de: React (Context, useState, useEffect, useCallback), lib/tipos.ts (Perfil), lib/store.tsx (lerPessoasSalvas: quem existe e em que status), localStorage e sessionStorage do navegador.
    Contexto: §3 (Perfis), §7 (autenticação no back é da PROGLOGIC), §12 e §15 item 1 (Login, recuperação de senha e primeiro acesso).
    ============================================================================ */
@@ -47,8 +47,12 @@ export interface Sessao {
  * Resposta de `entrar()`.
  * - `{ ok: true }`: logou.
  * - `motivo: 'credenciais'`: e-mail ou senha errados.
+ * - `motivo: 'inativo'`: e-mail e senha certos, mas a conta foi inativada pelo administrador (§11).
+ * - `motivo: 'convidado'`: e-mail e senha certos, mas a pessoa ainda não fez o primeiro acesso (convite pendente).
+ * Os dois últimos só aparecem para quem acertou a senha, para não revelar o status de contas alheias.
  */
-type ResultadoLogin = { ok: true } | { ok: false; motivo: 'credenciais' };
+type MotivoRecusa = 'credenciais' | 'inativo' | 'convidado';
+type ResultadoLogin = { ok: true } | { ok: false; motivo: MotivoRecusa };
 
 // SIMULADO: senha inicial de TODA pessoa ativa do seed, até ela trocar a própria senha.
 export const SENHA_DEMO = 'Cais@2026';
@@ -126,14 +130,46 @@ export function conferirSenha(email: string, senha: string): boolean {
   return senha === (salva ?? SENHA_DEMO);
 }
 
+// SIMULADO: chave do localStorage com o último login de cada pessoa, no formato { pessoaId: "AAAA-MM-DDTHH:mm:ss.sssZ" }.
+// ⚠️ ATENÇÃO: só registrarUltimoAcesso e lerUltimosAcessos mexem nela; app/(sistema)/acessos mostra o valor.
+// TODO(API): apagar; o "último acesso" vem da API junto com o cadastro da pessoa.
+const CHAVE_ULTIMO_ACESSO = 'cais-ultimo-acesso';
+
 /**
- * Confere e-mail e senha e devolve a sessão (ou null se não bater).
+ * Anota agora como o último acesso da pessoa.
+ * @param pessoaId - id da pessoa que acabou de entrar.
+ */
+// GRAVA: escreve a data-hora do login no localStorage (chave 'cais-ultimo-acesso').
+function registrarUltimoAcesso(pessoaId: string) {
+  try {
+    const todos = lerUltimosAcessos();
+    todos[pessoaId] = new Date().toISOString();
+    localStorage.setItem(CHAVE_ULTIMO_ACESSO, JSON.stringify(todos));
+  } catch { /* navegação privada: simplesmente não registra */ }
+}
+
+/**
+ * Lê o último acesso de todas as pessoas (para a tela de Acessos).
+ * @returns objeto pessoaId → data-hora ISO ({} se ninguém entrou ainda ou se o armazenamento falhar).
+ * @example lerUltimosAcessos()['pes_ana'] // '2026-10-07T14:03:11.000Z'
+ */
+export function lerUltimosAcessos(): Record<string, string> {
+  try {
+    const bruto = localStorage.getItem(CHAVE_ULTIMO_ACESSO);
+    return bruto ? (JSON.parse(bruto) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Confere e-mail e senha e devolve a sessão (ou o motivo da recusa).
  * @param email - e-mail digitado (espaços e maiúsculas são ignorados).
  * @param senha - senha digitada (diferencia maiúsculas).
- * @returns a `Sessao` da pessoa encontrada, ou `null` se as credenciais estiverem erradas
- *   ou se a pessoa não estiver ativa (convidada ou inativa ainda não entram).
+ * @returns a `Sessao` da pessoa encontrada, ou o motivo da recusa: 'credenciais' (e-mail ou senha errados),
+ *   'inativo' (conta inativada) ou 'convidado' (ainda não fez o primeiro acesso).
  */
-async function autenticar(email: string, senha: string): Promise<Sessao | null> {
+async function autenticar(email: string, senha: string): Promise<Sessao | MotivoRecusa> {
   // TODO(API): todo este corpo vira um fetch POST para o endpoint de login da
   // PROGLOGIC, que devolve o token e o perfil; tratar erro de rede à parte.
   // SIMULADO: espera 700 ms para a tela mostrar o estado "entrando...".
@@ -141,11 +177,17 @@ async function autenticar(email: string, senha: string): Promise<Sessao | null> 
   // trim/toLowerCase evitam erro por espaço ou maiúscula no e-mail.
   const emailLimpo = email.trim().toLowerCase();
   // Senha primeiro: assim ninguém descobre o status de uma conta sem saber a senha.
-  if (!conferirSenha(emailLimpo, senha)) return null;
-  // SIMULADO: a pessoa vem do cadastro salvo no navegador (a mesma lista que /pessoas edita).
+  if (!conferirSenha(emailLimpo, senha)) return 'credenciais';
+  // SIMULADO: a pessoa vem do cadastro salvo no navegador (a mesma lista que /pessoas e /acessos editam).
   const pessoa = lerPessoasSalvas().find((p) => p.email.toLowerCase() === emailLimpo);
-  // E-mail desconhecido ou pessoa que ainda não é "ativa": não entra.
-  if (!pessoa || pessoa.status !== 'ativo') return null;
+  // E-mail desconhecido: mesma resposta de senha errada (não revela quem tem conta).
+  if (!pessoa) return 'credenciais';
+  // Conta inativada pelo administrador (§11): senha certa, mas não entra. É ESTE o portão que
+  // barra o login; o layout de (sistema) só cuida de quem já estava com a sessão aberta.
+  // TODO(API): a API responde 403 com o motivo; a tela só mostra a mensagem.
+  if (pessoa.status === 'inativo') return 'inativo';
+  // Convite ainda não usado: a senha só existe depois do primeiro acesso.
+  if (pessoa.status === 'convidado') return 'convidado';
   // SIMULADO: token falso, só para o formato da sessão já ficar igual ao da API.
   return { pessoaId: pessoa.id, nome: pessoa.nome, email: pessoa.email, perfil: pessoa.perfil, token: `demo.${Date.now()}` };
 }
@@ -227,8 +269,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const entrar = useCallback(async (email: string, senha: string, lembrar: boolean): Promise<ResultadoLogin> => {
     const s = await autenticar(email, senha);
-    // Credenciais erradas: o LoginForm mostra o erro de e-mail/senha.
-    if (!s) return { ok: false, motivo: 'credenciais' };
+    // Recusado (senha errada, conta inativa ou convite pendente): o LoginForm mostra a mensagem do motivo.
+    if (typeof s === 'string') return { ok: false, motivo: s };
+    // GRAVA: registra o último acesso desta pessoa (aparece em /acessos).
+    registrarUltimoAcesso(s.pessoaId);
     // Os três perfis entram; o que cada um vê é decidido depois, por rota (lib/permissoes.ts).
     // GRAVA: salva a sessão no navegador (localStorage ou sessionStorage).
     guardarSessao(s, lembrar);
@@ -249,6 +293,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const iniciarSessao = useCallback((pessoa: { id: string; nome: string; email: string; perfil: Perfil }, lembrar: boolean) => {
     const s: Sessao = { pessoaId: pessoa.id, nome: pessoa.nome, email: pessoa.email, perfil: pessoa.perfil, token: `demo.${Date.now()}` };
     guardarSessao(s, lembrar);
+    // GRAVA: o primeiro acesso também conta como último acesso.
+    registrarUltimoAcesso(s.pessoaId);
     setSessao(s);
   }, []);
 
