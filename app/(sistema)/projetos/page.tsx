@@ -1,12 +1,14 @@
 /* ============================================================================
    APP/(SISTEMA)/PROJETOS/PAGE.TSX (LISTA DE PROJETOS)
    O que é: a lista de projetos em cartões, com busca e filtros, e o botão
-     para criar um projeto novo.
+     para criar um projeto novo. Mostra só os projetos do escopo do perfil
+     (lib/escopo.ts) e esconde "Novo projeto" de quem não pode editar projeto.
    Onde é usado: rota /projetos. Chegam aqui: o item "Projetos" do menu
      (components/shell/navegacao.ts), os cartões e o link "Ver projetos" do
      painel (app/(sistema)/painel/page.tsx) e a trilha de navegação, o estado
      "não encontrado" e a exclusão em app/(sistema)/projetos/[id]/page.tsx.
-   Depende de: lib/store.tsx (useDados), lib/metricas.ts (progressoProjeto,
+   Depende de: lib/store.tsx (useDados), lib/auth.tsx (useAuth), lib/escopo.ts
+     (projetosVisiveis, empresasVisiveis), lib/permissoes.ts (podeFazer), lib/metricas.ts (progressoProjeto,
      rótulos e tons de status), lib/utils.ts (dataCurta, normalizar),
      components/projetos/FormProjeto.tsx, components/projetos/cores.ts e
      componentes de components/ui/ e components/shell/Pagina.tsx.
@@ -21,6 +23,9 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Plus, FolderKanban, Search, CalendarDays } from 'lucide-react';
 import { useDados } from '@/lib/store';
+import { useAuth } from '@/lib/auth';
+import { empresasVisiveis, projetosVisiveis } from '@/lib/escopo';
+import { podeFazer } from '@/lib/permissoes';
 import { progressoProjeto, ROTULO_STATUS_PROJETO, TOM_STATUS_PROJETO } from '@/lib/metricas';
 import { CabecalhoPagina, BarraFiltros } from '@/components/shell/Pagina';
 import Button from '@/components/button';
@@ -35,10 +40,22 @@ import { dataCurta, normalizar } from '@/lib/utils';
  * Cada cartão mostra a empresa, o nome, o status, uma "miniatura" do quadro,
  * o progresso (tarefas prontas / total), a equipe e a data de entrega.
  *
+ * Escopo: Admin vê todos; Empresa só os da sua empresa; Profissional só os
+ * em que está alocado. "Novo projeto" só existe para quem pode editar projeto.
+ *
  * @returns a página com filtros e a grade de cartões (ou esqueleto/vazio).
  */
 export default function Projetos() {
   const d = useDados();
+  const { sessao } = useAuth();
+  // Projetos que a sessão pode ver. Sem sessão (só por um instante) a lista é vazia.
+  // Filtrar aqui é conveniência de interface; a segurança real é do back-end (§7).
+  const visiveis = useMemo(() => (sessao ? projetosVisiveis(sessao, d) : []), [sessao, d]);
+  // Empresas do filtro: só as dos projetos visíveis (a Empresa não vê as outras no seletor).
+  const empresasDoFiltro = useMemo(() => (sessao ? empresasVisiveis(sessao, d) : []), [sessao, d]);
+  // "+ Novo projeto" é ESCONDIDO (não desabilitado) de quem não pode: o botão nunca teria uso
+  // para esse perfil, e esconder evita dúvida e o anúncio de "indisponível" no leitor de tela.
+  const podeCriar = !!sessao && podeFazer(sessao.perfil, 'editar_projeto');
   // true = modal "Novo projeto" aberto.
   const [novo, setNovo] = useState(false);
   // Filtros da tela. Texto vazio ('') significa "sem filtro".
@@ -50,15 +67,15 @@ export default function Projetos() {
   // quando o filtro está vazio (o "!empresa ||" faz isso).
   // normalizar() tira acentos e maiúsculas: "projeto" acha "Projéto".
   // useMemo: só refaz a lista quando projetos ou filtros mudam.
-  const lista = useMemo(() => d.projetos
+  const lista = useMemo(() => visiveis
     .filter((p) => !empresa || p.empresaId === empresa)
     .filter((p) => !status || p.status === status)
-    .filter((p) => !busca.trim() || normalizar(p.nome).includes(normalizar(busca.trim()))), [d.projetos, empresa, status, busca]);
+    .filter((p) => !busca.trim() || normalizar(p.nome).includes(normalizar(busca.trim()))), [visiveis, empresa, status, busca]);
 
   return (
     <div className="mx-auto max-w-[1400px] p-4 sm:p-6 lg:p-8">
       <CabecalhoPagina titulo="Projetos" descricao="Da empresa à tarefa: cada projeto tem equipe alocada e um quadro próprio."
-        acao={<Button onClick={() => setNovo(true)}><Plus className="h-4 w-4" aria-hidden />Novo projeto</Button>} />
+        acao={podeCriar ? <Button onClick={() => setNovo(true)}><Plus className="h-4 w-4" aria-hidden />Novo projeto</Button> : undefined} />
 
       {/* Filtros acima do conteúdo, sempre visíveis (§10). */}
       <BarraFiltros>
@@ -70,7 +87,7 @@ export default function Projetos() {
           <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar projeto" aria-label="Buscar projetos"
             className="h-10 w-full rounded-lg border border-borda bg-superficie pl-9 pr-3 text-sm text-tinta placeholder:text-tinta-fraca focus:border-primaria focus:outline-none focus:ring-4 focus:ring-primaria/20" />
         </div>
-        <div className="w-48"><Select aria-label="Filtrar por empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Todas as empresas" opcoes={d.empresas.map((e) => ({ valor: e.id, rotulo: e.nomeFantasia }))} /></div>
+        <div className="w-48"><Select aria-label="Filtrar por empresa" value={empresa} onChange={(e) => setEmpresa(e.target.value)} placeholder="Todas as empresas" opcoes={empresasDoFiltro.map((e) => ({ valor: e.id, rotulo: e.nomeFantasia }))} /></div>
         <div className="w-44"><Select aria-label="Filtrar por status" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="Todos os status" opcoes={Object.entries(ROTULO_STATUS_PROJETO).map(([valor, rotulo]) => ({ valor, rotulo }))} /></div>
       </BarraFiltros>
 
@@ -83,11 +100,11 @@ export default function Projetos() {
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((i) => <Esqueleto key={i} className="h-64 rounded-2xl" />)}</div>
       ) : lista.length === 0 ? (
         <div className="rounded-2xl border border-borda bg-superficie">
-          {/* d.projetos.length > 0 significa "existem projetos, mas o filtro
+          {/* visiveis.length > 0 significa "existem projetos no seu escopo, mas o filtro
             * escondeu"; aí a dica é ajustar os filtros. */}
-          <EstadoVazio icone={<FolderKanban className="h-6 w-6" />} titulo={d.projetos.length ? 'Nenhum projeto com esses filtros' : 'Nenhum projeto ainda'}
-            descricao={d.projetos.length ? 'Ajuste a busca ou os filtros.' : 'Crie o primeiro projeto a partir de uma empresa cadastrada.'}
-            acao={<Button onClick={() => setNovo(true)}><Plus className="h-4 w-4" />Novo projeto</Button>} />
+          <EstadoVazio icone={<FolderKanban className="h-6 w-6" />} titulo={visiveis.length ? 'Nenhum projeto com esses filtros' : 'Nenhum projeto ainda'}
+            descricao={visiveis.length ? 'Ajuste a busca ou os filtros.' : podeCriar ? 'Crie o primeiro projeto a partir de uma empresa cadastrada.' : 'Quando houver um projeto para você, ele aparece aqui.'}
+            acao={podeCriar ? <Button onClick={() => setNovo(true)}><Plus className="h-4 w-4" />Novo projeto</Button> : undefined} />
         </div>
       ) : (
         <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -147,7 +164,7 @@ export default function Projetos() {
       {/* Modal de criação. Ao salvar, o FormProjeto GRAVA o projeto na store
         * e NAVEGA para /projetos/[id]?aba=equipe (§5: projeto novo abre na
         * aba Equipe). */}
-      {novo && <FormProjeto onFechar={() => setNovo(false)} />}
+      {podeCriar && novo && <FormProjeto onFechar={() => setNovo(false)} />}
     </div>
   );
 }

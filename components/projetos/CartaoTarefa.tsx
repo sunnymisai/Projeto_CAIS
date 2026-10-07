@@ -1,6 +1,7 @@
 /* ============================================================================
    CARTAOTAREFA.TSX
-   O que é: o cartão de uma tarefa dentro de uma lista do quadro kanban.
+   O que é: o cartão de uma tarefa dentro de uma lista do quadro kanban. Só
+   pode ser arrastado por quem pode mover a tarefa; os outros veem um cadeado.
    Onde é usado: components/projetos/Quadro.tsx (um cartão por tarefa da lista).
    Depende de: lucide-react (ícones), components/ui/basicos (Avatar,
                EtiquetaTarefa), lib/store (useDados, Tarefa) e lib/utils
@@ -11,7 +12,7 @@
 "use client";
 
 import { DragEvent } from 'react';
-import { Clock, CheckSquare, MessageSquare, AlignLeft, CircleCheck } from 'lucide-react';
+import { Clock, CheckSquare, MessageSquare, AlignLeft, CircleCheck, Lock } from 'lucide-react';
 import { Avatar, EtiquetaTarefa } from '@/components/ui/basicos';
 import { useDados, Tarefa } from '@/lib/store';
 import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
@@ -24,14 +25,16 @@ import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
  *
  * @param tarefa a tarefa exibida.
  * @param concluida true quando o cartão está na última lista ("Pronto").
+ * @param arrastavel true se quem está logado pode mover esta tarefa (lib/permissoes.ts, 'mover_tarefa').
+ * @param cadeado true para mostrar o cadeado "Só o responsável pode mover" (perfil Profissional olhando tarefa de outra pessoa).
  * @param arrastando true enquanto ESTE cartão está sendo arrastado.
  * @param onAbrir abre o detalhe da tarefa (clique, Enter ou Espaço).
  * @param onDragStart chamado quando o usuário começa a arrastar o cartão.
  * @param onDragEnd chamado quando o arraste termina (soltou ou cancelou).
  * @returns o cartão clicável e arrastável.
  */
-export default function CartaoTarefa({ tarefa, concluida, arrastando, onAbrir, onDragStart, onDragEnd }: {
-  tarefa: Tarefa; concluida: boolean; arrastando: boolean;
+export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel, cadeado, onAbrir, onDragStart, onDragEnd }: {
+  tarefa: Tarefa; concluida: boolean; arrastando: boolean; arrastavel: boolean; cadeado: boolean;
   onAbrir: () => void; onDragStart: (e: DragEvent) => void; onDragEnd: () => void;
 }) {
   const d = useDados();
@@ -60,26 +63,29 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, onAbrir, o
     <div
       // data-cartao é lido pelo Quadro no dragover para achar os cartões da lista.
       data-cartao={tarefa.id}
-      // Atributo HTML nativo que deixa o elemento ser arrastado.
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
+      // Atributo HTML nativo que deixa o elemento ser arrastado. Só liga para quem
+      // pode mover: sem ele o navegador nem começa o arraste (e o clique segue abrindo o detalhe).
+      draggable={arrastavel}
+      onDragStart={arrastavel ? onDragStart : undefined}
+      onDragEnd={arrastavel ? onDragEnd : undefined}
       onClick={onAbrir}
       // Acessibilidade: como é uma div com role="button", Enter e Espaço
       // precisam abrir o detalhe como um botão de verdade faria.
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAbrir(); } }}
       role="button"
       tabIndex={0}
-      aria-label={`${tarefa.titulo}. ${prazoTexto}. Responsável: ${resp?.nome ?? 'ninguém'}.`}
+      aria-label={`${tarefa.titulo}. ${prazoTexto}. Responsável: ${resp?.nome ?? 'ninguém'}.${cadeado ? ' Só o responsável pode mover.' : ''}`}
       /*
-       * cursor-grab/active:cursor-grabbing: mãozinha de "pegar" o cartão.
+       * cursor-grab/active:cursor-grabbing: mãozinha de "pegar" o cartão (só se for arrastável;
+       * senão cursor-pointer, porque o cartão continua clicável).
        * select-none: evita selecionar texto ao arrastar.
        * Enquanto arrasta, o cartão original fica inclinado e transparente
        * (rotate + opacity-40): é o estado "arrastando" pedido na §5.
        */
       className={cx(
-        'group cursor-grab select-none rounded-xl border border-borda bg-superficie p-3 shadow-[0_1px_0_rgba(20,22,31,0.06)] transition-[box-shadow,transform,opacity,border-color] duration-150',
-        'hover:border-primaria/40 hover:shadow-card active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60',
+        'group select-none rounded-xl border border-borda bg-superficie p-3 shadow-[0_1px_0_rgba(20,22,31,0.06)] transition-[box-shadow,transform,opacity,border-color] duration-150',
+        arrastavel ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
+        'hover:border-primaria/40 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60',
         arrastando && 'rotate-[1.5deg] opacity-40'
       )}
     >
@@ -108,8 +114,11 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, onAbrir, o
         )}
         {/* Ícone discreto avisando que a tarefa tem descrição. */}
         {tarefa.descricao && <AlignLeft className="h-3 w-3 text-tinta-fraca" aria-label="Tem descrição" />}
+        {/* Cadeado: avisa por ícone e por texto (aria-label e title) que só o responsável move.
+          * role="img" faz o aria-label valer para leitores de tela. */}
+        {cadeado && <span className="ml-auto inline-flex text-tinta-fraca" title="Só o responsável pode mover"><Lock className="h-3.5 w-3.5" role="img" aria-label="Só o responsável pode mover" /></span>}
         {/* ml-auto empurra o avatar do responsável para a direita do cartão. */}
-        <span className="ml-auto">{resp && <Avatar nome={resp.nome} tamanho={24} />}</span>
+        <span className={cadeado ? 'ml-1' : 'ml-auto'}>{resp && <Avatar nome={resp.nome} tamanho={24} />}</span>
       </div>
     </div>
   );

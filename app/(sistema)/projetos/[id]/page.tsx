@@ -2,13 +2,16 @@
    APP/(SISTEMA)/PROJETOS/[ID]/PAGE.TSX (FICHA DO PROJETO)
    O que é: a ficha de um projeto com três abas (Visão geral, Equipe,
      Tarefas), as vistas quadro/lista/cronograma e o detalhe da tarefa.
+     Projeto fora do escopo do perfil (inclusive digitado na URL) manda para
+     /sem-permissao; os botões que o perfil não pode usar são escondidos.
    Onde é usado: rota /projetos/[id] (ex.: /projetos/p1?aba=equipe&tarefa=t3).
      Chegam aqui: os cartões de app/(sistema)/projetos/page.tsx; o painel
      (app/(sistema)/painel/page.tsx, com ?tarefa= nos próximos prazos); a busca
      e os avisos de atraso do topo (components/shell/Topbar.tsx, com ?tarefa=);
      e o FormProjeto ao criar um projeto (com ?aba=equipe).
    Depende de: next/navigation (useParams, useSearchParams, useRouter),
-     lib/store.tsx (useDados), lib/toast.tsx (useToast), lib/metricas.ts,
+     lib/store.tsx (useDados), lib/auth.tsx (useAuth), lib/escopo.ts
+     (podeVerProjeto), lib/permissoes.ts (podeFazer), lib/toast.tsx (useToast), lib/metricas.ts,
      lib/utils.ts e components/projetos/ (Quadro, DetalheTarefa, Vistas,
      Equipe, FormProjeto), além de components/ui/.
    Contexto: §5 (Projetos: quatro níveis, três vistas, tarefa com responsável
@@ -19,11 +22,14 @@
 // "use client": usa estado, useParams/useSearchParams e useDados.
 "use client";
 
-import { Suspense, useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Plus, UserPlus, Pencil, Trash2, LayoutGrid, List, GanttChart, FolderX } from 'lucide-react';
 import { useDados, Projeto } from '@/lib/store';
 import { useToast } from '@/lib/toast';
+import { useAuth } from '@/lib/auth';
+import { podeVerProjeto } from '@/lib/escopo';
+import { podeFazer } from '@/lib/permissoes';
 import { progressoProjeto, ROTULO_STATUS_PROJETO, TOM_STATUS_PROJETO, ROTULO_PRIORIDADE } from '@/lib/metricas';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import Button from '@/components/button';
@@ -86,6 +92,7 @@ function FichaProjeto() {
   const params = useSearchParams();
   const router = useRouter();
   const d = useDados();
+  const { sessao } = useAuth();
 
   // Sem ?aba= na URL, abre na aba Tarefas (a mais usada no dia a dia).
   const aba = (params.get('aba') as Aba) || 'tarefas';
@@ -129,6 +136,21 @@ function FichaProjeto() {
 
   // undefined se o id da URL não existe (projeto excluído ou link errado).
   const projeto = d.projeto(id);
+  // ESCOPO: o projeto existe, mas a sessão não pode vê-lo (ex.: Marcos digitou o id de um projeto da Aurora).
+  // Só decide depois que os dados carregaram; antes disso não dá para saber.
+  // Conveniência de interface: a segurança real é do back-end (§7, TODO(API)).
+  const foraDoEscopo = d.pronto && !!sessao && !!projeto && !podeVerProjeto(sessao, id, d);
+  // Roda quando `foraDoEscopo` muda; não há o que limpar.
+  // NAVEGA: replace (não push) para o botão "voltar" não cair de novo no projeto proibido.
+  useEffect(() => {
+    if (foraDoEscopo) router.replace('/sem-permissao');
+  }, [foraDoEscopo, router]);
+  // Permissões de botões da ficha. Esconder (e não desabilitar) é melhor aqui: o botão nunca
+  // terá uso para esse perfil, então desabilitado só geraria dúvida e seria anunciado como
+  // "indisponível" pelo leitor de tela.
+  const podeCriarTarefa = !!sessao && podeFazer(sessao.perfil, 'criar_tarefa');
+  const podeAlocar = !!sessao && podeFazer(sessao.perfil, 'alocar');
+  const podeEditarProjeto = !!sessao && podeFazer(sessao.perfil, 'editar_projeto');
   // Todas as tarefas deste projeto; useMemo evita refiltrar a cada render.
   const tarefas = useMemo(() => d.tarefas.filter((t) => t.projetoId === id), [d.tarefas, id]);
   // Tarefas que passam nos três filtros ao mesmo tempo (filtro vazio = passa).
@@ -141,6 +163,8 @@ function FichaProjeto() {
       <div className="flex flex-1 gap-3">{[0, 1, 2, 3].map((i) => <Esqueleto key={i} className="h-full min-h-80 w-72 rounded-2xl" />)}</div>
     </div>
   );
+  // Fora do escopo: não mostra nada do projeto enquanto o redirecionamento acima acontece.
+  if (foraDoEscopo) return <div className="p-8" role="status"><span className="sr-only">Verificando acesso…</span></div>;
   // Estado de erro (§13): o id da URL não corresponde a nenhum projeto.
   // Explica o que houve e oferece a saída (NAVEGA: para /projetos).
   if (!projeto) return (
@@ -161,9 +185,10 @@ function FichaProjeto() {
   // O botão principal do cabeçalho muda conforme a aba (§10: título e ação
   // principal): Equipe → "Alocar pessoa"; Tarefas → "Nova tarefa";
   // Visão geral → "Editar projeto".
-  const acao = aba === 'equipe' ? <Button onClick={() => setAlocando(true)}><UserPlus className="h-4 w-4" aria-hidden />Alocar pessoa</Button>
-    : aba === 'tarefas' ? <Button onClick={() => setNovaTarefa(true)}><Plus className="h-4 w-4" aria-hidden />Nova tarefa</Button>
-    : <Button variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" aria-hidden />Editar projeto</Button>;
+  // Cada botão só existe para quem pode usá-lo (undefined = sem botão no cabeçalho).
+  const acao = aba === 'equipe' ? (podeAlocar ? <Button onClick={() => setAlocando(true)}><UserPlus className="h-4 w-4" aria-hidden />Alocar pessoa</Button> : undefined)
+    : aba === 'tarefas' ? (podeCriarTarefa ? <Button onClick={() => setNovaTarefa(true)}><Plus className="h-4 w-4" aria-hidden />Nova tarefa</Button> : undefined)
+    : (podeEditarProjeto ? <Button variante="secundario" onClick={() => setEditando(true)}><Pencil className="h-4 w-4" aria-hidden />Editar projeto</Button> : undefined);
 
   return (
     // Só no quadro a página ganha h-full: o quadro ocupa a altura disponível
@@ -189,7 +214,7 @@ function FichaProjeto() {
           <>
             {/* Projeto recém-criado (Planejado e sem ninguém): mostra o próximo
               * passo, já que ele nasce nesta aba (§5). */}
-            {projeto.status === 'planejado' && equipe.length === 0 && (
+            {podeAlocar && projeto.status === 'planejado' && equipe.length === 0 && (
               <div className="mb-4"><Aviso tipo="info" titulo="Próximo passo: montar a equipe">Aloque as pessoas com papel, período e carga. Depois, crie as tarefas no quadro.</Aviso></div>
             )}
             <Equipe projeto={projeto} alocando={alocando} setAlocando={setAlocando} />
@@ -235,10 +260,12 @@ function FichaProjeto() {
       {/* Detalhe da tarefa: abre quando há ?tarefa= na URL E a tarefa existe
         * (link antigo de tarefa excluída não abre nada). Fechar chama
         * navegar({ tarefa: null }), que remove o ?tarefa= da URL. */}
-      {tarefaAberta && d.tarefas.some((t) => t.id === tarefaAberta) && <DetalheTarefa tarefaId={tarefaAberta} onFechar={() => navegar({ tarefa: null })} />}
-      {editando && <FormProjeto projeto={projeto} onFechar={() => setEditando(false)} />}
+      {/* ESCOPO: a tarefa do ?tarefa= precisa ser DESTE projeto (já está no escopo); senão um link
+        * com ?tarefa= de outro projeto abriria uma tarefa que a pessoa não pode ver. */}
+      {tarefaAberta && tarefas.some((t) => t.id === tarefaAberta) && <DetalheTarefa tarefaId={tarefaAberta} onFechar={() => navegar({ tarefa: null })} />}
+      {podeEditarProjeto && editando && <FormProjeto projeto={projeto} onFechar={() => setEditando(false)} />}
       {/* Ao criar, a tarefa nova já abre no detalhe (onCriada → ?tarefa=id). */}
-      {novaTarefa && <NovaTarefa projeto={projeto} onFechar={() => setNovaTarefa(false)} onCriada={(t) => navegar({ tarefa: t })} />}
+      {podeCriarTarefa && novaTarefa && <NovaTarefa projeto={projeto} onFechar={() => setNovaTarefa(false)} onCriada={(t) => navegar({ tarefa: t })} />}
     </div>
   );
 }
@@ -253,8 +280,11 @@ function FichaProjeto() {
  */
 function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => void }) {
   const d = useDados();
+  const { sessao } = useAuth();
   const avisar = useToast();
   const router = useRouter();
+  // Trocar status, editar dados e excluir: só quem pode editar projeto (Admin). Os outros veem o status como texto.
+  const podeEditar = !!sessao && podeFazer(sessao.perfil, 'editar_projeto');
   // true = modal "Excluir este projeto?" aberto.
   const [excluir, setExcluir] = useState(false);
   // progressoProjeto (lib/metricas.ts): prontas, total, atrasadas e pct.
@@ -319,9 +349,14 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
         <Card className="p-5">
           {/* GRAVA: trocar o status salva o projeto na hora (sem botão
             * "Salvar") e mostra um aviso confirmando. */}
-          <Select label="Status do projeto" value={projeto.status}
-            onChange={(e) => { d.salvar('projetos', { ...projeto, status: e.target.value as Projeto['status'] }); avisar(`Status alterado para ${ROTULO_STATUS_PROJETO[e.target.value as Projeto['status']]}.`); }}
-            opcoes={Object.entries(ROTULO_STATUS_PROJETO).map(([valor, rotulo]) => ({ valor, rotulo }))} />
+          {podeEditar ? (
+            <Select label="Status do projeto" value={projeto.status}
+              onChange={(e) => { d.salvar('projetos', { ...projeto, status: e.target.value as Projeto['status'] }); avisar(`Status alterado para ${ROTULO_STATUS_PROJETO[e.target.value as Projeto['status']]}.`); }}
+              opcoes={Object.entries(ROTULO_STATUS_PROJETO).map(([valor, rotulo]) => ({ valor, rotulo }))} />
+          ) : (
+            // Somente leitura: texto em vez de select desabilitado (o leitor de tela lê rótulo e valor).
+            <div className="flex flex-col gap-1"><p className="text-[13px] font-medium text-tinta">Status do projeto</p><p><Etiqueta tom={TOM_STATUS_PROJETO[projeto.status]} ponto>{ROTULO_STATUS_PROJETO[projeto.status]}</Etiqueta></p></div>
+          )}
           <dl className="mt-5 space-y-3 text-sm">
             {dados.map(([k, v]) => (
               <div key={k} className="flex items-start justify-between gap-4">
@@ -329,13 +364,13 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
               </div>
             ))}
           </dl>
-          <Button variante="secundario" larguraTotal className="mt-5" onClick={onEditar}><Pencil className="h-4 w-4" aria-hidden />Editar dados</Button>
+          {podeEditar && <Button variante="secundario" larguraTotal className="mt-5" onClick={onEditar}><Pencil className="h-4 w-4" aria-hidden />Editar dados</Button>}
         </Card>
-        <Card className="p-5">
+        {podeEditar && <Card className="p-5">
           <h2 className="font-space text-[15px] font-semibold text-tinta">Excluir projeto</h2>
           <p className="mt-1 text-[13px] text-tinta-suave">Remove o quadro, as tarefas e as alocações. Prefira mudar o status para Concluído.</p>
           <Button variante="fantasma" className="mt-3 text-erro hover:bg-erro/10 hover:text-erro" onClick={() => setExcluir(true)}><Trash2 className="h-4 w-4" aria-hidden />Excluir projeto</Button>
-        </Card>
+        </Card>}
       </aside>
 
       {/* Confirmação de exclusão. APAGA: d.remover('projetos') remove o
@@ -343,7 +378,7 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
         * dele. NAVEGA: depois volta para /projetos.
         * ⚠️ ATENÇÃO: não tem desfazer; por isso a tela sugere mudar o status
         * para Concluído em vez de excluir. */}
-      <Modal aberto={excluir} onFechar={() => setExcluir(false)} tamanho="sm" titulo="Excluir este projeto?"
+      <Modal aberto={podeEditar && excluir} onFechar={() => setExcluir(false)} tamanho="sm" titulo="Excluir este projeto?"
         rodape={<><Button variante="secundario" onClick={() => setExcluir(false)}>Cancelar</Button>
           <Button variante="perigo" onClick={() => { d.remover('projetos', projeto.id); avisar('Projeto excluído.'); router.push('/projetos'); }}>Excluir projeto</Button></>}>
         <p className="text-sm text-tinta-suave"><strong className="text-tinta">{projeto.nome}</strong> e as {pr.total} tarefas do quadro serão removidos. Não dá para desfazer.</p>

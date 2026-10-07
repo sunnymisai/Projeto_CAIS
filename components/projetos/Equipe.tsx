@@ -1,9 +1,10 @@
 /* ============================================================================
    EQUIPE.TSX
    O que é: a aba Equipe do projeto (tabela de alocações + modal para alocar/editar).
+               Editar e remover alocação só aparecem para quem pode alocar (Admin).
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, na aba "Equipe".
    Depende de: lib/store (useDados: alocacoes, pessoa, cargaDaPessoa, salvar,
-               remover), lib/toast, lib/useFormulario, lib/metricas
+               remover), lib/auth (useAuth), lib/permissoes (podeFazer), lib/toast, lib/useFormulario, lib/metricas
                (trilhasDaPessoa), components/ui (Modal, form, basicos, Tabela),
                components/button, components/input e lib/utils.
    Contexto: §5 Projetos (Alocação: pessoa, papel, período, carga, trilhas;
@@ -15,6 +16,8 @@
 import { useCallback, useState } from 'react';
 import { UserPlus, Pencil, Trash2, TriangleAlert, Users } from 'lucide-react';
 import { useDados, Alocacao, Projeto } from '@/lib/store';
+import { useAuth } from '@/lib/auth';
+import { podeFazer } from '@/lib/permissoes';
 import { useToast } from '@/lib/toast';
 import { useFormulario } from '@/lib/useFormulario';
 import { trilhasDaPessoa } from '@/lib/metricas';
@@ -43,7 +46,12 @@ const PAPEIS = ['Líder', 'Front-end', 'Back-end', 'UX', 'QA', 'Dados'];
  */
 export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Projeto; alocando: boolean; setAlocando: (v: boolean) => void }) {
   const d = useDados();
+  const { sessao } = useAuth();
   const avisar = useToast();
+  // Só quem pode alocar (Admin) vê os botões de alocar, editar e remover. São ESCONDIDOS,
+  // não desabilitados: para os outros perfis a tabela é só leitura e um botão sem uso
+  // geraria dúvida (e seria anunciado como "indisponível" por leitores de tela).
+  const podeAlocar = !!sessao && podeFazer(sessao.perfil, 'alocar');
   // Alocação aberta no modal de edição (null = nenhuma).
   const [editando, setEditando] = useState<Alocacao | null>(null);
   const equipe = d.alocacoes.filter((a) => a.projetoId === projeto.id);
@@ -53,8 +61,9 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
       <div className="rounded-2xl border border-borda bg-superficie">
         {/* Estado vazio: explica o que é alocar e oferece a ação. */}
         {equipe.length === 0 ? (
-          <EstadoVazio icone={<Users className="h-6 w-6" />} titulo="Ninguém alocado ainda" descricao="Aloque as pessoas que vão trabalhar no projeto, com papel, período e carga semanal."
-            acao={<Button onClick={() => setAlocando(true)}><UserPlus className="h-4 w-4" />Alocar pessoa</Button>} />
+          <EstadoVazio icone={<Users className="h-6 w-6" />} titulo="Ninguém alocado ainda"
+            descricao={podeAlocar ? 'Aloque as pessoas que vão trabalhar no projeto, com papel, período e carga semanal.' : 'Quando a coordenação alocar pessoas neste projeto, a equipe aparece aqui.'}
+            acao={podeAlocar ? <Button onClick={() => setAlocando(true)}><UserPlus className="h-4 w-4" />Alocar pessoa</Button> : undefined} />
         ) : (
           <>
             <Tabela rotulo="Equipe do projeto">
@@ -94,7 +103,7 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
                       {/* Âmbar quando ainda faltam trilhas obrigatórias. */}
                       <Td className={cx('tabular-nums', tr.concluidas < tr.total && 'text-aviso')}>{tr.concluidas} de {tr.total}</Td>
                       <Td>
-                        <div className="flex justify-end gap-0.5">
+                        {podeAlocar && <div className="flex justify-end gap-0.5">
                           <button onClick={() => setEditando(a)} aria-label={`Editar alocação de ${p.nome}`} className="rounded-lg p-1.5 text-tinta-fraca hover:bg-superficie-alt hover:text-tinta"><Pencil className="h-4 w-4" /></button>
                           {/*
                             * APAGA: tira a pessoa da equipe (remove só a alocação; a
@@ -102,7 +111,7 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
                             * TODO(API): trocar por DELETE da alocação.
                             */}
                           <button onClick={() => { d.remover('alocacoes', a.id); avisar(`${p.nome} saiu da equipe.`); }} aria-label={`Remover ${p.nome} da equipe`} className="rounded-lg p-1.5 text-tinta-fraca hover:bg-erro/10 hover:text-erro"><Trash2 className="h-4 w-4" /></button>
-                        </div>
+                        </div>}
                       </Td>
                     </Tr>
                   );
@@ -118,7 +127,7 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
       </div>
 
       {/* Mesmo modal serve para alocar (sem alocação) e editar (com alocação). */}
-      {(alocando || editando) && <FormAlocacao projeto={projeto} alocacao={editando} onFechar={() => { setAlocando(false); setEditando(null); }} />}
+      {podeAlocar && (alocando || editando) && <FormAlocacao projeto={projeto} alocacao={editando} onFechar={() => { setAlocando(false); setEditando(null); }} />}
     </>
   );
 }

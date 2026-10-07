@@ -1,9 +1,12 @@
 /* ============================================================================
    DETALHETAREFA.TSX
-   O que é: o painel (modal) com todos os dados de uma tarefa, editáveis na hora.
+   O que é: o painel (modal) com todos os dados de uma tarefa. Admin edita na hora;
+                 os outros perfis veem os campos como TEXTO somente leitura (a regra
+                 está em lib/permissoes.ts). Comentar fica liberado a quem enxerga o projeto.
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, aberto ao clicar num
                  cartão do Quadro ou numa linha das vistas Lista/Cronograma.
    Depende de: lib/store (useDados), lib/auth (useAuth, autor do comentário),
+               lib/permissoes (podeFazer), lib/escopo (podeVerProjeto), lib/metricas,
                lib/toast (useToast), components/ui/Modal, components/button,
                components/ui/form (Select), components/ui/basicos e lib/utils.
    Contexto: §5 Projetos (tarefa com responsável e prazo obrigatórios,
@@ -12,15 +15,18 @@
 "use client";
 
 import { useState } from 'react';
-import { X, AlignLeft, CheckSquare, MessageSquare, Tag, Trash2, Plus, CreditCard } from 'lucide-react';
+import { X, AlignLeft, CheckSquare, Square, MessageSquare, Tag, Trash2, Plus, CreditCard } from 'lucide-react';
 import { useDados, Tarefa } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
+import { podeFazer } from '@/lib/permissoes';
+import { podeVerProjeto } from '@/lib/escopo';
+import { ROTULO_PRIORIDADE } from '@/lib/metricas';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/button';
 import { Select } from '@/components/ui/form';
 import { Avatar, EtiquetaTarefa, Progresso, corEtiqueta } from '@/components/ui/basicos';
-import { cx, novoId, tempoRelativo, hojeISO } from '@/lib/utils';
+import { cx, dataBR, novoId, tempoRelativo, hojeISO } from '@/lib/utils';
 
 // Etiquetas oferecidas como atalho; o usuário pode criar outras no campo "Nova etiqueta".
 const ETIQUETAS_SUGERIDAS = ['Front', 'UX', 'API', 'QA', 'Login', 'Gráfico', 'Back'];
@@ -30,6 +36,13 @@ const ETIQUETAS_SUGERIDAS = ['Front', 'UX', 'API', 'QA', 'Login', 'Gráfico', 'B
  * página. Tudo salva na hora. "Status" é também o "mover para…" do celular.
  *
  * Não há botão "Salvar": cada campo grava assim que muda (onChange).
+ *
+ * Permissões: quem NÃO pode editar vê os campos como TEXTO (não como inputs
+ * desabilitados). Um input desabilitado é pulado pelo Tab e muitos leitores de
+ * tela o anunciam como "indisponível" sem dizer o valor; texto comum é lido
+ * normalmente, na ordem da página, e o valor aparece junto do rótulo.
+ * Status ("mover para…", usado no celular no lugar do arrastar) segue a regra de
+ * mover do quadro: Admin sempre, Profissional só nas próprias tarefas.
  *
  * @param tarefaId id da tarefa a mostrar.
  * @param onFechar fecha o painel (a página tira o ?tarefa= da URL).
@@ -51,6 +64,14 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
   // ACIMA deste return porque o React exige que rodem sempre na mesma ordem.
   if (!t) return null;
   const projeto = d.projeto(t.projetoId)!;
+  // Permissões desta sessão (lib/permissoes.ts). Sem sessão, nada é permitido.
+  // ⚠️ ATENÇÃO: o mesmo 'mover_tarefa' é conferido em components/projetos/Quadro.tsx; as duas
+  // telas precisam concordar, senão dá para mover pelo detalhe o que o quadro bloqueia.
+  const podeEditar = !!sessao && podeFazer(sessao.perfil, 'editar_tarefa');
+  const podeExcluir = !!sessao && podeFazer(sessao.perfil, 'excluir_tarefa');
+  const podeMover = !!sessao && podeFazer(sessao.perfil, 'mover_tarefa', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
+  // Comentar: qualquer perfil que enxerga o projeto (escopo em lib/escopo.ts).
+  const podeComentar = !!sessao && podeFazer(sessao.perfil, 'comentar_tarefa', { enxergaProjeto: podeVerProjeto(sessao, t.projetoId, d) });
   const coluna = projeto.colunas.find((c) => c.id === t.colunaId);
   const feitos = t.checklist.filter((c) => c.feito).length;
   // Opções de responsável: equipe alocada + o responsável atual (mesmo que
@@ -97,8 +118,13 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
           <div className="min-w-0 flex-1">
             <p className="text-[12px] text-tinta-suave">{projeto.nome} › Tarefas</p>
             {/* Título editável no próprio cabeçalho; -ml-1.5 compensa o padding para alinhar o texto. */}
-            <input value={t.titulo} onChange={(e) => atualizar({ titulo: e.target.value })} aria-label="Título da tarefa"
-              className="-ml-1.5 w-full rounded-md bg-transparent px-1.5 py-0.5 font-space text-xl font-semibold text-tinta focus:bg-superficie-alt focus:outline-none focus:ring-2 focus:ring-primaria/40" />
+            {podeEditar ? (
+              <input value={t.titulo} onChange={(e) => atualizar({ titulo: e.target.value })} aria-label="Título da tarefa"
+                className="-ml-1.5 w-full rounded-md bg-transparent px-1.5 py-0.5 font-space text-xl font-semibold text-tinta focus:bg-superficie-alt focus:outline-none focus:ring-2 focus:ring-primaria/40" />
+            ) : (
+              // Somente leitura: o título aparece como texto (o Modal já nomeia o diálogo com ele).
+              <p className="py-0.5 font-space text-xl font-semibold text-tinta">{t.titulo}</p>
+            )}
             <p className="text-[13px] text-tinta-suave">na lista <strong className="text-tinta">{coluna?.titulo}</strong></p>
           </div>
           <button onClick={onFechar} aria-label="Fechar" className="-mr-2 rounded-lg p-2 text-tinta-fraca hover:bg-superficie-alt hover:text-tinta"><X className="h-5 w-5" /></button>
@@ -116,8 +142,12 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
 
           <section>
             <h3 className={secao}><AlignLeft className="h-4 w-4" aria-hidden />Descrição</h3>
-            <textarea value={t.descricao} onChange={(e) => atualizar({ descricao: e.target.value })} rows={3} placeholder="Adicione uma descrição mais detalhada…" aria-label="Descrição"
-              className="w-full resize-y rounded-xl border border-borda bg-superficie-alt/50 px-3.5 py-2.5 text-sm text-tinta placeholder:text-tinta-fraca focus:border-primaria focus:bg-superficie focus:outline-none focus:ring-4 focus:ring-primaria/20" />
+            {podeEditar ? (
+              <textarea value={t.descricao} onChange={(e) => atualizar({ descricao: e.target.value })} rows={3} placeholder="Adicione uma descrição mais detalhada…" aria-label="Descrição"
+                className="w-full resize-y rounded-xl border border-borda bg-superficie-alt/50 px-3.5 py-2.5 text-sm text-tinta placeholder:text-tinta-fraca focus:border-primaria focus:bg-superficie focus:outline-none focus:ring-4 focus:ring-primaria/20" />
+            ) : (
+              <p className="whitespace-pre-line text-sm text-tinta">{t.descricao || <span className="text-tinta-suave">Sem descrição.</span>}</p>
+            )}
           </section>
 
           <section>
@@ -132,7 +162,14 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
               </div>
             )}
             <ul className="space-y-1">
-              {t.checklist.map((c) => (
+              {t.checklist.map((c) => !podeEditar ? (
+                // Somente leitura: ícone + texto; o estado (feito/pendente) vai também em texto para leitor de tela.
+                <li key={c.id} className="flex items-center gap-2.5 px-2 py-1.5 text-sm">
+                  {c.feito ? <CheckSquare className="h-4 w-4 text-sucesso" aria-hidden /> : <Square className="h-4 w-4 text-tinta-fraca" aria-hidden />}
+                  <span className={cx('flex-1', c.feito ? 'text-tinta-suave line-through' : 'text-tinta')}>{c.texto}</span>
+                  <span className="sr-only">{c.feito ? '(feito)' : '(pendente)'}</span>
+                </li>
+              ) : (
                 // "group" permite que o botão de remover apareça só no hover da linha.
                 <li key={c.id} className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-superficie-alt">
                   <input type="checkbox" checked={c.feito} id={c.id} className="h-4 w-4 accent-[var(--primaria)]"
@@ -148,16 +185,19 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
                 </li>
               ))}
             </ul>
-            <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); addItem(); }}>
+            {/* Adicionar item: só para quem edita a tarefa (escondido, não desabilitado, para os demais). */}
+            {podeEditar && <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); addItem(); }}>
               <input value={novoItem} onChange={(e) => setNovoItem(e.target.value)} placeholder="Adicionar um item" aria-label="Novo item do checklist"
                 className="h-9 flex-1 rounded-lg border border-borda bg-superficie px-3 text-sm text-tinta placeholder:text-tinta-fraca focus:border-primaria focus:outline-none focus:ring-4 focus:ring-primaria/20" />
               <Button type="submit" variante="secundario" tamanho="sm" className="h-9">Adicionar</Button>
-            </form>
+            </form>}
+            {!podeEditar && t.checklist.length === 0 && <p className="text-[13px] text-tinta-suave">Esta tarefa não tem checklist.</p>}
           </section>
 
           <section>
             <h3 className={secao}><MessageSquare className="h-4 w-4" aria-hidden />Comentários</h3>
-            <form className="mb-4 flex gap-3" onSubmit={(e) => { e.preventDefault(); addComentario(); }}>
+            {/* Comentar: liberado a quem enxerga o projeto (inclui Empresa e Profissional). */}
+            {podeComentar && <form className="mb-4 flex gap-3" onSubmit={(e) => { e.preventDefault(); addComentario(); }}>
               <Avatar nome={sessao?.nome ?? ''} tamanho={32} />
               <div className="flex-1">
                 <textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={2} placeholder="Escreva um comentário…" aria-label="Novo comentário"
@@ -167,7 +207,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
                 {/* Botão "Comentar" só aparece quando há texto. */}
                 {comentario.trim() && <Button type="submit" tamanho="sm" className="mt-1.5">Comentar</Button>}
               </div>
-            </form>
+            </form>}
             <ul className="space-y-4">
               {/* Mais recentes primeiro; a cópia ([...]) evita inverter o array guardado na store. */}
               {[...t.comentarios].reverse().map((c) => {
@@ -193,14 +233,16 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
             * Status = em que lista a tarefa está. No celular este é o
             * "mover para..." que substitui o arrastar (§5).
             */}
-          <Select label="Status" required value={t.colunaId} hint="Mover para outra lista"
+          {podeMover ? <Select label="Status" required value={t.colunaId} hint="Mover para outra lista"
             // GRAVA: índice 999 = "fim da lista"; moverTarefa limita ao tamanho real.
             // TODO(API): mesma chamada de mover do Quadro (com aviso via WebSocket).
             onChange={(e) => { d.moverTarefa(t.id, e.target.value, 999); avisar(`Movida para ${projeto.colunas.find((c) => c.id === e.target.value)?.titulo}.`); }}
             opcoes={projeto.colunas.map((c) => ({ valor: c.id, rotulo: c.titulo }))} />
-          <Select label="Responsável" required value={t.responsavelId} onChange={(e) => atualizar({ responsavelId: e.target.value })}
+            : <CampoTexto rotulo="Status" dica={sessao?.perfil === 'profissional' ? 'Só o responsável pode mover' : undefined}>{coluna?.titulo}</CampoTexto>}
+          {podeEditar ? <Select label="Responsável" required value={t.responsavelId} onChange={(e) => atualizar({ responsavelId: e.target.value })}
             opcoes={equipe.map((p) => ({ valor: p.id, rotulo: p.nome }))} />
-          <div className="flex flex-col gap-1.5">
+            : <CampoTexto rotulo="Responsável">{d.pessoa(t.responsavelId)?.nome ?? 'Ninguém'}</CampoTexto>}
+          {podeEditar ? <div className="flex flex-col gap-1.5">
             <label htmlFor="prazo-tarefa" className="text-[13px] font-medium text-tinta">Prazo<span className="ml-0.5 text-erro" aria-hidden>*</span></label>
             {/*
               * Prazo é obrigatório: só grava se o campo não ficou vazio.
@@ -213,10 +255,13 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
             {/* Mensagem em texto junto da cor (cor nunca aparece sozinha). */}
             {t.prazo < hojeISO() && t.colunaId !== projeto.colunas.at(-1)?.id && <p className="text-[12px] font-medium text-erro">Prazo vencido.</p>}
           </div>
-          <Select label="Prioridade" value={t.prioridade} onChange={(e) => atualizar({ prioridade: e.target.value as Tarefa['prioridade'] })}
+            : <CampoTexto rotulo="Prazo">{dataBR(t.prazo)}{t.prazo < hojeISO() && t.colunaId !== projeto.colunas.at(-1)?.id && <span className="ml-2 text-[12px] font-medium text-erro">Prazo vencido.</span>}</CampoTexto>}
+          {podeEditar ? <Select label="Prioridade" value={t.prioridade} onChange={(e) => atualizar({ prioridade: e.target.value as Tarefa['prioridade'] })}
             opcoes={[{ valor: 'baixa', rotulo: 'Baixa' }, { valor: 'media', rotulo: 'Média' }, { valor: 'alta', rotulo: 'Alta' }]} />
+            : <CampoTexto rotulo="Prioridade">{ROTULO_PRIORIDADE[t.prioridade]}</CampoTexto>}
 
-          <div>
+          {/* Editor de etiquetas: só Admin. Os outros perfis já veem as etiquetas da tarefa no topo. */}
+          {podeEditar && <div>
             <p className="mb-1.5 flex items-center gap-1.5 text-[13px] font-medium text-tinta"><Tag className="h-3.5 w-3.5" aria-hidden />Etiquetas</p>
             <div className="flex flex-wrap gap-1.5">
               {/* Sugeridas + as que a tarefa já tem, sem repetir (Set). */}
@@ -237,10 +282,10 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
                 className="h-8 min-w-0 flex-1 rounded-lg border border-borda bg-superficie px-2 text-[12px] text-tinta focus:border-primaria focus:outline-none" />
               <button type="submit" aria-label="Adicionar etiqueta" className="rounded-lg border border-borda px-2 text-tinta-suave hover:bg-superficie-alt"><Plus className="h-3.5 w-3.5" /></button>
             </form>
-          </div>
+          </div>}
 
-          {/* Exclusão em dois passos para evitar clique acidental. */}
-          <div className="border-t border-borda pt-4">
+          {/* Exclusão em dois passos para evitar clique acidental. Só quem pode excluir tarefa. */}
+          {podeExcluir && <div className="border-t border-borda pt-4">
             {!confirmar ? (
               <Button variante="fantasma" larguraTotal className="justify-start text-erro hover:bg-erro/10 hover:text-erro" onClick={() => setConfirmar(true)}>
                 <Trash2 className="h-4 w-4" aria-hidden />Excluir tarefa
@@ -259,9 +304,26 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
                 </div>
               </div>
             )}
-          </div>
+          </div>}
         </aside>
       </div>
     </Modal>
+  );
+}
+
+/**
+ * Campo somente leitura: rótulo e valor em TEXTO (alternativa a um input desabilitado).
+ * @param rotulo - nome do campo (ex.: "Prazo").
+ * @param children - o valor já formatado.
+ * @param dica - frase curta opcional abaixo do valor (ex.: por que não dá para mover).
+ * @returns o par rótulo + valor.
+ */
+function CampoTexto({ rotulo, children, dica }: { rotulo: string; children: React.ReactNode; dica?: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="text-[13px] font-medium text-tinta">{rotulo}</p>
+      <p className="text-sm text-tinta">{children}</p>
+      {dica && <p className="text-[12px] text-tinta-suave">{dica}</p>}
+    </div>
   );
 }

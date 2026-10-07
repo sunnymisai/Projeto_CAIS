@@ -1,9 +1,11 @@
 /* ============================================================================
    QUADRO.TSX
    O que é: o quadro kanban de um projeto (listas + cartões com arrastar e soltar).
+               Respeita o perfil: só quem pode mover arrasta, e os botões de criar
+               cartão/lista e de editar lista só existem para quem pode usá-los.
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, na vista "quadro" da aba Tarefas.
    Depende de: lib/store (useDados: moverTarefa, salvar, alocacoes, pessoa),
-               lib/toast (useToast), lib/utils (cx, hojeISO, novoId, somaDias),
+               lib/auth (useAuth), lib/permissoes (podeFazer), lib/toast (useToast), lib/utils (cx, hojeISO, novoId, somaDias),
                components/button, components/ui/Menu, ./CartaoTarefa e ./cores.
                Arrastar e soltar é a API nativa do HTML5 (sem biblioteca).
    Contexto: §5 Projetos (kanban, colunas padrão, tarefa com responsável e
@@ -14,6 +16,8 @@
 import { DragEvent, useRef, useState } from 'react';
 import { Plus, X, MoreHorizontal } from 'lucide-react';
 import { useDados, Projeto, Tarefa } from '@/lib/store';
+import { useAuth } from '@/lib/auth';
+import { podeFazer } from '@/lib/permissoes';
 import { useToast } from '@/lib/toast';
 import Button from '@/components/button';
 import Menu, { ItemMenu } from '@/components/ui/Menu';
@@ -27,6 +31,12 @@ import { cx, hojeISO, novoId, somaDias } from '@/lib/utils';
  *   se destaca e um espaço tracejado mostra onde o cartão vai cair.
  * - Cada lista tem nome, contagem e ação de criar. Lista vazia explica.
  * - No celular as listas viram abas; mover é feito pelo detalhe da tarefa.
+ * - Permissões (lib/permissoes.ts): Admin arrasta tudo; Profissional só os cartões
+ *   em que é o responsável (os outros mostram cadeado); Empresa não arrasta.
+ *   Criar cartão, criar/renomear/excluir lista: só Admin. Esses botões são
+ *   ESCONDIDOS (não desabilitados): botão desabilitado sem motivo visível deixa a
+ *   pessoa se perguntando o que fazer, e leitor de tela ainda o anuncia como
+ *   "indisponível". Se a pessoa nunca poderá usar, o melhor é nem mostrar.
  *
  * Como o arraste funciona (eventos nativos do HTML5, nesta ordem):
  * 1. dragstart (no cartão): guarda o id de quem está sendo arrastado.
@@ -44,7 +54,18 @@ import { cx, hojeISO, novoId, somaDias } from '@/lib/utils';
  */
 export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto; tarefas: Tarefa[]; onAbrir: (id: string) => void }) {
   const d = useDados();
+  const { sessao } = useAuth();
   const avisar = useToast();
+  /**
+   * Pergunta a lib/permissoes se a sessão pode a ação. Sem sessão, nada é permitido.
+   * @param acao - ação de projeto.
+   * @param responsavelId - responsável da tarefa, quando a ação é sobre uma tarefa.
+   */
+  const pode = (acao: Parameters<typeof podeFazer>[1], responsavelId?: string) =>
+    !!sessao && podeFazer(sessao.perfil, acao, { pessoaId: sessao.pessoaId, responsavelId });
+  // Botões de criar/editar lista e criar cartão: só aparecem para quem pode (ver nota acima).
+  const podeEditarLista = pode('editar_lista');
+  const podeCriar = pode('criar_tarefa');
   // Id do cartão sendo arrastado (null = estado de repouso).
   const [arrastando, setArrastando] = useState<string | null>(null);
   // Onde o cartão cairia se fosse solto agora: lista e posição dentro dela.
@@ -117,15 +138,16 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
     // arrastado como se fosse um link).
     e.preventDefault();
     // Só move se havia um cartão sendo arrastado e um alvo calculado no dragover.
-    if (arrastando && alvo) {
-      const t = tarefas.find((x) => x.id === arrastando);
+    const t = tarefas.find((x) => x.id === arrastando);
+    // Confere a permissão de novo na hora de soltar (o dragstart já filtra, mas aqui é a gravação).
+    if (arrastando && alvo && t && pode('mover_tarefa', t.responsavelId)) {
       // GRAVA: muda coluna e ordem da tarefa na store (localStorage) e
       // renumera os vizinhos da lista de destino.
       // TODO(API): trocar por chamada à API e avisar os colegas pelo
       // WebSocket de tempo real, para o cartão mover na tela deles (§5).
       d.moverTarefa(arrastando, colunaId, alvo.indice);
       // Só avisa quando trocou de lista; reordenar na mesma lista é silencioso.
-      if (t && t.colunaId !== colunaId) avisar(`“${t.titulo}” movida para ${projeto.colunas.find((c) => c.id === colunaId)?.titulo}.`);
+      if (t.colunaId !== colunaId) avisar(`“${t.titulo}” movida para ${projeto.colunas.find((c) => c.id === colunaId)?.titulo}.`);
     }
     // Volta ao estado de repouso.
     setArrastando(null); setAlvo(null);
@@ -182,11 +204,11 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
                     onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); if (e.key === 'Escape') setRenomeando(null); }}
                     className="h-8 flex-1 rounded-md border border-primaria bg-superficie px-2 text-sm font-semibold text-tinta focus:outline-none" />
                 ) : (
-                  <h3 className="flex-1 truncate px-1 font-space text-[14px] font-semibold text-tinta" onDoubleClick={() => setRenomeando(col.id)}>{col.titulo}</h3>
+                  <h3 className="flex-1 truncate px-1 font-space text-[14px] font-semibold text-tinta" onDoubleClick={() => podeEditarLista && setRenomeando(col.id)}>{col.titulo}</h3>
                 )}
                 <span className="rounded-full bg-superficie-alt px-2 py-0.5 text-[12px] font-semibold tabular-nums text-tinta-suave">{lista.length}</span>
-                {/* Menu "..." da lista: renomear e excluir. */}
-                <Menu largura="w-48" gatilho={(p) => (
+                {/* Menu "..." da lista: renomear e excluir. Escondido de quem não pode editar lista. */}
+                {podeEditarLista && <Menu largura="w-48" gatilho={(p) => (
                   <button onClick={p.alternar} aria-expanded={p['aria-expanded']} aria-haspopup="menu" aria-label={`Ações da lista ${col.titulo}`}
                     className="rounded-lg p-1 text-tinta-fraca hover:bg-superficie-alt hover:text-tinta"><MoreHorizontal className="h-4 w-4" /></button>
                 )}>
@@ -202,7 +224,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
                       salvarColunas(projeto.colunas.filter((c) => c.id !== col.id));
                     }}>Excluir lista</ItemMenu>
                   </>)}
-                </Menu>
+                </Menu>}
               </header>
 
               {/* Área que recebe os cartões soltos (é nela que ficam os eventos de arraste). */}
@@ -223,6 +245,11 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
                       {/* Espaço tracejado ANTES do cartão cuja posição é o alvo (estado "soltando"). */}
                       {destacada && pos === alvo!.indice && t.id !== arrastando && <Espaco />}
                       <CartaoTarefa tarefa={t} concluida={col.id === ultima} arrastando={arrastando === t.id}
+                        // arrastavel: Admin sempre; Profissional só o próprio. cadeado: só quando é
+                        // Profissional olhando tarefa alheia (Empresa não arrasta e não precisa de cadeado:
+                        // a regra dela é geral, não "só o responsável").
+                        arrastavel={pode('mover_tarefa', t.responsavelId)}
+                        cadeado={sessao?.perfil === 'profissional' && !pode('mover_tarefa', t.responsavelId)}
                         onAbrir={() => onAbrir(t.id)}
                         /*
                          * dragstart: guarda o id no dataTransfer e permite só "mover".
@@ -241,19 +268,19 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
                 {/* Estado vazio: explica a lista e sugere a próxima ação (some durante o arraste). */}
                 {lista.length === 0 && !destacada && (
                   <p className="rounded-xl border border-dashed border-borda px-3 py-5 text-center text-[12px] leading-relaxed text-tinta-suave">
-                    Nenhum cartão aqui.{col.id === ultima ? ' Tarefas concluídas aparecem nesta lista.' : ' Arraste um cartão ou crie um novo.'}
+                    Nenhum cartão aqui.{col.id === ultima ? ' Tarefas concluídas aparecem nesta lista.' : podeCriar ? ' Arraste um cartão ou crie um novo.' : ''}
                   </p>
                 )}
               </div>
 
-              {/* Novo cartão entra no fim da lista (ordem = quantidade atual). */}
-              <CriarCartao projeto={projeto} colunaId={col.id} ordem={lista.length} />
+              {/* Novo cartão entra no fim da lista (ordem = quantidade atual). Só para quem pode criar tarefa. */}
+              {podeCriar && <CriarCartao projeto={projeto} colunaId={col.id} ordem={lista.length} />}
             </section>
           );
         })}
 
-        {/* Adicionar lista (só no desktop: hidden md:block) */}
-        <div className="hidden w-[264px] shrink-0 md:block">
+        {/* Adicionar lista (só no desktop: hidden md:block; e só para quem pode editar lista) */}
+        {podeEditarLista && <div className="hidden w-[264px] shrink-0 md:block">
           {novaLista === null ? (
             <button onClick={() => setNovaLista('')}
               className="flex w-full items-center gap-2 rounded-2xl bg-white/20 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
@@ -281,7 +308,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
               </div>
             </form>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );
