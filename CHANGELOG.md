@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Painel da empresa para a apresentação (branch `feat/painel-empresa`)
+- Criado: `components/paineis/Bloco.tsx` (moldura de bloco com os estados e o link "Ver todas", agora compartilhada pelos painéis), `testes/navegador/paineis-todos-perfis.mjs` (o painel de cada perfil abre com conteúdo, também em 375 px).
+- Modificado: `components/paineis/PainelEmpresa.tsx` (era "Em construção"; agora andamento dos projetos, quem está no time, entregas e trilha do time; o E01 aprofunda), `components/paineis/PainelProfissional.tsx` (usa o `Bloco` compartilhado), `SISTEMA.md`.
+- Pendência: o deck fala em "entregas aprovadas", mas não existe aprovação; hoje "Pronto" conta como entregue (`TODO(PROGLOGIC)`).
+
 ## Ajustes visuais para a apresentação (branch `fix/login-visual`)
 - Modificado: `next.config.ts` (`devIndicators: false`: some a bolinha "N" do Next no `npm run dev`), `components/LoginForm.tsx` (os botões "Entrar como" ficam um embaixo do outro, com largura total; em três colunas o ícone de Administrador e Profissional encolhia até sumir).
 

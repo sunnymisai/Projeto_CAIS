@@ -7,14 +7,14 @@
    Depende de: lib/auth.tsx (useAuth), lib/store.tsx (useDados), lib/escopo.ts
      (tarefasVisiveis), lib/metricas.ts (trilhasDaPessoaDetalhadas, agruparMinhasTarefas,
      cargaDaSemana, entregasPorSemana), lib/trilhas.ts (TIPOS_ETAPA, hrefEtapa),
-     components/trilhas/PrazoTrilha.tsx, components/ui/ (basicos, Graficos),
+     components/trilhas/PrazoTrilha.tsx, components/paineis/Bloco.tsx, components/ui/ (basicos, Graficos),
      components/button.tsx (classesBotao) e components/shell/Pagina.tsx.
    Contexto: §6 (Dashboards: painel do profissional), §3 (funciona no celular) e §13 (quatro estados).
    ============================================================================ */
 "use client";
 
 import Link from 'next/link';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { ArrowRight, BookOpenCheck, CalendarDays, CircleAlert, Clock, Gauge, ListTodo, PackageCheck } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
@@ -23,37 +23,12 @@ import { agruparMinhasTarefas, cargaDaSemana, entregasPorSemana, trilhasDaPessoa
 import { TIPOS_ETAPA, hrefEtapa } from '@/lib/trilhas';
 import type { Tarefa } from '@/lib/tipos';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
-import { Card, CardTitulo, Esqueleto, EstadoVazio, Aviso, Progresso } from '@/components/ui/basicos';
+import { EstadoVazio, Progresso } from '@/components/ui/basicos';
+import Bloco, { VerTodas } from './Bloco';
 import { Colunas, COR_GRAFICO } from '@/components/ui/Graficos';
 import { classesBotao } from '@/components/button';
 import PrazoTrilha from '@/components/trilhas/PrazoTrilha';
 import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
-
-/** Link "Ver todas" do canto de um bloco. NAVEGA: para a tela completa. */
-const VerTodas = ({ href }: { href: string }) => (
-  <Link href={href} className="rounded text-[13px] font-semibold text-primaria hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">Ver todas</Link>
-);
-
-/**
- * Moldura de um bloco com os estados (§13): carregando (esqueleto) e erro (cadastro não
- * encontrado). O vazio e o "com dado" ficam com o conteúdo de cada bloco.
- * @param props.titulo título do bloco.
- * @param props.acao link no canto (ex.: "Ver todas").
- * @param props.estado 'carregando', 'erro' ou 'pronto'.
- * @param props.children o conteúdo (só desenhado quando pronto).
- */
-function Bloco({ titulo, acao, estado, children }: { titulo: string; acao?: ReactNode; estado: 'carregando' | 'erro' | 'pronto'; children: ReactNode }) {
-  return (
-    <Card className="flex flex-col">
-      <CardTitulo titulo={titulo} acao={estado === 'pronto' ? acao : undefined} />
-      <div className="flex-1 p-4 pt-0 sm:p-5 sm:pt-0">
-        {estado === 'carregando' ? <div className="space-y-2"><Esqueleto className="h-5 w-2/3" /><Esqueleto className="h-16 w-full" /><Esqueleto className="h-5 w-1/2" /></div>
-          : estado === 'erro' ? <Aviso tipo="erro" titulo="Não encontramos o seu cadastro">Saia e entre de novo. Se continuar, fale com o administrador.</Aviso>
-          : children}
-      </div>
-    </Card>
-  );
-}
 
 /**
  * Painel do Profissional. Uma coluna no celular; grade de duas colunas a partir de 1024 px.
