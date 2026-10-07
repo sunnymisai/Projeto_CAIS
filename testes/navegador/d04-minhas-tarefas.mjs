@@ -13,6 +13,7 @@ const c = conferir();
 const nav = await abrirNavegador('d04', 9354);
 const { ev, ir, entrar, largura, cmd, tab, erros } = nav;
 
+/** Texto visível da área principal da tela (onde ficam as páginas). */
 const textoMain = () => ev(`document.querySelector('main')?.innerText ?? ''`);
 // Títulos de um grupo (pelo título do h2).
 const doGrupo = (titulo) => ev(`(() => { const h = [...document.querySelectorAll('main section h2')].find((x) => x.textContent.trim().startsWith(${JSON.stringify(titulo)})); return h ? [...h.closest('section').querySelectorAll('li > button > span:first-child')].map((s) => s.textContent.trim()) : []; })()`);

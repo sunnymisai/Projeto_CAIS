@@ -35,6 +35,7 @@ export const CONTAS = {
   patricia: { pessoaId: 'pes_patricia', nome: 'Patrícia Melo', email: 'patricia@aurora.example', perfil: 'empresa' },
 };
 
+/** Espera `ms` milissegundos (para a tela reagir entre um passo e outro do teste). */
 const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 export { espera };
 
@@ -125,6 +126,7 @@ export async function abrirNavegador(nome, porta = 9350) {
  */
 export function conferir() {
   let falhas = 0;
+  // Uma conferência: imprime ✓/✗ com a descrição (e o detalhe, para entender a falha) e conta as falhas.
   const c = (descricao, ok, detalhe = '') => {
     if (!ok) falhas++;
     console.log(`${ok ? '✓' : '✗'} ${descricao}${detalhe ? `  (${detalhe})` : ''}`);

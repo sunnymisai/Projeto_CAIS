@@ -17,7 +17,9 @@ const { ev, ir, entrar, clicar, largura, cmd, erros } = nav;
 // Respostas certas do quiz "Prova prática" (lib/seed.ts, et_n5), pelo texto da alternativa.
 const CERTAS_NIVEL = ['Por props', 'Uma vez, depois que o componente aparece', 'string | undefined', 'text-erro', 'Carregando, vazio, com erro e com dado'];
 const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'); return document.documentElement.scrollWidth <= innerWidth + 1 && m.scrollWidth <= m.clientWidth + 1; })()`;
+/** Texto visível da área principal da tela (onde ficam as páginas). */
 const textoMain = () => ev(`document.querySelector('main')?.innerText ?? ''`);
+/** Progresso salvo no navegador de uma pessoa numa trilha (lido do localStorage). */
 const progressoDe = (trilhaId, pessoaId) => ev(`JSON.parse(localStorage.getItem('cais-dados-v2')).trilhas.find((t) => t.id === '${trilhaId}').progresso['${pessoaId}']`);
 /** Marca, em cada pergunta visível, a alternativa cujo texto está na lista (ou a primeira que NÃO está, para errar). */
 const responder = (lista, errar = false) => ev(`(() => {
@@ -30,7 +32,9 @@ const responder = (lista, errar = false) => ev(`(() => {
   }
   return document.querySelectorAll('main fieldset').length;
 })()`);
+/** Trecho de JS que acha, na página, o botão ou link cujo texto começa com `texto`. */
 const botao = (texto) => `[...document.querySelectorAll('main button, main a')].find((b) => b.textContent.trim().startsWith(${JSON.stringify(texto)}))`;
+/** Clica no botão/link pelo texto e espera a tela reagir. */
 const clicarBotao = async (texto) => { await ev(`${botao(texto)}?.click()`); await espera(500); };
 
 try {

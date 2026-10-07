@@ -15,6 +15,10 @@ import type { Dados, Projeto, Tarefa } from './tipos.ts';
 // Hoje fixo: quarta-feira, 7 de outubro de 2026 (domingo da semana = dia 11).
 const HOJE = '2026-10-07';
 const projeto = { id: 'p', colunas: [{ id: 'afazer', titulo: 'A fazer' }, { id: 'pronto', titulo: 'Pronto' }] } as Projeto;
+/**
+ * Monta uma tarefa de teste com valores padrão; `extra` troca só o que o caso precisa.
+ * @example tarefa('x', '2026-10-07', { prioridade: 'alta' })
+ */
 const tarefa = (id: string, prazo: string, extra: Partial<Tarefa> = {}): Tarefa => ({
   id, projetoId: 'p', colunaId: 'afazer', titulo: id, descricao: '', responsavelId: 'ana', prazo, prioridade: 'media',
   etiquetas: [], checklist: [], comentarios: [], ordem: 0, ...extra,
@@ -29,6 +33,7 @@ const g = agruparMinhasTarefas([
   tarefa('pronta-antiga', '2026-09-01', { colunaId: 'pronto', concluidaEm: '2026-09-02' }),
   tarefa('sem-projeto', HOJE, { projetoId: 'apagado' }),
 ], [projeto], HOJE);
+/** Junta os ids de uma lista de tarefas ('a,b,c'), para comparar a ordem num caso. */
 const ids = (l: Tarefa[]) => l.map((t) => t.id).join(',');
 
 // Dados mínimos para carga e entregas (Ana, semana de 5 a 11/10/2026).

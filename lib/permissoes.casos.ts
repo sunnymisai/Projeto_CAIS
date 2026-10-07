@@ -20,18 +20,22 @@ const pessoa = (id: string, perfil: Pessoa['perfil'], empresaId = ''): Pessoa =>
   id, nome: id, email: `${id}@x`, telefone: '', cargo: '', perfil, status: 'ativo', dataEntrada: '2026-01-01',
   area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId,
 });
+/** Monta uma tarefa de teste no projeto e com o responsável indicados. */
 const tarefa = (id: string, projetoId: string, responsavelId: string): Tarefa => ({
   id, projetoId, colunaId: 'c1', titulo: id, descricao: '', responsavelId, prazo: '2026-12-01', prioridade: 'media',
   etiquetas: [], checklist: [], comentarios: [], ordem: 0,
 });
+/** Monta um projeto de teste ligado a uma empresa. */
 const projeto = (id: string, empresaId: string) => ({
   id, nome: id, tipo: '', empresaId, contatoNome: '', descricao: '', inicio: '2026-01-01', entrega: '2026-12-01',
   prioridade: 'media' as const, liderId: '', status: 'andamento' as const, cor: 'roxo', colunas: [{ id: 'c1', titulo: 'A fazer' }],
 });
+/** Monta uma empresa de teste. */
 const empresa = (id: string) => ({
   id, razaoSocial: id, nomeFantasia: id, cnpj: '', segmento: '', porte: '', site: '', cep: '', logradouro: '', numero: '',
   cidadeUf: '', contatoNome: '', contatoEmail: '', contatoTelefone: '', contatoCargo: '', status: 'ativa' as const, dataEntrada: '2026-01-01',
 });
+/** Monta uma alocação de teste (pessoa num projeto). */
 const aloc = (id: string, projetoId: string, pessoaId: string) => ({
   id, projetoId, pessoaId, papel: '', inicio: '2026-01-01', fim: '2026-12-01', carga: 10, obs: '',
 });
@@ -52,6 +56,7 @@ const ana = { pessoaId: 'pes_ana', perfil: 'profissional' as const };
 const marcos = { pessoaId: 'pes_marcos', perfil: 'empresa' as const };
 const patricia = { pessoaId: 'pes_patricia', perfil: 'empresa' as const };
 const admin = { pessoaId: 'pes_admin', perfil: 'admin' as const };
+/** Ids ordenados e juntos ('a,b'): compara listas sem depender da ordem de origem. */
 const ids = (xs: { id: string }[]) => xs.map((x) => x.id).sort().join(',');
 
 
@@ -66,6 +71,7 @@ const trilhaGeral = (status: 'publicada' | 'rascunho', alcance: 'geral' | 'profi
   ],
   progresso: { pes_ana: { concluidas: 3 }, pes_bruno: { concluidas: 1 }, pes_carla: { concluidas: 2 } },
 });
+/** Os dados de teste com UMA trilha (para os casos da trilha obrigatória). */
 const comTrilha = (t: ReturnType<typeof trilhaGeral>): Dados => ({ ...dados, trilhas: [t] });
 
 // Cada caso: descrição (o porquê), valor obtido e valor esperado.

@@ -2,6 +2,10 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Auditoria de comentários antes do push (master)
+- Criado: `testes/auditar-comentarios.mjs` (confere em todo arquivo versionado: cabeçalho, JSDoc em funções e handlers, comentário em cada useEffect e rótulos GRAVA/APAGA/NAVEGA).
+- Modificado: cabeçalho no padrão em `eslint.config.mjs`, `postcss.config.mjs` e `tailwind.config.ts`; JSDoc nas funções auxiliares de `lib/*.casos.ts` e `testes/navegador/*`; comentário no ouvinte de Esc de `components/home/TopoHome.tsx`; rótulo NAVEGA no player de etapa. Resultado: 112 arquivos, 0 pontos para revisar.
+
 ## Registro e prompts no repositório (master)
 - Criado: `docs/prompts/` (os 34 arquivos dos prompts, do 00-GUIA ao H01, copiados de `Desktop/promptsCAIS/prompts-cais`) e `docs/ONDE-PARAMOS.md` (situação de cada bloco, como retomar, pendências e decisões).
 - Modificado: `SISTEMA.md` (link para os dois).

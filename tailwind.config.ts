@@ -1,12 +1,11 @@
-/**
- * AVISO: com Tailwind v4 (usado neste projeto), este arquivo só é lido se
- * houver uma diretiva "@config" apontando para ele dentro do CSS — e este
- * projeto não tem essa diretiva. Ou seja, as cores/fontes declaradas aqui
- * embaixo NÃO estão ativas.
- *
- * A fonte da verdade real dos tokens de marca (cores, fontes) é o bloco
- * @theme em app/globals.css. Edite as cores lá, não aqui.
- */
+/* ============================================================================
+   TAILWIND.CONFIG.TS
+   O que é: configuração herdada do Tailwind v3. ⚠️ ATENÇÃO: no Tailwind v4 (usado aqui) este arquivo só é lido se o CSS tiver uma diretiva "@config" apontando para ele, e o projeto NÃO tem; as cores e fontes declaradas aqui NÃO estão ativas.
+   Onde é usado: por ninguém hoje (mantido só como referência dos nomes da marca).
+   Depende de: tailwindcss (tipo Config).
+   Contexto: os tokens reais (cores, fontes) ficam no bloco @theme de app/globals.css: edite lá, não aqui. Se for apagar este arquivo, confira antes que nada no CSS usa @config.
+   ============================================================================ */
+
 import type { Config } from "tailwindcss";
 
 const config: Config = {

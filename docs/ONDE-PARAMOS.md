@@ -36,6 +36,9 @@ node --experimental-strip-types lib/permissoes.casos.ts   # 65 casos
 node --experimental-strip-types lib/quiz.casos.ts         # 27 casos
 node --experimental-strip-types lib/metricas.casos.ts     # 19 casos
 
+# Padrão de comentários do CLAUDE.md (cabeçalho, JSDoc, useEffect, GRAVA/APAGA/NAVEGA); rode antes de todo push
+node testes/auditar-comentarios.mjs                # deve terminar com "0 ponto(s) para revisar"
+
 # Testes de navegador (com o npm run dev aberto; usam o Chrome instalado)
 node testes/navegador/d02-minhas-trilhas.mjs      # 25 conferências
 node testes/navegador/d03-player-e-quiz.mjs       # 32 conferências

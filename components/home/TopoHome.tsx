@@ -62,6 +62,7 @@ export default function TopoHome() {
   // Roda quando `aberto` muda; ao fechar (ou desmontar) remove o ouvinte.
   useEffect(() => {
     if (!aberto) return;
+    // Ouvinte de teclado da página inteira: só reage ao Esc (fecha e devolve o foco ao botão do menu).
     const aoTeclar = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") {
         setAberto(false);

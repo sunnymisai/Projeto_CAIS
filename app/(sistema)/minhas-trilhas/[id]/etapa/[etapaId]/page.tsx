@@ -68,6 +68,7 @@ export default function PlayerEtapa() {
     if (!d.pronto || !sessao || terminou) return;
     if (!t) { router.replace('/sem-permissao'); return; }
     if (indice === -1) { router.replace(`/minhas-trilhas/${id}`); return; }
+    // NAVEGA: etapa adiante da atual → detalhe com ?bloqueada=, que explica o motivo.
     if (indice > t.concluidas) router.replace(`/minhas-trilhas/${id}?bloqueada=${encodeURIComponent(etapaId)}`);
   }, [d.pronto, sessao, t, indice, id, etapaId, router, terminou]);
 
