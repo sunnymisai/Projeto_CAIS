@@ -4,7 +4,8 @@
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx (VistaLista e VistaCronograma,
                  trocadas pelo seletor de vista da aba Tarefas).
    Depende de: lib/store (useDados), components/ui/basicos, components/ui/Tabela,
-               lib/metricas (rótulos e tons de prioridade) e lib/utils (datas, cx).
+               lib/metricas (rótulos e tons de prioridade), lib/utils (datas, cx) e
+               components/ui/Graficos (COR_GRAFICO e TONS_COLUNA).
    Contexto: §5 Projetos (três vistas: quadro, lista, cronograma).
    ============================================================================ */
 "use client";
@@ -16,21 +17,22 @@ import { Avatar, Etiqueta, EtiquetaTarefa, EstadoVazio } from '@/components/ui/b
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import { ROTULO_PRIORIDADE, TOM_PRIORIDADE } from '@/lib/metricas';
 import { cx, dataBR, dataCurta, diasEntre, hojeISO, somaDias } from '@/lib/utils';
+import { COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
 
-// Cor da bolinha de status por posição da lista (cinza, roxo, âmbar...).
-const TOM_COLUNA = ['#9CA0B3', '#7C5CFF', '#F5A524', '#10B981', '#2563EB', '#BE185D'];
 /**
- * Cor que representa a lista (status) de uma tarefa.
+ * Cor que representa a lista (status) de uma tarefa (bolinha e barra do cronograma).
  * A última lista ("Pronto") é sempre verde; as demais usam as 3 primeiras
- * cores de TOM_COLUNA (da 3ª em diante repetem o âmbar, "em andamento").
+ * cores de TONS_COLUNA (da 3ª em diante repetem o âmbar, "em andamento").
+ * As cores são tokens --grafico-* e trocam com o tema claro/escuro.
  * @param p projeto dono das listas.
  * @param colunaId lista da tarefa.
- * @returns cor em hexadecimal.
- * @example corColuna(p, p.colunas[0].id) // '#9CA0B3' (A fazer)
+ * @returns a cor como var(--grafico-...).
+ * @example corColuna(p, p.colunas[0].id) // 'var(--grafico-a-fazer)' (A fazer)
  */
 const corColuna = (p: Projeto, colunaId: string) => {
   const i = p.colunas.findIndex((c) => c.id === colunaId);
-  return i === p.colunas.length - 1 ? '#10B981' : TOM_COLUNA[Math.min(i, 2)] ?? '#9CA0B3';
+  // i === -1 (lista apagada): cai no cinza de "A fazer".
+  return i === p.colunas.length - 1 ? COR_GRAFICO.concluida : TONS_COLUNA[Math.min(i, 2)] ?? COR_GRAFICO.aFazer;
 };
 
 /**
@@ -207,9 +209,9 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
                         /*
                          * left = início estimado; width vai até o fim do dia do prazo
                          * (prazo + 1). Mínimo de 1,5% para barra curta continuar clicável.
-                         * Fundo = cor do status com transparência (sufixo hex "33" ≈ 20%).
+                         * Fundo = cor do status a 20% (color-mix, porque a cor é var(--...) e não hex).
                          */
-                        style={{ left: `${x(ini)}%`, width: `${Math.max(1.5, x(somaDias(t.prazo, 1)) - x(ini))}%`, background: `${cor}33`, border: `1px solid ${cor}` }}>
+                        style={{ left: `${x(ini)}%`, width: `${Math.max(1.5, x(somaDias(t.prazo, 1)) - x(ini))}%`, background: `color-mix(in srgb, ${cor} 20%, transparent)`, border: `1px solid ${cor}` }}>
                         {/* Preenchimento proporcional ao checklist concluído. */}
                         <span className="absolute inset-y-0 left-0" style={{ width: `${pct * 100}%`, background: cor, opacity: 0.55 }} />
                         <span className="relative truncate px-1.5 text-[11px] font-semibold leading-6 text-tinta">{dataCurta(t.prazo)}</span>

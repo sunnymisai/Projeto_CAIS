@@ -11,7 +11,8 @@
    Depende de: lib/auth.tsx (useAuth → sessao e pronto), next/navigation
      (useRouter, usePathname), lib/permissoes.ts (podeAcessar e a guarda da trilha obrigatória),
      lib/store.tsx (useDados, para saber a trilha pendente), components/shell/Sidebar.tsx,
-     components/shell/Topbar.tsx, components/shell/TrilhaPendente.tsx e components/CaisLogo.tsx (CaisMark).
+     components/shell/Topbar.tsx, components/shell/TrilhaPendente.tsx, components/CaisLogo.tsx (CaisMark),
+     components/ui/basicos.tsx (EstadoErro, quando a store não lê os dados) e components/button.tsx.
    Contexto: §3 (perfis), §10 (anatomia de toda tela: só o conteúdo rola),
      §12 fluxo 1 (trilha obrigatória libera o sistema), §15 item 1 (shell da
      aplicação) e docs/notas-next16.md §4 (rotas públicas e protegidas).
@@ -29,6 +30,9 @@ import { useDados } from '@/lib/store';
 import { podeAcessar, temTrilhaObrigatoriaPendente, rotaLiberadaComTrilhaPendente, EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO } from '@/lib/permissoes';
 import TrilhaPendente from '@/components/shell/TrilhaPendente';
 import { CaisMark } from '@/components/CaisLogo';
+import { EstadoErro } from '@/components/ui/basicos';
+import Button from '@/components/button';
+import { RotateCw } from 'lucide-react';
 
 /**
  * Casca de todas as telas internas.
@@ -69,7 +73,9 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
   // APAGA: sair() remove a sessão do navegador.
   // TODO(API): a API responde 401/403 na próxima chamada e a tela reage a isso.
   useEffect(() => {
-    if (!pronto || !sessao || !dados.pronto) return;
+    // Com erro de leitura (dados.erro), a store está com a demonstração, não com o cadastro
+    // real: comparar com ela poderia encerrar ou alterar a sessão por engano.
+    if (!pronto || !sessao || !dados.pronto || dados.erro) return;
     const p = dados.pessoa(sessao.pessoaId);
     // Cadastro não encontrado: não mexe (a tela de perfil explica o erro).
     if (!p) return;
@@ -145,8 +151,27 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
           * tabIndex={-1} permite receber foco pelo link "pular para o
           * conteúdo" sem entrar na ordem normal do Tab. */}
         <main id="conteudo" tabIndex={-1} className="rolagem flex-1 overflow-y-auto focus:outline-none">
-          {/* Bloqueio da trilha pendente no lugar da página; o menu e o topo continuam à mostra para a pessoa se mover. */}
-          {trilhaBloqueia ? <TrilhaPendente /> : children}
+          {/* Estado de erro (§13) de TODAS as telas internas: se a store não conseguiu ler os dados,
+            * mostra o EstadoErro no lugar da página (que estaria com dados errados).
+            * Bloqueio da trilha pendente: também no lugar da página.
+            * Nos dois casos o menu e o topo continuam à mostra para a pessoa se mover. */}
+          {dados.erro ? (
+            <EstadoErro
+              titulo="Não foi possível carregar os dados"
+              descricao={`${dados.erro} Tente de novo; se continuar, volte aos dados de demonstração (o que estava salvo neste navegador se perde).`}
+              acoes={<>
+                {/* isLoading: enquanto relê, o botão mostra o spinner e não aceita outro clique. */}
+                <Button onClick={dados.tentarDeNovo} isLoading={!dados.pronto} loadingText="Tentando…">
+                  <RotateCw className="h-4 w-4" aria-hidden />
+                  Tentar de novo
+                </Button>
+                {/* APAGA: troca os dados danificados pela demonstração (lib/store.tsx). */}
+                <Button variante="secundario" onClick={dados.restaurarDemonstracao} disabled={!dados.pronto}>
+                  Voltar aos dados de demonstração
+                </Button>
+              </>}
+            />
+          ) : trilhaBloqueia ? <TrilhaPendente /> : children}
         </main>
       </div>
     </div>

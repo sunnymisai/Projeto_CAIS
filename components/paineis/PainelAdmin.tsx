@@ -26,18 +26,17 @@ import { useDados } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import { Card, CardTitulo, Esqueleto, Etiqueta, Avatar, Progresso } from '@/components/ui/basicos';
-import { BarraEmpilhada, Legenda, Rosca, BarrasComLimite, Colunas } from '@/components/ui/Graficos';
+import { BarraEmpilhada, Legenda, Rosca, BarrasComLimite, Colunas, COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
 import { resumoTrilha, progressoProjeto } from '@/lib/metricas';
 import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
 
 /*
  * Cores dos gráficos de trilha (verde = concluída, roxo = em andamento,
  * cinza = nunca iniciada), seguindo "cor tem significado" (§9).
- * São hex porque os gráficos são SVG e recebem a cor como valor, não classe.
- * ⚠️ ATENÇÃO: trilhas/page.tsx usa as mesmas três cores na barra de cada
- * trilha; mudar só aqui deixa as duas telas com legendas diferentes.
+ * Vêm dos tokens --grafico-* (COR_GRAFICO), que trocam com o tema claro/escuro;
+ * trilhas/page.tsx usa as mesmas, então as legendas das duas telas batem.
  */
-const COR = { concluida: '#10B981', andamento: '#7C5CFF', nao: '#C9CCD8' };
+const COR = { concluida: COR_GRAFICO.concluida, andamento: COR_GRAFICO.andamento, nao: COR_GRAFICO.naoIniciada };
 
 /**
  * Painel do Administrador (mostrado em /painel só para o perfil admin).
@@ -88,7 +87,7 @@ export default function PainelAdmin() {
     // ⚠️ ATENÇÃO: se um projeto renomear ou reordenar colunas, a contagem
     // continua pela posição; os rótulos aqui são os padrão do §5.
     const porColuna = ['A fazer', 'Fazendo', 'Revisão', 'Pronto'].map((rot, i) => ({
-      rotulo: rot, cor: ['#9CA0B3', '#7C5CFF', '#F5A524', '#10B981'][i],
+      rotulo: rot, cor: i === 3 ? COR_GRAFICO.concluida : TONS_COLUNA[i],
       valor: d.tarefas.filter((t) => d.projeto(t.projetoId)?.colunas[i]?.id === t.colunaId).length,
     }));
 

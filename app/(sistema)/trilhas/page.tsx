@@ -28,7 +28,7 @@ import { CabecalhoPagina, BarraFiltros } from '@/components/shell/Pagina';
 import Button from '@/components/button';
 import { Segmentado } from '@/components/ui/form';
 import { Etiqueta, EstadoVazio, Esqueleto } from '@/components/ui/basicos';
-import { BarraEmpilhada } from '@/components/ui/Graficos';
+import { BarraEmpilhada, COR_GRAFICO } from '@/components/ui/Graficos';
 import { novoId } from '@/lib/utils';
 import type { Trilha } from '@/lib/tipos';
 
@@ -123,7 +123,7 @@ export default function Trilhas() {
                     * COR em painel/page.tsx; mude nos dois lugares juntos. */}
                   {t.status === 'publicada' && r.publico > 0 && (
                     <div className="mt-4">
-                      <BarraEmpilhada altura={8} segmentos={[{ rotulo: 'Concluídas', valor: r.concluida, cor: '#10B981' }, { rotulo: 'Em andamento', valor: r.andamento, cor: '#7C5CFF' }, { rotulo: 'Não iniciadas', valor: r.nao_iniciada, cor: '#C9CCD8' }]} />
+                      <BarraEmpilhada altura={8} segmentos={[{ rotulo: 'Concluídas', valor: r.concluida, cor: COR_GRAFICO.concluida }, { rotulo: 'Em andamento', valor: r.andamento, cor: COR_GRAFICO.andamento }, { rotulo: 'Não iniciadas', valor: r.nao_iniciada, cor: COR_GRAFICO.naoIniciada }]} />
                       <p className="mt-1.5 text-[12px] text-tinta-suave">{r.concluida} de {r.publico} concluíram · {r.nao_iniciada} não iniciaram</p>
                     </div>
                   )}

@@ -1,7 +1,7 @@
 /* ============================================================================
    BASICOS.TSX — COMPONENTES BÁSICOS DO DESIGN SYSTEM CAIS
    O que é: peças pequenas e reaproveitáveis da interface: Card, Etiqueta,
-   Avatar, Aviso, Abas, Paginação, Progresso, Esqueleto e Estado vazio.
+   Avatar, Aviso, Abas, Paginação, Progresso, Esqueleto, Estado vazio e Estado de erro.
    Onde é usado: telas de app/(sistema) (painel, empresas, pessoas, projetos,
    trilhas, design-system), components/projetos/* (CartaoTarefa,
    DetalheTarefa, Equipe, Vistas) e components/shell/Topbar.tsx (Avatar).
@@ -394,6 +394,31 @@ export function EstadoVazio({ icone, titulo, descricao, acao }: { icone: ReactNo
       <p className="mt-1 max-w-sm text-sm text-tinta-suave">{descricao}</p>
       {/* A ação só aparece quando a tela passa uma. */}
       {acao && <div className="mt-5">{acao}</div>}
+    </div>
+  );
+}
+
+/* ---------------- Estado de erro ---------------- */
+/**
+ * Estado de erro (§13): diz o que houve, em português, e como tentar de novo.
+ * Mesmo desenho do EstadoVazio, com o ícone em vermelho (cor de erro + ícone + texto,
+ * nunca só a cor). role="alert" faz o leitor de tela anunciar assim que aparece.
+ * @param titulo o que deu errado, curto (ex.: "Não foi possível carregar os dados").
+ * @param descricao o detalhe e o que a pessoa pode fazer.
+ * @param acoes botões (ex.: "Tentar de novo"); quem chama decide quais.
+ * @returns o bloco centralizado.
+ * @example <EstadoErro titulo="Não foi possível carregar" descricao={d.erro} acoes={<Button onClick={d.tentarDeNovo}>Tentar de novo</Button>} />
+ */
+export function EstadoErro({ titulo, descricao, acoes }: { titulo: string; descricao: string; acoes?: ReactNode }) {
+  return (
+    <div role="alert" className="flex flex-col items-center justify-center px-6 py-14 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-erro/10 text-erro">
+        <CircleAlert className="h-6 w-6" aria-hidden />
+      </div>
+      <p className="font-space text-base font-semibold text-tinta">{titulo}</p>
+      <p className="mt-1 max-w-md text-sm text-tinta-suave">{descricao}</p>
+      {/* flex-wrap: no celular os botões descem um embaixo do outro em vez de estourar a largura. */}
+      {acoes && <div className="mt-5 flex flex-wrap justify-center gap-2">{acoes}</div>}
     </div>
   );
 }

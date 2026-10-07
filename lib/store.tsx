@@ -25,6 +25,25 @@ import { hojeISO } from './utils';
 // `Dados` mudar de um jeito incompatível com o que já está gravado.
 const CHAVE = 'cais-dados-v1';
 
+/** As seis coleções que todo `Dados` precisa ter (usadas para conferir o que veio do navegador). */
+const COLECOES = ['empresas', 'pessoas', 'trilhas', 'projetos', 'alocacoes', 'tarefas'] as const;
+
+/**
+ * Confere se o que foi lido do navegador tem o formato mínimo de `Dados`:
+ * um objeto com as seis coleções, cada uma sendo uma lista.
+ * Não confere campo por campo; só pega o caso de dado quebrado ou de outro formato.
+ * @param valor - o resultado do JSON.parse.
+ * @returns true se dá para usar como `Dados`.
+ * @example formatoValido({ empresas: [] }) // false (faltam as outras cinco)
+ */
+function formatoValido(valor: unknown): valor is Dados {
+  return typeof valor === 'object' && valor !== null
+    && COLECOES.every((c) => Array.isArray((valor as Record<string, unknown>)[c]));
+}
+
+/** Mensagem do estado de erro: diz o que houve, sem termo técnico. */
+const ERRO_LEITURA = 'Os dados salvos neste navegador estão danificados e não puderam ser lidos.';
+
 /**
  * Lê as pessoas cadastradas direto do navegador, SEM precisar do DadosProvider.
  * Existe porque o AuthProvider fica FORA do DadosProvider (app/providers.tsx) e
@@ -61,6 +80,13 @@ type ItemDe<K extends Salvavel> = Dados[K][number];
 interface DadosCtx extends Dados {
   /** false enquanto carrega — as telas mostram esqueleto nesse estado */
   pronto: boolean;
+  /**
+   * Mensagem quando a leitura falhou (dados danificados); null quando deu certo.
+   * Com erro, o layout de (sistema) mostra o EstadoErro no lugar da tela.
+   */
+  erro: string | null;
+  /** Tenta ler os dados de novo (volta a mostrar o esqueleto enquanto lê). */
+  tentarDeNovo: () => void;
   /**
    * Cria o item se o `id` ainda não existe; se existe, substitui pelo novo.
    * @example d.salvar('empresas', { ...empresa, status: 'ativa' })
@@ -108,27 +134,47 @@ export function DadosProvider({ children }: { children: ReactNode }) {
   // (o servidor não tem localStorage; a leitura real acontece no useEffect).
   const [dados, setDados] = useState<Dados>(() => criarSeed());
   const [pronto, setPronto] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  // Muda a cada "Tentar de novo": é a dependência que faz o efeito de leitura rodar outra vez.
+  const [tentativa, setTentativa] = useState(0);
   // Ref (e não state) porque só serve de "trava" para o efeito de salvar:
   // mudar um ref não provoca novo desenho da tela.
   const carregou = useRef(false);
 
   // Carrega do navegador (simula a latência da API para mostrar o esqueleto)
-  // Roda UMA vez, depois que o componente aparece na tela ([] = sem dependências).
+  // Roda ao abrir e de novo a cada "Tentar de novo" (dependência `tentativa`).
   // Limpeza: se o componente sair antes dos 450 ms, cancela o timer.
   // SIMULADO: o atraso de 450 ms finge o tempo de resposta de uma API.
-  // TODO(API): trocar a leitura do localStorage por um fetch (GET) para a API da PROGLOGIC.
+  // TODO(API): trocar a leitura do localStorage por um fetch (GET) para a API da PROGLOGIC;
+  // erro de rede ou 5xx também cai no setErro.
   useEffect(() => {
     const t = setTimeout(() => {
       try {
         const bruto = localStorage.getItem(CHAVE);
         // Só substitui a demonstração se já houver algo salvo no navegador.
-        if (bruto) setDados(JSON.parse(bruto));
-      } catch { /* dados corrompidos: fica com a demonstração */ }
-      // Libera o efeito de salvar (abaixo) somente depois da leitura.
-      carregou.current = true;
+        if (bruto) {
+          const lido: unknown = JSON.parse(bruto);
+          // JSON válido mas sem as seis coleções também é dado danificado.
+          if (!formatoValido(lido)) throw new Error('formato');
+          setDados(lido);
+        }
+        setErro(null);
+        // Libera o efeito de salvar (abaixo) somente depois de uma leitura que deu certo.
+        carregou.current = true;
+      } catch {
+        // ⚠️ ATENÇÃO: com erro, `carregou` continua false de propósito: assim o efeito de
+        // salvar NÃO grava a demonstração por cima do que estava no navegador.
+        setErro(ERRO_LEITURA);
+      }
       setPronto(true);
     }, 450);
     return () => clearTimeout(t);
+  }, [tentativa]);
+
+  /** Lê de novo: mostra o esqueleto e repete a leitura (o efeito acima roda outra vez). */
+  const tentarDeNovo = useCallback(() => {
+    setPronto(false);
+    setTentativa((n) => n + 1);
   }, []);
 
   // Persiste a cada mudança, depois do carregamento inicial
@@ -222,13 +268,21 @@ export function DadosProvider({ children }: { children: ReactNode }) {
 
   // GRAVA: substitui tudo pela demonstração (o efeito de persistir grava no localStorage).
   // APAGA: tudo o que foi criado ou editado no navegador se perde.
-  const restaurarDemonstracao = useCallback(() => setDados(criarSeed()), []);
+  // Também é a saída do estado de erro: libera a gravação (carregou) e limpa o erro,
+  // para a demonstração substituir os dados danificados.
+  const restaurarDemonstracao = useCallback(() => {
+    carregou.current = true;
+    setErro(null);
+    setDados(criarSeed());
+  }, []);
 
   // useMemo: só cria um novo objeto quando algo da lista de dependências muda,
   // evitando redesenhar todas as telas a cada desenho do provider.
   const valor = useMemo<DadosCtx>(() => ({
     ...dados,
     pronto,
+    erro,
+    tentarDeNovo,
     salvar,
     remover,
     moverTarefa,
@@ -247,7 +301,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     cargaDaPessoa: (pessoaId, ignorar) => dados.alocacoes
       .filter((a) => a.pessoaId === pessoaId && a.id !== ignorar && a.fim >= hojeISO())
       .reduce((s, a) => s + a.carga, 0),
-  }), [dados, pronto, salvar, remover, moverTarefa, restaurarDemonstracao]);
+  }), [dados, pronto, erro, tentarDeNovo, salvar, remover, moverTarefa, restaurarDemonstracao]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

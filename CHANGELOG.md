@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Revisão H01 do bloco C (branch `feat/acessos`)
+- Criado: tokens `--grafico-*` em `app/globals.css` (claro e escuro), `COR_GRAFICO` e `TONS_COLUNA` em `components/ui/Graficos.tsx`, componente `EstadoErro` em `components/ui/basicos.tsx` (documentado em `/design-system`).
+- Modificado: `lib/store.tsx` (confere o formato do que lê do navegador; expõe `erro` e `tentarDeNovo()`; com erro, não grava por cima dos dados; `restaurarDemonstracao` também tira do erro), `app/(sistema)/layout.tsx` (mostra o `EstadoErro` no lugar da tela e não sincroniza a sessão com dados danificados), `components/shell/Sidebar.tsx` (logo com `aria-label` e anel de foco no botão "Fechar menu"), `components/paineis/PainelAdmin.tsx`, `app/(sistema)/trilhas/page.tsx`, `app/(sistema)/projetos/[id]/page.tsx`, `components/projetos/Vistas.tsx` e `app/(sistema)/design-system/page.tsx` (cores dos gráficos por token, trocando com o tema; o cronograma usa `color-mix` no lugar do sufixo hex "33"), `components/ui/Graficos.tsx` (a rosca aplica a cor por `style`, que aceita `var()`).
+- Removido: os hex de gráfico soltos nas telas e a constante `TOM_COLUNA` do `Vistas.tsx`.
+
 ## Ajustes no login (branch `feat/acessos`)
 - Modificado: `components/LoginForm.tsx` (o seletor "Entrar como…" virou três botões secundários do design system, um por perfil, que preenchem e-mail e senha; o campo de e-mail usa a máscara `mascaraEmail`), `lib/utils.ts` (`EMAIL_REGEX` mais rígido, valendo para todos os formulários: recusa acento, vírgula, ponto dobrado ou no fim, hífen na ponta do domínio e final com número; criada `mascaraEmail`, que tira espaços e passa para minúsculas), `SISTEMA.md` (contas de demonstração).
 - Corrigido: `next.config.ts` ganhou `allowedDevOrigins` (127.0.0.1 e os IPs da rede). Sem isso, o Next 16 bloqueia os scripts do `npm run dev` fora do `localhost`, e o login, os botões e as validações paravam de funcionar.

@@ -17,8 +17,8 @@ import Input from '@/components/input';
 import Checkbox from '@/components/checkbox';
 import CaisLogo from '@/components/CaisLogo';
 import { Select, AreaTexto, Segmentado, Interruptor } from '@/components/ui/form';
-import { Card, Etiqueta, EtiquetaTarefa, Avatar, GrupoAvatares, Aviso, Abas, Paginacao, Progresso, Esqueleto, EstadoVazio } from '@/components/ui/basicos';
-import { BarraEmpilhada, Rosca, Colunas } from '@/components/ui/Graficos';
+import { Card, Etiqueta, EtiquetaTarefa, Avatar, GrupoAvatares, Aviso, Abas, Paginacao, Progresso, Esqueleto, EstadoVazio, EstadoErro } from '@/components/ui/basicos';
+import { BarraEmpilhada, Rosca, Colunas, COR_GRAFICO } from '@/components/ui/Graficos';
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
 import RegrasSenha from '@/components/ui/RegrasSenha';
@@ -262,6 +262,7 @@ export default function DesignSystem() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-xl border border-borda p-4"><Rot>Carregando</Rot><div className="space-y-2"><Esqueleto className="h-4 w-3/4" /><Esqueleto className="h-4 w-full" /><Esqueleto className="h-4 w-1/2" /></div></div>
             <div className="rounded-xl border border-borda"><EstadoVazio icone={<Inbox className="h-6 w-6" />} titulo="Vazio" descricao="Explica por que está vazio e oferece a próxima ação." acao={<Button tamanho="sm">Criar o primeiro</Button>} /></div>
+            <div className="rounded-xl border border-borda md:col-span-2"><EstadoErro titulo="Com erro" descricao="Diz o que houve, em português, e como tentar de novo. É o que o layout mostra quando a store não consegue ler os dados." acoes={<Button tamanho="sm">Tentar de novo</Button>} /></div>
           </div>
           <div className="mt-5 space-y-3">
             <Rot>Progresso</Rot>
@@ -291,9 +292,9 @@ export default function DesignSystem() {
           </div>
           <div className="grid items-center gap-8 md:grid-cols-3">
             {/* Os gráficos recebem a cor por prop; os hex abaixo reproduzem as cores da marca (§9) só na demonstração. */}
-            <div className="flex justify-center"><Rosca centro="14" subcentro="conclusões" segmentos={[{ rotulo: 'Concluídas', valor: 14, cor: '#10B981' }, { rotulo: 'Andamento', valor: 5, cor: '#7C5CFF' }, { rotulo: 'Não iniciadas', valor: 3, cor: '#C9CCD8' }]} /></div>
-            <div className="space-y-3"><BarraEmpilhada segmentos={[{ rotulo: 'A', valor: 5, cor: '#10B981' }, { rotulo: 'B', valor: 3, cor: '#7C5CFF' }, { rotulo: 'C', valor: 2, cor: '#C9CCD8' }]} /><BarraEmpilhada segmentos={[{ rotulo: 'A', valor: 2, cor: '#10B981' }, { rotulo: 'B', valor: 6, cor: '#7C5CFF' }, { rotulo: 'C', valor: 2, cor: '#C9CCD8' }]} /></div>
-            <Colunas altura={90} itens={[{ rotulo: 'A fazer', valor: 4, cor: '#9CA0B3' }, { rotulo: 'Fazendo', valor: 5, cor: '#7C5CFF' }, { rotulo: 'Revisão', valor: 1, cor: '#F5A524' }, { rotulo: 'Pronto', valor: 4, cor: '#10B981' }]} />
+            <div className="flex justify-center"><Rosca centro="14" subcentro="conclusões" segmentos={[{ rotulo: 'Concluídas', valor: 14, cor: COR_GRAFICO.concluida }, { rotulo: 'Andamento', valor: 5, cor: COR_GRAFICO.andamento }, { rotulo: 'Não iniciadas', valor: 3, cor: COR_GRAFICO.naoIniciada }]} /></div>
+            <div className="space-y-3"><BarraEmpilhada segmentos={[{ rotulo: 'A', valor: 5, cor: COR_GRAFICO.concluida }, { rotulo: 'B', valor: 3, cor: COR_GRAFICO.andamento }, { rotulo: 'C', valor: 2, cor: COR_GRAFICO.naoIniciada }]} /><BarraEmpilhada segmentos={[{ rotulo: 'A', valor: 2, cor: COR_GRAFICO.concluida }, { rotulo: 'B', valor: 6, cor: COR_GRAFICO.andamento }, { rotulo: 'C', valor: 2, cor: COR_GRAFICO.naoIniciada }]} /></div>
+            <Colunas altura={90} itens={[{ rotulo: 'A fazer', valor: 4, cor: COR_GRAFICO.aFazer }, { rotulo: 'Fazendo', valor: 5, cor: COR_GRAFICO.andamento }, { rotulo: 'Revisão', valor: 1, cor: COR_GRAFICO.revisao }, { rotulo: 'Pronto', valor: 4, cor: COR_GRAFICO.concluida }]} />
           </div>
         </Secao>
 

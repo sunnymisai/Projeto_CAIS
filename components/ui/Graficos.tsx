@@ -21,6 +21,30 @@ import { cx } from '@/lib/utils';
 export interface Segmento { rotulo: string; valor: number; cor: string }
 
 /**
+ * Cores dos gráficos, como referência às variáveis de app/globals.css (--grafico-*).
+ * São var(...) e não hex: assim a cor troca sozinha entre o tema claro e o escuro.
+ * ⚠️ ATENÇÃO: o painel do admin, /trilhas, /projetos/[id] e a lista de tarefas (Vistas)
+ * usam estas cores com o MESMO significado; trocar aqui muda as legendas de todos.
+ * @example <BarraEmpilhada segmentos={[{ rotulo: 'Concluídas', valor: 3, cor: COR_GRAFICO.concluida }]} />
+ */
+export const COR_GRAFICO = {
+  concluida: 'var(--grafico-concluida)',
+  andamento: 'var(--grafico-andamento)',
+  revisao: 'var(--grafico-revisao)',
+  aFazer: 'var(--grafico-a-fazer)',
+  naoIniciada: 'var(--grafico-nao-iniciada)',
+  extra: 'var(--grafico-extra)',
+  extra2: 'var(--grafico-extra-2)',
+} as const;
+
+/**
+ * Cores das colunas do quadro pela POSIÇÃO (1ª, 2ª, 3ª...): A fazer, Fazendo,
+ * Revisão, depois azul e rosa. A última coluna ("Pronto") não usa esta lista:
+ * quem desenha pinta de COR_GRAFICO.concluida.
+ */
+export const TONS_COLUNA = [COR_GRAFICO.aFazer, COR_GRAFICO.andamento, COR_GRAFICO.revisao, COR_GRAFICO.extra, COR_GRAFICO.extra2];
+
+/**
  * Barra empilhada horizontal (ex.: situação das pessoas numa trilha).
  * @param segmentos pedaços da barra; cada um ocupa sua fração do total.
  * @param altura altura da barra em px (padrão 10).
@@ -86,7 +110,8 @@ export function Rosca({ segmentos, tamanho = 148, centro, subcentro }: { segment
       {total > 0 && segmentos.map((s) => {
         const frac = s.valor / total;
         const el = (
-          <circle key={s.rotulo} cx="50" cy="50" r={r} fill="none" stroke={s.cor} strokeWidth="12"
+          // stroke em style (e não no atributo): atributo de SVG não entende var(--...) em todo navegador.
+          <circle key={s.rotulo} cx="50" cy="50" r={r} fill="none" style={{ stroke: s.cor }} strokeWidth="12"
             strokeDasharray={`${Math.max(0, frac * c - 1.5)} ${c}`} strokeDashoffset={-acumulado * c}
             transform="rotate(-90 50 50)" strokeLinecap="butt" />
         );

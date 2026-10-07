@@ -111,3 +111,5 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Telas `/carga`, `/minhas-trilhas` e `/minhas-tarefas` (hoje "Em construção").
 - Redefinir senha na tela Acessos grava a senha temporária `Cais@2026` sem forçar a troca no próximo login (SIMULADO).
 - Permissão no servidor: as regras de perfil só existem no navegador.
+- Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v1`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).
+- Revisão H01 do bloco C (pendências cosméticas que ficaram para depois): `dark:text-[#14161F]` em 5 componentes (virar token `--sobre-cor`), `#B9A7FF` no item ativo da barra lateral (virar token `--marca-clara`) e as paletas fixas de avatares (`components/ui/basicos.tsx`) e de capas de projeto (`components/projetos/cores.ts`), que hoje são exceção documentada.

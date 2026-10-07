@@ -46,12 +46,14 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
   const conteudo = (
     <nav aria-label="Menu principal" className="flex h-full flex-col bg-noite text-white dark:bg-noite-alt">
       <div className="flex h-16 items-center justify-between px-5">
-        {/* NAVEGA: o logo leva ao painel (home do sistema). */}
-        <Link href="/painel" className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" onClick={onFechar}>
+        {/* NAVEGA: o logo leva ao painel (home do sistema).
+          * aria-label: o logo é só desenho (SVG); sem ele, o leitor de tela anunciaria apenas "link". */}
+        <Link href="/painel" aria-label="CAIS, ir para o painel" className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" onClick={onFechar}>
           <CaisLogo size={30} tone="claro" />
         </Link>
-        {/* Botão × só existe no celular (lg:hidden): no desktop o menu não fecha. */}
-        <button onClick={onFechar} aria-label="Fechar menu" className="rounded-lg p-2 text-white/60 hover:bg-white/10 hover:text-white lg:hidden">
+        {/* Botão × só existe no celular (lg:hidden): no desktop o menu não fecha.
+          * focus-visible: o mesmo anel claro do logo, visível sobre o fundo escuro do menu. */}
+        <button onClick={onFechar} aria-label="Fechar menu" className="rounded-lg p-2 text-white/60 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 lg:hidden">
           <X className="h-5 w-5" />
         </button>
       </div>

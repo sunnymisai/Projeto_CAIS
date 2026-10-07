@@ -42,6 +42,17 @@
   --borda: #E1E3EC;
   --sombra-card: 0 1px 2px rgba(20, 22, 31, 0.04), 0 12px 40px -12px rgba(60, 40, 160, 0.18);
 
+  /* Gráficos (status de trilha e colunas do quadro). Tons de DADO, não de texto:
+   * podem ser mais vivos que --sucesso/--aviso, que precisam de contraste p/ texto.
+   * Usados via COR_GRAFICO (components/ui/Graficos.tsx). */
+  --grafico-concluida: #10B981;     /* verde: concluída / Pronto */
+  --grafico-andamento: #7052F2;     /* roxo: em andamento / Fazendo */
+  --grafico-revisao: #F5A524;       /* âmbar: Revisão */
+  --grafico-a-fazer: #9CA0B3;       /* cinza médio: A fazer */
+  --grafico-nao-iniciada: #C9CCD8;  /* cinza claro: não iniciada */
+  --grafico-extra: #2563EB;         /* azul: 5ª coluna em diante */
+  --grafico-extra-2: #BE185D;       /* rosa: reserva */
+
   color-scheme: light;
 }
 
@@ -64,6 +75,16 @@
   --tinta-fraca: #6E7389;
   --borda: #2E3244;
   --sombra-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+
+  /* Gráficos no escuro: um pouco mais claros para destacar do fundo, e o cinza
+   * de "não iniciada" escurece (o claro brilharia mais que os dados de verdade). */
+  --grafico-concluida: #34D399;
+  --grafico-andamento: #8F74FF;
+  --grafico-revisao: #FBBF24;
+  --grafico-a-fazer: #7D8299;
+  --grafico-nao-iniciada: #3F4459;
+  --grafico-extra: #60A5FA;
+  --grafico-extra-2: #F472B6;
 
   color-scheme: dark;
 }

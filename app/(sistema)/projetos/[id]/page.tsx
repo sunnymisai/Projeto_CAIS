@@ -36,7 +36,7 @@ import Button from '@/components/button';
 import Input from '@/components/input';
 import { Select } from '@/components/ui/form';
 import { Abas, Card, CardTitulo, Etiqueta, Esqueleto, EstadoVazio, Progresso, Avatar, Aviso } from '@/components/ui/basicos';
-import { Colunas } from '@/components/ui/Graficos';
+import { Colunas, COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
 import Modal from '@/components/ui/Modal';
 import Quadro from '@/components/projetos/Quadro';
 import DetalheTarefa from '@/components/projetos/DetalheTarefa';
@@ -302,7 +302,7 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
   // âmbar e azul pela posição (Math.min(i, 3) repete o azul se houver mais).
   const porColuna = projeto.colunas.map((c, i) => ({
     rotulo: c.titulo, valor: d.tarefas.filter((t) => t.colunaId === c.id && t.projetoId === projeto.id).length,
-    cor: i === projeto.colunas.length - 1 ? '#10B981' : ['#9CA0B3', '#7C5CFF', '#F5A524', '#2563EB'][Math.min(i, 3)],
+    cor: i === projeto.colunas.length - 1 ? COR_GRAFICO.concluida : TONS_COLUNA[Math.min(i, 3)],
   }));
 
   // Pares [rótulo, valor] da lista de dados da lateral. "—" indica campo
