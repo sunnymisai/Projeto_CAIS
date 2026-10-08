@@ -14,9 +14,9 @@ import { abrirNavegador, conferir, CONTAS } from './cdp.mjs';
 const c = conferir();
 const nav = await abrirNavegador('e01', 9360);
 const { ev, ir, entrar, largura, erros } = nav;
+/** Texto visível da área de conteúdo (<main>), para procurar nomes de projeto e mensagens. */
 const texto = () => ev(`document.querySelector('main')?.innerText ?? ''`);
 const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'); return document.documentElement.scrollWidth <= innerWidth + 1 && m.scrollWidth <= m.clientWidth + 1; })()`;
-// Texto de um bloco do painel pelo título (h2/h3 do CardTitulo).
 /**
  * Abre o /painel e espera os blocos aparecerem (até 15 s), em vez de um tempo fixo:
  * com a máquina ocupada (build, tsc), a primeira compilação do Next pode passar de 3 s.
@@ -29,6 +29,11 @@ const abrirPainel = async () => {
     await new Promise((r) => setTimeout(r, 500));
   }
 };
+/**
+ * Texto de um bloco do painel, achado pelo título (h2/h3 do CardTitulo).
+ * @param titulo - título exato do bloco, ex.: 'Entregas'.
+ * @returns o texto do cartão inteiro ('' se não achar).
+ */
 const bloco = (titulo) => ev(`(() => { const h = [...document.querySelectorAll('main h2, main h3')].find((x) => x.textContent.trim() === ${JSON.stringify(titulo)}); return h?.closest('.flex.flex-col')?.innerText ?? ''; })()`);
 
 try {
