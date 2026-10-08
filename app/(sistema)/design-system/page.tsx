@@ -2,7 +2,7 @@
    APP/(SISTEMA)/DESIGN-SYSTEM/PAGE.TSX
    O que é: a documentação viva do design system do CAIS: cada componente aparece funcionando, com todos os seus estados.
    Onde é usado: rota /design-system (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts). Regra do time (CLAUDE.md): todo componente novo de components/ui deve ganhar uma seção aqui.
-   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal, RegrasSenha), components/button, components/input, components/checkbox, components/CaisLogo, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
+   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal, RegrasSenha, Semaforo), components/button, components/input, components/checkbox, components/CaisLogo, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
    Contexto: docs/contexto-cais.md §9 (Design system e marca: "documentado ao vivo"), §10 (Anatomia de toda tela) e §13 (Qualidade: os quatro estados).
    ============================================================================ */
 // "use client": as demonstrações usam estado (abas, modal, interruptor) e toast,
@@ -22,6 +22,7 @@ import { BarraEmpilhada, Rosca, Colunas, COR_GRAFICO } from '@/components/ui/Gra
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
 import RegrasSenha from '@/components/ui/RegrasSenha';
+import { IndicadorCarga, LinhaDeSemanas, LegendaSemaforo } from '@/components/ui/Semaforo';
 import { useToast } from '@/lib/toast';
 
 /* Documentação viva: cada componente aparece com seus estados, como pede
@@ -48,7 +49,7 @@ const CORES = [
 // ⚠️ ATENÇÃO: o id precisa ser igual ao id de uma <Secao>; se não for, o link âncora não rola para lugar nenhum.
 const SECOES = [
   ['tokens', 'Tokens'], ['tipografia', 'Tipografia'], ['botoes', 'Botões'], ['campos', 'Campos'], ['selecao', 'Seleção'],
-  ['etiquetas', 'Etiquetas e avatar'], ['feedback', 'Avisos e estados'], ['navegacao', 'Abas e paginação'], ['dados', 'Tabela e gráficos'], ['modal', 'Modal'],
+  ['etiquetas', 'Etiquetas e avatar'], ['feedback', 'Avisos e estados'], ['navegacao', 'Abas e paginação'], ['dados', 'Tabela e gráficos'], ['semaforo', 'Semáforo de carga'], ['modal', 'Modal'],
 ] as const;
 
 /**
@@ -295,6 +296,33 @@ export default function DesignSystem() {
             <div className="flex justify-center"><Rosca centro="14" subcentro="conclusões" segmentos={[{ rotulo: 'Concluídas', valor: 14, cor: COR_GRAFICO.concluida }, { rotulo: 'Andamento', valor: 5, cor: COR_GRAFICO.andamento }, { rotulo: 'Não iniciadas', valor: 3, cor: COR_GRAFICO.naoIniciada }]} /></div>
             <div className="space-y-3"><BarraEmpilhada segmentos={[{ rotulo: 'A', valor: 5, cor: COR_GRAFICO.concluida }, { rotulo: 'B', valor: 3, cor: COR_GRAFICO.andamento }, { rotulo: 'C', valor: 2, cor: COR_GRAFICO.naoIniciada }]} /><BarraEmpilhada segmentos={[{ rotulo: 'A', valor: 2, cor: COR_GRAFICO.concluida }, { rotulo: 'B', valor: 6, cor: COR_GRAFICO.andamento }, { rotulo: 'C', valor: 2, cor: COR_GRAFICO.naoIniciada }]} /></div>
             <Colunas altura={90} itens={[{ rotulo: 'A fazer', valor: 4, cor: COR_GRAFICO.aFazer }, { rotulo: 'Fazendo', valor: 5, cor: COR_GRAFICO.andamento }, { rotulo: 'Revisão', valor: 1, cor: COR_GRAFICO.revisao }, { rotulo: 'Pronto', valor: 4, cor: COR_GRAFICO.concluida }]} />
+          </div>
+        </Secao>
+
+        {/* Semáforo de carga (bloco F, lib/carga.ts): os quatro níveis em pílula, a fileira de semanas e a legenda.
+          * Cor nunca sozinha: cada nível tem ícone próprio e o texto (por extenso ou no aria-label do compacto). */}
+        <Secao id="semaforo" titulo="Semáforo de carga" descricao="Ocupação da pessoa pelo pico do dia mais cheio. Ícone, número e texto juntos; a cor reforça, não substitui.">
+          <div className="space-y-5">
+            <div>
+              <Rot>Indicador (normal e compacto)</Rot>
+              <div className="flex flex-wrap items-center gap-2">
+                <IndicadorCarga nivel="livre" pct={0} /><IndicadorCarga nivel="verde" pct={50} /><IndicadorCarga nivel="amarelo" pct={90} /><IndicadorCarga nivel="vermelho" pct={112.5} />
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <IndicadorCarga nivel="livre" pct={0} compacto /><IndicadorCarga nivel="verde" pct={50} compacto /><IndicadorCarga nivel="amarelo" pct={90} compacto /><IndicadorCarga nivel="vermelho" pct={112.5} compacto />
+              </div>
+            </div>
+            <div>
+              <Rot>Linha de semanas</Rot>
+              <LinhaDeSemanas rotulo="Exemplo de linha de semanas" semanas={[
+                { segunda: '2026-10-12', pct: 112.5, nivel: 'vermelho' }, { segunda: '2026-10-19', pct: 90, nivel: 'amarelo' },
+                { segunda: '2026-10-26', pct: 50, nivel: 'verde' }, { segunda: '2026-11-02', pct: 0, nivel: 'livre' },
+              ]} />
+            </div>
+            <div>
+              <Rot>Legenda</Rot>
+              <LegendaSemaforo />
+            </div>
           </div>
         </Secao>
 

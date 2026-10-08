@@ -11,7 +11,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `f03-tela-carga.mjs`, `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
 **Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts`, `lib/metricas.casos.ts` e `lib/carga.casos.ts` (semáforo de carga).
 
@@ -43,7 +43,7 @@ npm run dev        # http://localhost:3000
 | `/projetos` e `/projetos/[id]` | Lista, ficha, equipe e tarefas (quadro, lista, cronograma). A Visão geral tem "Próximas entregas" (prazo nos próximos 14 dias). Para a Empresa: só os projetos dela, quadro sem arrastar e sem criar, detalhe da tarefa em leitura com comentário liberado e Equipe só com pessoa, papel e período (sem carga nem trilhas) |
 | `/design-system` | Documentação viva dos componentes |
 | `/acessos` | Admin: tabela de contas (pessoa, e-mail/login, perfil, empresa, status, último acesso) com filtros e menu por linha (reenviar convite, redefinir senha para `Cais@2026`, mudar perfil com explicação do que ganha e perde, inativar/reativar) e o quadro "O que cada perfil pode fazer", gerado de `ROTAS_POR_PERFIL` e `podeFazer` |
-| `/carga` | Admin: carga da equipe ("Em construção") |
+| `/carga` | Admin: **Carga da equipe**. Matriz profissionais ativos × semanas (4, 8 ou 12, com ← → e "Hoje"), cada célula com o nível da semana; nome e cabeçalho fixos e só a tabela rola. Cada linha abre a carga por projeto; cada célula (clique ou Enter) abre um painel lateral com os 5 dias úteis e as alocações, com link para a Equipe do projeto. Filtros de nome, área, projeto e "Só acima do limite", legenda e contagem no rodapé. No celular, cards com as próximas 4 semanas |
 | `/minhas-trilhas` | Profissional e empresa: "Continue de onde parou" (próxima etapa em destaque) e as trilhas agrupadas por alcance, com progresso, nota e prazo (no prazo, perto, vencido) |
 | `/minhas-trilhas/[id]` | Detalhe da trilha para quem a cumpre: etapas concluídas, atual e bloqueadas (com o motivo), botão Começar/Continuar (fixo no rodapé no celular). Trilha fora do público, em rascunho ou inexistente vai para `/sem-permissao` |
 | `/minhas-trilhas/[id]/etapa/[etapaId]` | Player da etapa: texto, vídeo e áudio nativos (com estado de erro), PDF/apresentação/link em nova aba, "Marcar como concluída", anterior/próxima (próxima só depois de concluir) e o quiz (uma pergunta por vez no celular, todas no desktop; nota, nota mínima, revisão de cada resposta, "Tentar de novo" com as alternativas embaralhadas, "Fale com a coordenação" sem tentativas). Etapa bloqueada aberta pela URL volta ao detalhe com `?bloqueada=` explicando o motivo. Ao concluir a última etapa, tela de parabéns |
@@ -57,6 +57,7 @@ A regra fica em `lib/carga.ts` (funções puras, testadas em `lib/carga.casos.ts
 
 - `cargaDaPessoa` (store) devolve as horas ativas **hoje**; para semanas e períodos, use `ocupacaoNaSemana`, `linhaDoTempo`, `picoNoPeriodo`, `simularAlocacao` e `proximaJanelaLivre`.
 - O card "Alocação e carga" do painel do admin mostra a semana atual com o nível em texto.
+- Componentes em `components/ui/Semaforo.tsx` (`IndicadorCarga`, `LinhaDeSemanas`, `LegendaSemaforo`), documentados em `/design-system`. O `Modal` ganhou a variante `lateral` (painel pela direita).
 - Cenários do seed: **Bruno** acima do limite (30 + 15 h nos mesmos dias); **Diego**, o exemplo do time (§16): 10 h/sem no Sprint de acessibilidade até daqui a 7 dias e 30 h/sem no Portal a partir do 8º dia, nunca acima do limite; **Elisa** (limite 30 h) acima do limite só em 2 semanas; **Gabriela** livre.
 
 ## Permissões por perfil

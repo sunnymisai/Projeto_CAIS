@@ -1,6 +1,6 @@
 # Onde paramos (CAIS v4)
 
-Registro para retomar o trabalho. Atualizado em **08/10/2026**, durante o bloco F (branch `feat/semaforo-carga`: F01 e F02 feitos).
+Registro para retomar o trabalho. Atualizado em **08/10/2026**, durante o bloco F (branch `feat/semaforo-carga`: F01, F02 e F03 feitos).
 Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles em [`docs/prompts/00-GUIA.md`](prompts/00-GUIA.md).
 
 ## Situação dos prompts
@@ -12,7 +12,7 @@ Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles
 | C · Perfis e acesso | C01 a C08 + revisão H01 | ✅ feito, no `main` | `c8e097a` |
 | D · Profissional | D01 a D05 | ✅ feito, no `main` | `ef7633b` |
 | E · Empresa | E01, E02 | ✅ feito, no `main` | `1bb2fd6` |
-| F · Semáforo de carga | F01 a F04 | 🔨 F01 e F02 feitos na branch `feat/semaforo-carga` (não está no `main`); **próximo: F03** | ver `git log feat/semaforo-carga` |
+| F · Semáforo de carga | F01 a F04 | 🔨 F01 a F03 feitos na branch `feat/semaforo-carga` (não está no `main`); **próximo: F04** | ver `git log feat/semaforo-carga` |
 | G · Lacunas do deck | G01, G02, G03 | ⏳ a fazer | — |
 | H · Revisão | H01 | 🔁 rodar ao fim de cada bloco. A dos blocos D e E foi feita: relatório em [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) (branch `revisao/h01-blocos-d-e`), esperando o time escolher o que corrigir | `8b5466c` |
 
@@ -25,7 +25,7 @@ Fora dos prompts, já no `main`:
 1. Abra o terminal na pasta do projeto, `Projeto_CAIS/`, e rode `npm run dev` (http://localhost:3000).
 2. No navegador, menu do perfil → **"Restaurar dados de demonstração"**, para partir do seed atual.
 3. Continue na branch do bloco: `git switch feat/semaforo-carga` (ela já contém a branch `revisao/h01-blocos-d-e`).
-4. Rode o [`docs/prompts/F03-semaforo-componentes-e-tela-carga.txt`](prompts/F03-semaforo-componentes-e-tela-carga.txt) e depois o F04. O F04 pede o merge no `main` (só com aprovação) e depois o `git push`.
+4. Rode o [`docs/prompts/F04-semaforo-alocacao-e-paineis.txt`](prompts/F04-semaforo-alocacao-e-paineis.txt). O F04 pede o merge no `main` (só com aprovação) e depois o `git push`.
 5. Ao terminar cada prompt: `npx tsc --noEmit`, `npm run lint`, `npm run build`, os casos e os testes de navegador (abaixo).
 
 ## Verificações disponíveis
@@ -47,6 +47,7 @@ node testes/navegador/d04-minhas-tarefas.mjs      # 24 conferências
 node testes/navegador/e01-painel-empresa.mjs      # 22 conferências
 node testes/navegador/e02-empresa-projetos.mjs    # 20 conferências
 node testes/navegador/f02-semaforo-painel.mjs     # 6 conferências
+node testes/navegador/f03-tela-carga.mjs          # 26 conferências
 node testes/navegador/h01-varredura.mjs           # parte automática do H01 (6 contas × rotas)
 node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, desktop e 375 px
 ```
@@ -58,7 +59,7 @@ node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, des
 - **Itens cosméticos da revisão H01 do bloco C** (não bloqueiam): `dark:text-[#14161F]` em 5 componentes (virar token `--sobre-cor`), `#B9A7FF` no item ativo da barra lateral (token `--marca-clara`), paletas fixas de avatares e capas de projeto.
 - **Liberar nova tentativa de quiz**: quem esgota as tentativas vê "Fale com a coordenação", mas o admin ainda não tem botão para liberar.
 - **"Entregas aprovadas"** (painel da empresa): não existe aprovação; hoje "Pronto" conta como aprovada e a penúltima coluna ("Revisão") como aguardando revisão (`entregasDoProjeto`). A empresa também não vê as horas de quem está no time (decisão de privacidade do E01, com `TODO(PROGLOGIC)`).
-- **Semáforo de carga**: a regra (`lib/carga.ts`) e o card do painel do admin já usam o período (F01 e F02). Faltam a tela `/carga` e os componentes (F03) e o modal de alocação, a aba Equipe, o painel do profissional e a ficha de pessoa (F04). A chave do navegador agora é `cais-dados-v3`.
+- **Semáforo de carga**: a regra (`lib/carga.ts`) e o card do painel do admin já usam o período (F01 e F02). A tela `/carga` e os componentes saíram no F03. Faltam o modal de alocação, a aba Equipe, o painel do profissional e a ficha de pessoa (F04). A chave do navegador agora é `cais-dados-v3`.
 
 ## Decisões tomadas pelo time (registradas com `TODO(PROGLOGIC)` no código)
 

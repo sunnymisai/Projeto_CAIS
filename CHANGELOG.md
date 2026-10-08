@@ -4,6 +4,10 @@ Cada entrada lista o que foi criado, modificado e removido.
 
 ## Bloco F: semáforo de carga (branch `feat/semaforo-carga`)
 
+### F03: componentes do semáforo e tela de carga da equipe
+- Criado: `components/ui/Semaforo.tsx` (`IndicadorCarga`, `LinhaDeSemanas`, `LegendaSemaforo`, `descreverCarga`, `rotuloSemana`), a tela `app/(sistema)/carga/page.tsx` (substitui o "Em construção") e o teste `testes/navegador/f03-tela-carga.mjs` (26 conferências).
+- Modificado: `components/ui/Modal.tsx` (variante `lateral`), `app/(sistema)/design-system/page.tsx` (seção "Semáforo de carga"), `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+
 ### F02: semáforo integrado à store e cenários de demonstração
 - Criado: `TOM_NIVEL` em `lib/carga.ts`; projeto "Sprint de acessibilidade" (`prj_sprint`, Vértice), alocações `alo_8` (Diego no Sprint) e `alo_9` (Elisa no App de agendamento por 2 semanas) e a profissional livre Gabriela Costa (`pes_gabriela`) em `lib/seed.ts`; teste `testes/navegador/f02-semaforo-painel.mjs`.
 - Modificado: `lib/store.tsx` (`cargaDaPessoa` passa a devolver as horas ativas HOJE via `ocupacaoNoDia`, com a mesma assinatura; chave `cais-dados-v2` → `cais-dados-v3`, que descarta os dados antigos do navegador), `lib/seed.ts` (Diego no Portal a partir do 8º dia com 30 h/sem), `components/paineis/PainelAdmin.tsx` (card "Alocação e carga" com a semana atual e o nível em texto), `components/ui/Graficos.tsx` (`BarrasComLimite` aceita `nivel`), os testes de navegador que limpavam a chave antiga e `SISTEMA.md` (seção "Semáforo de carga").

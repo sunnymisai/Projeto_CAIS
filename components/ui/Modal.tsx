@@ -31,12 +31,14 @@ import { cx } from '@/lib/utils';
  * @param rodape botões de ação no rodapé (opcional).
  * @param tamanho largura máxima: sm, md (padrão), lg ou xl.
  * @param cabecalho substitui o cabeçalho padrão (opcional).
+ * @param lateral true = painel que entra pela direita, com a altura toda da tela (ex.: detalhe de
+ *   uma célula da tela /carga). Mesmo comportamento de foco, Esc e fundo; só muda o desenho.
  * @returns o modal via portal, ou null quando fechado.
  * @example
  * <Modal aberto={aberto} onFechar={() => setAberto(false)} titulo="Nova empresa"
  *   rodape={<Button onClick={salvar}>Salvar</Button>}>…campos…</Modal>
  */
-export default function Modal({ aberto, onFechar, titulo, descricao, children, rodape, tamanho = 'md', cabecalho }: {
+export default function Modal({ aberto, onFechar, titulo, descricao, children, rodape, tamanho = 'md', cabecalho, lateral = false }: {
   aberto: boolean;
   onFechar: () => void;
   titulo: string;
@@ -46,6 +48,8 @@ export default function Modal({ aberto, onFechar, titulo, descricao, children, r
   tamanho?: 'sm' | 'md' | 'lg' | 'xl';
   /** Substitui o cabeçalho padrão (usado no detalhe da tarefa). */
   cabecalho?: ReactNode;
+  /** Painel lateral (entra pela direita, altura toda) em vez da caixa central. */
+  lateral?: boolean;
 }) {
   // Referência à caixa do diálogo: usada para achar os elementos focáveis dentro dela.
   const ref = useRef<HTMLDivElement>(null);
@@ -128,13 +132,15 @@ export default function Modal({ aberto, onFechar, titulo, descricao, children, r
   // No celular o modal "sobe" do rodapé (items-end, cantos de cima arredondados);
   // a partir de sm fica centralizado.
   return createPortal(
-    <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center sm:p-6">
+    // Lateral: encosta na direita (justify-end) e ocupa a altura toda; central: como descrito acima.
+    <div className={cx('fixed inset-0 z-[70] flex', lateral ? 'justify-end' : 'items-end justify-center sm:items-center sm:p-6')}>
       {/* Fundo escurecido: clicar fora da caixa fecha o modal. */}
       <div className="animate-fade-in absolute inset-0 bg-[#0B0C12]/55 backdrop-blur-[2px]" onClick={onFechar} aria-hidden />
       {/* tabIndex={-1} deixa a própria caixa receber foco (quando não há campo para focar). */}
       <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={idTitulo} tabIndex={-1}
         // max-h-[92vh] + flex-col: o modal nunca passa da altura da tela; só o meio rola.
-        className={cx('animate-modal-in relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-borda bg-superficie shadow-card focus:outline-none sm:rounded-3xl', largura)}>
+        className={cx('animate-modal-in relative flex w-full flex-col overflow-hidden border border-borda bg-superficie shadow-card focus:outline-none',
+          lateral ? 'h-full max-w-md sm:rounded-l-3xl' : cx('max-h-[92vh] rounded-t-3xl sm:rounded-3xl', largura))}>
         {/* Usa o cabeçalho próprio se veio um; senão, o padrão com título e botão ×. */}
         {cabecalho ?? (
           <div className="flex items-start justify-between gap-4 border-b border-borda px-6 py-4">
