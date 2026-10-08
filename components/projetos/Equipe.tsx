@@ -4,24 +4,29 @@
                Editar e remover alocação só aparecem para quem pode alocar (Admin).
                O perfil Empresa não vê carga nem trilhas das pessoas (privacidade, E02).
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, na aba "Equipe".
-   Depende de: lib/store (useDados: alocacoes, pessoa, cargaDaPessoa, salvar,
-               remover), lib/auth (useAuth), lib/permissoes (podeFazer), lib/toast, lib/useFormulario, lib/metricas
-               (trilhasDaPessoa), components/ui (Modal, form, basicos, Tabela),
+               O modal de alocar mostra a prévia do semáforo (antes × depois por semana)
+               e sugere a primeira data livre quando alguma semana fica acima do limite.
+   Depende de: lib/store (useDados: alocacoes, pessoa, salvar, remover), lib/auth (useAuth),
+               lib/permissoes (podeFazer), lib/toast, lib/useFormulario, lib/metricas
+               (trilhasDaPessoa), lib/carga (picoNoPeriodo, simularAlocacao, proximaJanelaLivre e
+               afins), components/ui (Modal, form, basicos, Tabela, Semaforo),
                components/button, components/input e lib/utils.
    Contexto: §5 Projetos (Alocação: pessoa, papel, período, carga, trilhas;
-             acima de 40 h/sem "É AVISO, NÃO BLOQUEIO") e §16 (semáforo de
-             carga por período, ainda não implementado).
+             acima do limite "É AVISO, NÃO BLOQUEIO"), §12 fluxo 3 (alocar alguém)
+             e §16 (semáforo de carga por período).
    ============================================================================ */
 "use client";
 
 import { useCallback, useState } from 'react';
-import { UserPlus, Pencil, Trash2, TriangleAlert, Users } from 'lucide-react';
+import { UserPlus, Pencil, Trash2, Users } from 'lucide-react';
 import { useDados, Alocacao, Projeto } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 import { podeFazer } from '@/lib/permissoes';
 import { useToast } from '@/lib/toast';
 import { useFormulario } from '@/lib/useFormulario';
 import { trilhasDaPessoa } from '@/lib/metricas';
+import { BLOQUEAR_SOBRECARGA, diasUteisEntre, fimAposDiasUteis, picoNoPeriodo, proximaJanelaLivre, ROTULO_NIVEL, simularAlocacao } from '@/lib/carga';
+import { IndicadorCarga, LinhaDeSemanas, descreverCarga, rotuloSemana } from '@/components/ui/Semaforo';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/button';
 import Input from '@/components/input';
@@ -81,18 +86,12 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
                   // Alocação de pessoa que não existe mais: pula a linha.
                   const p = d.pessoa(a.pessoaId); if (!p) return null;
                   /*
-                   * Carga total = soma das alocações da pessoa em TODOS os
-                   * projetos. Passar do limite dela (cargaMax, 40 h/sem por
-                   * padrão) só pinta a carga de âmbar com ícone: É AVISO,
-                   * NÃO BLOQUEIO (§5).
-                   * ⚠️ ATENÇÃO: hoje a soma ignora o período (só descarta
-                   * alocações já encerradas). Duas alocações que nem se
-                   * cruzam no tempo somam como se fossem simultâneas. O
-                   * semáforo de carga por período (bloco F, §16) vai
-                   * corrigir isso em cargaDaPessoa, na store.
+                   * Semáforo (F04): o PICO da pessoa, somando TODOS os projetos, no período
+                   * DESTA alocação (picoNoPeriodo, lib/carga.ts). Conta o quando de cada
+                   * alocação: duas que não se cruzam no tempo não se somam. Acima do limite
+                   * é AVISO, NÃO BLOQUEIO (§5).
                    */
-                  const total = d.cargaDaPessoa(p.id);
-                  const acima = total > p.cargaMax;
+                  const pico = picoNoPeriodo(p, a.inicio, a.fim, d);
                   // Trilhas concluídas das obrigatórias (coluna "Trilhas", §5).
                   const tr = trilhasDaPessoa(p.id, d);
                   return (
@@ -104,9 +103,10 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
                       {/* Carga e trilhas: escondidas para o perfil Empresa (ver verDetalhesDaPessoa). */}
                       {verDetalhesDaPessoa && <>
                         <Td>
-                          {/* Mostra a carga DESTE projeto; o title revela a soma de todos quando passa do limite. */}
-                          <span className={cx('inline-flex items-center gap-1.5 tabular-nums', acima && 'font-semibold text-aviso')} title={acima ? `Soma de todos os projetos: ${total} h/sem` : undefined}>
-                            {acima && <TriangleAlert className="h-3.5 w-3.5" aria-label="Acima do limite" />}{a.carga} h/sem
+                          {/* As horas DESTE projeto e, ao lado, o pico da pessoa no período da alocação. */}
+                          <span className="inline-flex flex-wrap items-center gap-2">
+                            <span className="tabular-nums">{a.carga} h/sem</span>
+                            <IndicadorCarga nivel={pico.nivel} pct={pico.pct} compacto rotulo={`Pico de ${p.nome} no período desta alocação: ${descreverCarga(pico.pct, pico.nivel)}`} />
                           </span>
                         </Td>
                         {/* Âmbar quando ainda faltam trilhas obrigatórias. */}
@@ -131,7 +131,7 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
             {/* Legenda dos sinais da tabela (o ícone nunca aparece sem explicação); só faz sentido com as colunas de carga e trilhas. */}
             {verDetalhesDaPessoa && (
               <p className="flex items-center gap-1.5 px-4 py-3 text-[12px] text-tinta-suave">
-                <TriangleAlert className="h-3.5 w-3.5 text-aviso" aria-hidden />soma de todos os projetos passa do limite da pessoa. É aviso, não bloqueio. <strong className="ml-1 text-tinta">Trilhas:</strong> quantas concluídas das atribuídas.
+                <strong className="text-tinta">Carga:</strong> horas neste projeto e o pico da pessoa, somando todos os projetos, no período da alocação. Acima do limite é aviso, não bloqueio. <strong className="ml-1 text-tinta">Trilhas:</strong> quantas concluídas das atribuídas.
               </p>
             )}
           </>
@@ -184,19 +184,34 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
   const disponiveis = d.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo' && !jaNaEquipe.has(p.id));
   const pessoa = d.pessoa(v.pessoaId);
   /*
-   * Carga total se esta alocação for salva: soma dos OUTROS projetos
-   * (ignora esta alocação, para não contar duas vezes ao editar) + a carga
-   * digitada agora.
-   * ⚠️ ATENÇÃO: igual à tabela, não considera o período; o semáforo
-   * (bloco F, §16) vai mudar este cálculo.
+   * Prévia do semáforo (F04, lib/carga.ts): como fica cada semana do período ANTES e DEPOIS
+   * desta alocação, recalculada ao mudar pessoa, datas ou carga. Fim vazio = entrega do projeto.
+   * Na edição, a alocação antiga sai do "depois" (ignorar = alocacao.id) para não contar duas vezes.
    */
-  const totalDepois = pessoa ? d.cargaDaPessoa(pessoa.id, alocacao?.id) + (Number(v.carga) || 0) : 0;
-  // Passou do limite da pessoa: mostra o Aviso abaixo, mas deixa salvar.
-  const passa = pessoa && totalDepois > pessoa.cargaMax;
+  const carga = Number(v.carga) || 0;
+  const fimEfetivo = v.fim || projeto.entrega;
+  const periodoValido = !!pessoa && !!v.inicio && fimEfetivo >= v.inicio && carga > 0;
+  const previa = periodoValido ? simularAlocacao(pessoa!, { inicio: v.inicio, fim: fimEfetivo, carga }, d, alocacao?.id) : [];
+  // Semanas que ficam vermelhas com esta alocação.
+  const vermelhas = previa.filter((s) => s.depois.nivel === 'vermelho');
+  // Duração em dias úteis (mantida ao usar a data sugerida) e a primeira data em que a alocação cabe.
+  const duracao = periodoValido ? diasUteisEntre(v.inicio, fimEfetivo).length : 0;
+  const sugestao = vermelhas.length && pessoa ? proximaJanelaLivre(pessoa, carga, duracao, v.inicio, d, alocacao?.id) : null;
+  // BLOQUEAR_SOBRECARGA = false (§5: é aviso, não bloqueio). Se o time ligar, "Alocar" recusa.
+  const bloqueado = BLOQUEAR_SOBRECARGA && vermelhas.length > 0;
+  /**
+   * Aplica a data sugerida: novo início e o fim ajustado para manter a mesma duração em dias úteis.
+   * GRAVA: só os campos do formulário (ainda não salva a alocação).
+   */
+  const usarSugestao = () => {
+    if (!sugestao) return;
+    f.set('inicio', sugestao);
+    f.set('fim', fimAposDiasUteis(sugestao, duracao));
+  };
 
   /** Valida tudo e grava a alocação (nova ou editada). */
   const salvar = () => {
-    if (!f.validarTudo()) return;
+    if (!f.validarTudo() || bloqueado) return;
     // GRAVA: cria ou atualiza a alocação. Number() porque o campo devolve texto.
     // TODO(API): trocar por POST/PUT de alocação.
     d.salvar('alocacoes', { ...v, carga: Number(v.carga), id: alocacao?.id ?? novoId('alo'), projetoId: projeto.id });
@@ -207,16 +222,16 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
 
   return (
     <Modal aberto onFechar={onFechar} tamanho="md" titulo={alocacao ? 'Editar alocação' : 'Alocar pessoa'} descricao={projeto.nome}
-      rodape={<><Button variante="secundario" onClick={onFechar}>Cancelar</Button><Button onClick={salvar}>{alocacao ? 'Salvar' : 'Alocar'}</Button></>}>
+      rodape={<><Button variante="secundario" onClick={onFechar}>Cancelar</Button><Button onClick={salvar} disabled={bloqueado}>{alocacao ? 'Salvar' : 'Alocar'}</Button></>}>
       {/* noValidate: quem valida é o useFormulario, não o navegador. */}
       <form onSubmit={(e) => { e.preventDefault(); salvar(); }} noValidate className="space-y-4">
         {/*
           * Ao editar, a pessoa fica travada (disabled) e a lista mostra só ela.
-          * Cada opção já exibe a carga atual/limite para ajudar a escolher.
+          * Cada opção diz, em texto, o pico da pessoa no período do projeto (semáforo), para ajudar a escolher.
           */}
         <Select label="Pessoa" required placeholder="Escolha um profissional" value={v.pessoaId} error={f.erros.pessoaId} disabled={!!alocacao}
           onChange={(e) => f.set('pessoaId', e.target.value)} onBlur={() => f.blur('pessoaId')}
-          opcoes={(alocacao ? d.pessoas.filter((p) => p.id === alocacao.pessoaId) : disponiveis).map((p) => ({ valor: p.id, rotulo: `${p.nome} · ${p.area} · ${d.cargaDaPessoa(p.id)}/${p.cargaMax} h` }))} />
+          opcoes={(alocacao ? d.pessoas.filter((p) => p.id === alocacao.pessoaId) : disponiveis).map((p) => ({ valor: p.id, rotulo: `${p.nome} · ${p.area || 'sem área'} · ${ROTULO_NIVEL[picoNoPeriodo(p, projeto.inicio, projeto.entrega, d, alocacao?.id).nivel].toLowerCase()} no período` }))} />
         <Select label="Papel no projeto" required placeholder="Selecione o papel" value={v.papel} error={f.erros.papel}
           onChange={(e) => f.set('papel', e.target.value)} onBlur={() => f.blur('papel')} opcoes={PAPEIS.map((p) => ({ valor: p, rotulo: p }))} />
         <div className="grid grid-cols-2 gap-4">
@@ -227,10 +242,29 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
         <Input compacto label="Carga semanal (horas)" required type="number" min={1} max={44} value={String(v.carga)}
           onChange={(e) => f.set('carga', Number(e.target.value))} onBlur={() => f.blur('carga')} error={f.erros.carga} />
         <AreaTexto label="Observação" placeholder="Opcional" rows={2} value={v.obs} onChange={(e) => f.set('obs', e.target.value)} />
-        {/* É AVISO, NÃO BLOQUEIO (§5): o botão de salvar continua habilitado. */}
-        {passa && (
-          <Aviso tipo="aviso" titulo="Atenção com esta alocação">
-            A carga total de {pessoa!.nome.split(' ')[0]} passa para {totalDepois} h por semana, acima do limite de {pessoa!.cargaMax} h. Dá para confirmar mesmo assim.
+        {/* Prévia antes × depois por semana do período (aria-live: o leitor de tela ouve a mudança). */}
+        {previa.length > 0 && (
+          <div className="space-y-3 rounded-xl border border-borda bg-fundo/50 p-3" aria-live="polite">
+            <p className="text-[13px] font-semibold text-tinta">Carga de {pessoa!.nome.split(' ')[0]} no período</p>
+            <div>
+              <p className="mb-1 text-[12px] text-tinta-suave">Antes</p>
+              <LinhaDeSemanas quem={pessoa!.nome} rotulo={`Carga de ${pessoa!.nome} antes desta alocação`} semanas={previa.map((s) => ({ segunda: s.segunda, ...s.antes }))} />
+            </div>
+            <div>
+              <p className="mb-1 text-[12px] text-tinta-suave">Depois</p>
+              <LinhaDeSemanas quem={pessoa!.nome} rotulo={`Carga de ${pessoa!.nome} depois desta alocação`} semanas={previa.map((s) => ({ segunda: s.segunda, ...s.depois }))} />
+            </div>
+          </div>
+        )}
+        {/* É AVISO, NÃO BLOQUEIO (§5): com semana vermelha, explica e sugere a 1ª data livre, mas deixa alocar. */}
+        {vermelhas.length > 0 && (
+          <Aviso tipo={bloqueado ? 'erro' : 'aviso'} titulo={bloqueado ? 'Alocação bloqueada pelo limite de carga' : 'Atenção com esta alocação'}
+            acao={sugestao ? <Button tamanho="sm" variante="secundario" onClick={usarSugestao}>Usar {rotuloSemana(sugestao)} como início</Button> : undefined}>
+            {pessoa!.nome.split(' ')[0]} fica acima do limite {vermelhas.length === 1 ? 'na semana de ' : 'nas semanas de '}{listarSemanas(vermelhas.map((s) => s.segunda))}.{' '}
+            {sugestao
+              ? <>Com {carga} h/sem, há espaço a partir de {rotuloSemana(sugestao)}.</>
+              : <>Com {carga} h/sem, não há espaço nos próximos 12 meses.</>}
+            {!bloqueado && ' Dá para alocar mesmo assim.'}
           </Aviso>
         )}
         {/* Botão invisível para o Enter enviar o formulário. */}
@@ -238,4 +272,15 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
       </form>
     </Modal>
   );
+}
+
+/**
+ * Junta as datas das semanas em português: "13/10", "13/10 e 20/10" ou "13/10, 20/10 e 27/10".
+ * @param segundas - segundas-feiras (AAAA-MM-DD).
+ * @returns o texto.
+ * @example listarSemanas(['2026-10-12', '2026-10-19']) // '12/10 e 19/10'
+ */
+function listarSemanas(segundas: string[]): string {
+  const r = segundas.map(rotuloSemana);
+  return r.length <= 1 ? (r[0] ?? '') : `${r.slice(0, -1).join(', ')} e ${r[r.length - 1]}`;
 }

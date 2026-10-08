@@ -6,8 +6,8 @@
    Onde é usado: app/(sistema)/painel/page.tsx, quando o perfil da sessão é profissional.
    Depende de: lib/auth.tsx (useAuth), lib/store.tsx (useDados), lib/escopo.ts
      (tarefasVisiveis), lib/metricas.ts (trilhasDaPessoaDetalhadas, agruparMinhasTarefas,
-     cargaDaSemana, entregasPorSemana), lib/trilhas.ts (TIPOS_ETAPA, hrefEtapa),
-     components/trilhas/PrazoTrilha.tsx, components/paineis/Bloco.tsx, components/ui/ (basicos, Graficos),
+     entregasPorSemana), lib/carga.ts (linhaDoTempo: semáforo de carga), lib/trilhas.ts (TIPOS_ETAPA, hrefEtapa),
+     components/trilhas/PrazoTrilha.tsx, components/paineis/Bloco.tsx, components/ui/ (basicos, Graficos, Semaforo),
      components/button.tsx (classesBotao) e components/shell/Pagina.tsx.
    Contexto: §6 (Dashboards: painel do profissional), §3 (funciona no celular) e §13 (quatro estados).
    ============================================================================ */
@@ -19,7 +19,9 @@ import { ArrowRight, BookOpenCheck, CalendarDays, CircleAlert, Clock, Gauge, Lis
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { tarefasVisiveis } from '@/lib/escopo';
-import { agruparMinhasTarefas, cargaDaSemana, entregasPorSemana, trilhasDaPessoaDetalhadas } from '@/lib/metricas';
+import { agruparMinhasTarefas, entregasPorSemana, trilhasDaPessoaDetalhadas } from '@/lib/metricas';
+import { linhaDoTempo, segundaDaSemana, ROTULO_NIVEL } from '@/lib/carga';
+import { IndicadorCarga, LinhaDeSemanas } from '@/components/ui/Semaforo';
 import { TIPOS_ETAPA, hrefEtapa } from '@/lib/trilhas';
 import type { Tarefa } from '@/lib/tipos';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
@@ -48,7 +50,13 @@ export default function PainelProfissional() {
     const minhas = pronto ? tarefasVisiveis(sessao!, d).filter((t) => t.responsavelId === pessoaId) : [];
     return agruparMinhasTarefas(minhas, d.projetos);
   }, [pronto, sessao, pessoaId, d]);
-  const carga = useMemo(() => (pronto ? cargaDaSemana(pessoaId, d) : { total: 0, limite: 40, itens: [] }), [pronto, pessoaId, d]);
+  // Semáforo de carga (F04): as próximas 8 semanas a partir da atual; a primeira é "esta semana".
+  const semanasCarga = useMemo(() => {
+    const p = pronto ? d.pessoa(pessoaId) : undefined;
+    return p ? linhaDoTempo(p, segundaDaSemana(hojeISO()), 8, d) : [];
+  }, [pronto, pessoaId, d]);
+  const estaSemana = semanasCarga[0];
+  const limite = d.pessoa(pessoaId)?.cargaMax ?? 40;
   const entregas = useMemo(() => (pronto ? entregasPorSemana(pessoaId, d, 8) : []), [pronto, pessoaId, d]);
 
   // Saudação: primeiro nome e a data por extenso ("quarta-feira, 7 de outubro de 2026").
@@ -147,23 +155,37 @@ export default function PainelProfissional() {
           )}
         </Bloco>
 
-        {/* 3) Minha carga da semana */}
+        {/* 3) Minha carga da semana: semáforo (F04, lib/carga.ts). O nível desta semana vem do dia mais
+          * cheio; a linha mostra as próximas 8 semanas; a lista quebra esta semana por projeto. */}
         <Bloco titulo="Minha carga da semana" estado={estado}>
-          {carga.itens.length === 0 ? (
-            <EstadoVazio icone={<Gauge className="h-6 w-6" aria-hidden />} titulo="Sem alocação nesta semana" descricao="Quando você for alocado num projeto, as horas por semana aparecem aqui." />
+          {semanasCarga.every((s) => s.porProjeto.length === 0) ? (
+            <EstadoVazio icone={<Gauge className="h-6 w-6" aria-hidden />} titulo="Sem alocação nas próximas semanas" descricao="Quando você for alocado num projeto, a sua carga semana a semana aparece aqui." />
           ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-tinta"><span className="font-space text-2xl font-semibold">{carga.total} h</span> <span className="text-tinta-suave">de {carga.limite} h por semana</span></p>
-              <Progresso valor={(carga.total / carga.limite) * 100} rotulo={`Carga da semana: ${carga.total} de ${carga.limite} horas`} />
-              {/* Semáforo de carga entra no bloco F */}
-              <ul className="divide-y divide-borda">
-                {carga.itens.map(({ alocacao, projeto }) => (
-                  <li key={alocacao.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-                    <span className="min-w-0"><span className="block truncate font-semibold text-tinta">{projeto.nome}</span><span className="text-[12px] text-tinta-suave">{alocacao.papel} · até {dataCurta(alocacao.fim)}</span></span>
-                    <span className="shrink-0 font-semibold text-tinta">{alocacao.carga} h/sem</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-4">
+              {estaSemana && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <IndicadorCarga nivel={estaSemana.nivel} pct={estaSemana.pct} rotulo={`Esta semana: ${Math.round(estaSemana.pct)}%, ${ROTULO_NIVEL[estaSemana.nivel].toLowerCase()}`} />
+                  <span className="text-sm text-tinta-suave">dia mais cheio: {Math.round((estaSemana.pct * limite) / 100)} h de {limite} h por semana</span>
+                </div>
+              )}
+              <div>
+                <p className="mb-1.5 text-[12px] font-semibold text-tinta-suave">Próximas 8 semanas</p>
+                <LinhaDeSemanas rotulo="Minha carga nas próximas 8 semanas" semanas={semanasCarga.map((s) => ({ segunda: s.segunda, pct: s.pct, nivel: s.nivel }))} />
+              </div>
+              {estaSemana && estaSemana.porProjeto.length > 0 && (
+                <ul className="divide-y divide-borda">
+                  {estaSemana.porProjeto.map((parte) => {
+                    const projeto = d.projeto(parte.projetoId);
+                    const aloc = d.alocacoes.find((a) => a.id === parte.alocacaoId);
+                    return (
+                      <li key={parte.alocacaoId} className="flex items-center justify-between gap-3 py-2 text-sm">
+                        <span className="min-w-0"><span className="block truncate font-semibold text-tinta">{projeto?.nome ?? 'Projeto removido'}</span><span className="text-[12px] text-tinta-suave">{parte.papel}{aloc ? ` · até ${dataCurta(aloc.fim)}` : ''}{parte.diasAtivos < 5 ? ` · ${parte.diasAtivos} dia${parte.diasAtivos > 1 ? 's' : ''} nesta semana` : ''}</span></span>
+                        <span className="shrink-0 font-semibold text-tinta">{parte.carga} h/sem</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           )}
         </Bloco>

@@ -4,6 +4,11 @@ Cada entrada lista o que foi criado, modificado e removido.
 
 ## Bloco F: semáforo de carga (branch `feat/semaforo-carga`)
 
+### F04: semáforo na alocação, na equipe, nos painéis e na ficha
+- Criado: teste `testes/navegador/f04-semaforo-alocacao.mjs` (19 conferências).
+- Modificado: `components/projetos/Equipe.tsx` (modal "Alocar pessoa" com a prévia antes × depois por semana, o aviso com as semanas acima do limite e o botão "Usar dd/mm como início"; "Alocar" continua liberado, salvo com `BLOQUEAR_SOBRECARGA`; select de pessoas com o pico no período; coluna Carga com o `IndicadorCarga` do pico no período da alocação), `components/paineis/PainelAdmin.tsx` (link "Ver carga da equipe"), `components/paineis/PainelProfissional.tsx` ("Minha carga da semana" com 8 semanas e a quebra por projeto), `app/(sistema)/pessoas/page.tsx` ("Disponibilidade" na ficha), `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+- Removido: o aviso único "passa de 40 h" do modal e o "!" da coluna Carga; o painel do profissional deixou de usar `cargaDaSemana` (a função continua em `lib/metricas.ts`, coberta pelos casos).
+
 ### F03: componentes do semáforo e tela de carga da equipe
 - Criado: `components/ui/Semaforo.tsx` (`IndicadorCarga`, `LinhaDeSemanas`, `LegendaSemaforo`, `descreverCarga`, `rotuloSemana`), a tela `app/(sistema)/carga/page.tsx` (substitui o "Em construção") e o teste `testes/navegador/f03-tela-carga.mjs` (26 conferências).
 - Modificado: `components/ui/Modal.tsx` (variante `lateral`), `app/(sistema)/design-system/page.tsx` (seção "Semáforo de carga"), `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.

@@ -2,7 +2,7 @@
    APP/(SISTEMA)/PESSOAS/PAGE.TSX
    O que é: tela de cadastro de pessoas dos três perfis (lista com filtros + ficha em modal).
    Onde é usado: rota /pessoas (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts), pelo card "Profissionais" do painel (app/(sistema)/painel/page.tsx) e pelo topo (components/shell/Topbar.tsx): a busca global e o aviso de sobrecarga abrem a ficha direto com /pessoas?abrir=<id>.
-   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), trilhasDaPessoa (lib/metricas.ts), copiarTexto e linkDeConvite (lib/convite.ts), lib/utils.ts, tipo Perfil (lib/tipos.ts), componentes de components/ui e components/shell e useSearchParams/useRouter do Next.
+   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), trilhasDaPessoa (lib/metricas.ts), linhaDoTempo e segundaDaSemana (lib/carga.ts) e LinhaDeSemanas (components/ui/Semaforo.tsx) para a Disponibilidade da ficha, copiarTexto e linkDeConvite (lib/convite.ts), lib/utils.ts, tipo Perfil (lib/tipos.ts), componentes de components/ui e components/shell e useSearchParams/useRouter do Next.
    Contexto: docs/contexto-cais.md §11 (Regras de cadastro), §3 (Perfis), §10 (Anatomia de toda tela); docs/notas-next16.md §2 (useSearchParams + Suspense).
    ============================================================================ */
 // "use client": a tela usa estado, eventos e useSearchParams, que só existem no navegador
@@ -27,6 +27,8 @@ import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
 import { EMAIL_REGEX, hojeISO, mascaraTelefone, normalizar, novoId, cx } from '@/lib/utils';
 import type { Perfil } from '@/lib/tipos';
+import { linhaDoTempo, segundaDaSemana } from '@/lib/carga';
+import { LinhaDeSemanas } from '@/components/ui/Semaforo';
 
 /** Nome de cada perfil na tela. Uma única tela cadastra os três (§11). */
 const PERFIS: Record<Perfil, string> = { profissional: 'Profissional', empresa: 'Empresa', admin: 'Administrador' };
@@ -414,6 +416,17 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
                     placeholder={v.habilidades.length ? '' : 'Digite e tecle Enter'} className="min-w-28 flex-1 bg-transparent px-1 text-sm text-tinta placeholder:text-tinta-fraca focus:outline-none" />
                 </div>
               </div>
+              {/* Disponibilidade (F04): o semáforo das próximas 8 semanas. Só na edição (pessoa nova não tem
+                * alocação). Usa a carga máxima DO FORMULÁRIO, então mudar o limite já mostra o efeito. */}
+              {pessoa && (
+                <div>
+                  <p className="mb-1.5 text-[13px] font-medium text-tinta">Disponibilidade nas próximas 8 semanas</p>
+                  <LinhaDeSemanas quem={pessoa.nome} rotulo={`Disponibilidade de ${pessoa.nome} nas próximas 8 semanas`}
+                    semanas={linhaDoTempo({ ...pessoa, cargaMax: Number(v.cargaMax) || 0 }, segundaDaSemana(hojeISO()), 8, d).map((s) => ({ segunda: s.segunda, pct: s.pct, nivel: s.nivel }))} />
+                  {/* NAVEGA: a matriz completa da equipe. */}
+                  <Link href="/carga" className="mt-1.5 inline-block rounded text-[13px] font-semibold text-primaria hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">Ver carga da equipe</Link>
+                </div>
+              )}
             </SecaoForm>
           )}
           {v.perfil !== 'admin' && (

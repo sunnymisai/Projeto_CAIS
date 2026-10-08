@@ -301,7 +301,9 @@ export default function PainelAdmin() {
           * Conta o QUANDO de cada alocação: duas que não se cruzam no tempo não se somam
           * (o caso do Diego). Passar do limite é AVISO, NÃO BLOQUEIO (§5). */}
         <Card className="xl:col-span-3">
-          <CardTitulo titulo="Alocação e carga" descricao="Semana atual: as horas do dia mais cheio de cada pessoa, somando só os projetos ativos naquele dia. A marca indica o limite." />
+          {/* NAVEGA: "Ver carga da equipe" leva à matriz completa, semana a semana (/carga). */}
+          <CardTitulo titulo="Alocação e carga" descricao="Semana atual: as horas do dia mais cheio de cada pessoa, somando só os projetos ativos naquele dia. A marca indica o limite."
+            acao={<Link href="/carga" className="inline-flex items-center gap-1 rounded text-[13px] font-semibold text-primaria hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">Ver carga da equipe<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></Link>} />
           {/* Lista ordenada da maior para a menor ocupação e cortada ao meio:
             * a 1ª metade vai na coluna da esquerda e o resto na da direita.
             * Math.ceil: com número ímpar, a coluna da esquerda fica com 1 a mais.

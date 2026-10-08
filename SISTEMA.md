@@ -58,6 +58,7 @@ A regra fica em `lib/carga.ts` (funções puras, testadas em `lib/carga.casos.ts
 - `cargaDaPessoa` (store) devolve as horas ativas **hoje**; para semanas e períodos, use `ocupacaoNaSemana`, `linhaDoTempo`, `picoNoPeriodo`, `simularAlocacao` e `proximaJanelaLivre`.
 - O card "Alocação e carga" do painel do admin mostra a semana atual com o nível em texto.
 - Componentes em `components/ui/Semaforo.tsx` (`IndicadorCarga`, `LinhaDeSemanas`, `LegendaSemaforo`), documentados em `/design-system`. O `Modal` ganhou a variante `lateral` (painel pela direita).
+- Onde o semáforo aparece: tela `/carga`; modal "Alocar pessoa" (prévia antes × depois por semana, aviso com as semanas acima do limite e o botão "Usar dd/mm como início", da `proximaJanelaLivre`, mantendo a duração em dias úteis); select de pessoas com o pico no período do projeto; coluna Carga da aba Equipe (pico da pessoa no período da alocação; a empresa não vê); card do painel do admin (com "Ver carga da equipe"); "Minha carga da semana" do profissional (8 semanas e a quebra por projeto); e "Disponibilidade" na ficha de pessoa.
 - Cenários do seed: **Bruno** acima do limite (30 + 15 h nos mesmos dias); **Diego**, o exemplo do time (§16): 10 h/sem no Sprint de acessibilidade até daqui a 7 dias e 30 h/sem no Portal a partir do 8º dia, nunca acima do limite; **Elisa** (limite 30 h) acima do limite só em 2 semanas; **Gabriela** livre.
 
 ## Permissões por perfil
@@ -129,7 +130,7 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Textos oficiais dos termos de uso e da política de privacidade (LGPD) do primeiro acesso.
 - Painéis dos perfis Empresa e Profissional (hoje "Em construção").
 - Tela `/carga` (hoje "Em construção").
-- Painel do profissional: o semáforo de carga (cor de atenção) entra no bloco F; falta o teste de navegador automático do D05 (conferido à mão).
+- Semáforo de carga: feriados contam como dia útil e projeto pausado conta (`TODO(PROGLOGIC)` em `lib/carga.ts`); a data sugerida no modal de alocação mantém a duração em dias úteis e pode terminar depois da entrega do projeto. Falta o teste de navegador automático do D05 (conferido à mão).
 - Quiz sem tentativas: a pessoa vê "Fale com a coordenação", mas ainda não existe tela para o admin liberar uma nova tentativa (`TODO(PROGLOGIC)`). Para destravar no protótipo, apague o registro do quiz em `progresso[pessoa].quizzes` ou use "Restaurar dados de demonstração".
 - Vídeos e áudios do seed apontam para endereços `example.com`, que não existem: o player mostra o estado de erro com "Abrir em nova aba".
 - Público das trilhas: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`, com `TODO(PROGLOGIC)`). Por isso o Marcos e a Patrícia contam como "não iniciada" nos números do admin.
