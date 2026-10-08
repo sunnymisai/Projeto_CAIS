@@ -9,8 +9,9 @@
      (app/not-found.tsx).
    Depende de: lib/store.tsx (useDados: empresas, pessoas, projetos, tarefas,
      trilhas), lib/carga.ts (ocupacaoNaSemana e os níveis do semáforo), lib/auth.tsx (useAuth: nome de quem entrou),
-     lib/metricas.ts (resumoTrilha, progressoProjeto), lib/utils.ts (datas e
-     cx), components/ui/basicos.tsx e components/ui/Graficos.tsx.
+     lib/metricas.ts (resumoTrilha, progressoProjeto e, no bloco "No período", evolucaoDaTurma,
+     trilhasConcluidasNoPeriodo e tarefasConcluidasPorEmpresa), lib/utils.ts (datas e cx),
+     components/ui/FiltroPeriodo.tsx (filtro e período da URL), components/ui/basicos.tsx e components/ui/Graficos.tsx.
    Contexto: §6 (Dashboards: painel do admin — trilhas, projetos, pessoas),
      §15 item 2 (painel por perfil), §16 (semáforo de carga) e §13 (quatro
      estados: esqueleto enquanto carrega).
@@ -27,8 +28,9 @@ import { useAuth } from '@/lib/auth';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import { Card, CardTitulo, Esqueleto, Etiqueta, Avatar, Progresso } from '@/components/ui/basicos';
 import { BarraEmpilhada, Legenda, Rosca, BarrasComLimite, Colunas, COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
-import { resumoTrilha, progressoProjeto } from '@/lib/metricas';
-import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
+import { resumoTrilha, progressoProjeto, evolucaoDaTurma, tarefasConcluidasPorEmpresa, trilhasConcluidasNoPeriodo } from '@/lib/metricas';
+import FiltroPeriodo, { usePeriodo } from '@/components/ui/FiltroPeriodo';
+import { cx, dataBR, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
 import { ocupacaoNaSemana, segundaDaSemana, ROTULO_NIVEL, TOM_NIVEL } from '@/lib/carga';
 
 /*
@@ -50,6 +52,8 @@ const COR = { concluida: COR_GRAFICO.concluida, andamento: COR_GRAFICO.andamento
  */
 export default function PainelAdmin() {
   const d = useDados();
+  // Período dos blocos "No período" (G01): vem da URL (?de=&ate=) para o link poder ser compartilhado.
+  const { periodo, definir } = usePeriodo();
   const { sessao } = useAuth();
   // Data de hoje no formato "AAAA-MM-DD"; comparar textos nesse formato
   // funciona como comparar datas ("2026-10-01" < "2026-10-07").
@@ -115,6 +119,14 @@ export default function PainelAdmin() {
     .sort((a, b) => b.o.pct - a.o.pct)
     .map(({ p, o }) => ({ rotulo: p.nome, sub: p.area, valor: Math.round((o.pct * p.cargaMax) / 100), limite: p.cargaMax, nivel: { rotulo: ROTULO_NIVEL[o.nivel], tom: TOM_NIVEL[o.nivel] } }));
 
+  // Blocos "No período" (G01): conclusões de trilha por semana (evolução da turma) e tarefas
+  // concluídas por empresa. Tudo recalculado a partir do período escolhido no filtro.
+  const evolucao = evolucaoDaTurma(d, periodo);
+  const conclusoes = trilhasConcluidasNoPeriodo(d, periodo).length;
+  const porEmpresa = tarefasConcluidasPorEmpresa(d, periodo);
+  const tarefasNoPeriodo = porEmpresa.reduce((s, e) => s + e.total, 0);
+  const faixa = `de ${dataBR(periodo.de)} a ${dataBR(periodo.ate)}`;
+
   // Os 4 cartões de número (KPIs) do topo. Cada um tem: rótulo, número
   // grande (valor), linha de apoio (sub), ícone, para onde o clique leva
   // (href) e as classes de cor do ícone.
@@ -176,6 +188,50 @@ export default function PainelAdmin() {
           </Link>
         ))}
       </div>
+
+      {/* NO PERÍODO (G01, §6 e §8 Onda 4): o filtro fica acima dos blocos que ele muda (§10).
+        * Cada gráfico tem um resumo em texto que muda junto com o período. */}
+      <section aria-labelledby="no-periodo" className="mb-6">
+        <h2 id="no-periodo" className="mb-3 font-space text-[17px] font-semibold text-tinta">No período</h2>
+        <div className="mb-4"><FiltroPeriodo periodo={periodo} onChange={definir} /></div>
+        <div className="grid gap-6 xl:grid-cols-3">
+          <Card className="xl:col-span-2">
+            <CardTitulo titulo="Turma: evolução ao longo do tempo" descricao="Trilhas concluídas por semana: cada pessoa que terminou uma trilha conta uma vez." />
+            <div className="p-5">
+              {conclusoes === 0 ? (
+                // Vazio do período: explica e sugere o que fazer.
+                <p className="rounded-xl border border-dashed border-borda px-4 py-6 text-center text-sm text-tinta-suave">Nenhuma trilha concluída {faixa}. Escolha um período maior para ver a evolução.</p>
+              ) : (
+                <>
+                  <Colunas altura={110} itens={evolucao.map((s) => ({ rotulo: s.rotulo, valor: s.valor, cor: COR_GRAFICO.concluida }))} />
+                  <p className="mt-2 text-[13px] text-tinta-suave">{conclusoes} trilha{conclusoes > 1 ? 's' : ''} concluída{conclusoes > 1 ? 's' : ''} {faixa}.</p>
+                </>
+              )}
+            </div>
+          </Card>
+          <Card>
+            <CardTitulo titulo="Tarefas concluídas por empresa" descricao="Tarefas que chegaram em Pronto no período." />
+            <div className="p-5">
+              {porEmpresa.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-borda px-4 py-6 text-center text-sm text-tinta-suave">Nenhuma tarefa concluída {faixa}.</p>
+              ) : (
+                <>
+                  <ul className="space-y-3">
+                    {porEmpresa.map((e) => (
+                      <li key={e.empresaId}>
+                        <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]"><span className="truncate font-medium text-tinta">{e.nome}</span><span className="shrink-0 font-semibold tabular-nums text-tinta-suave">{e.total}</span></div>
+                        {/* A barra é relativa à empresa com mais tarefas concluídas (a maior fica cheia). */}
+                        <Progresso valor={(e.total / porEmpresa[0].total) * 100} fino rotulo={`${e.nome}: ${e.total} tarefa${e.total > 1 ? 's' : ''} concluída${e.total > 1 ? 's' : ''}`} />
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-[13px] text-tinta-suave">{tarefasNoPeriodo} tarefa{tarefasNoPeriodo > 1 ? 's' : ''} concluída{tarefasNoPeriodo > 1 ? 's' : ''} {faixa}.</p>
+                </>
+              )}
+            </div>
+          </Card>
+        </div>
+      </section>
 
       {/* Grade dos cartões de detalhe: 1 coluna até xl; em xl, 3 colunas.
         * xl:col-span-2 faz um cartão ocupar 2 das 3 colunas. */}

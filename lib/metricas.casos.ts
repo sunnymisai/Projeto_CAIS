@@ -1,7 +1,9 @@
 /* ============================================================================
    CASOS DE TESTE DAS MÉTRICAS (MINHAS TAREFAS E PAINÉIS DO PROFISSIONAL E DA EMPRESA)
    O que é: script simples (sem biblioteca de testes) que confere fimDaSemana,
-     inicioDaSemana, agruparMinhasTarefas, cargaDaSemana, entregasPorSemana, entregasDoProjeto e proximasEntregas com uma
+     inicioDaSemana, agruparMinhasTarefas, cargaDaSemana, entregasPorSemana (com e sem período), entregasDoProjeto, proximasEntregas e as
+     funções de período do G01 (ultimosDias, esteMes, atalhoDoPeriodo, semanasDoPeriodo,
+     trilhasConcluidasNoPeriodo, evolucaoDaTurma, tarefasConcluidasPorEmpresa) com uma
      data fixa. Cada caso tem entrada, esperado e o porquê.
    Onde é usado: rodado à mão no terminal; nenhuma tela importa este arquivo.
    Depende de: lib/metricas.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
@@ -9,8 +11,8 @@
    Como rodar: node --experimental-strip-types lib/metricas.casos.ts
    ============================================================================ */
 
-import { agruparMinhasTarefas, cargaDaSemana, entregasDoProjeto, entregasPorSemana, fimDaSemana, inicioDaSemana, proximasEntregas } from './metricas.ts';
-import type { Dados, Projeto, Tarefa } from './tipos.ts';
+import { agruparMinhasTarefas, atalhoDoPeriodo, cargaDaSemana, entregasDoProjeto, entregasPorSemana, esteMes, evolucaoDaTurma, fimDaSemana, inicioDaSemana, proximasEntregas, semanasDoPeriodo, tarefasConcluidasPorEmpresa, trilhasConcluidasNoPeriodo, ultimosDias } from './metricas.ts';
+import type { Dados, Projeto, Tarefa, Trilha } from './tipos.ts';
 
 // Hoje fixo: quarta-feira, 7 de outubro de 2026 (domingo da semana = dia 11).
 const HOJE = '2026-10-07';
@@ -65,6 +67,19 @@ const dadosEntregas = {
 };
 // Próximas entregas (janela de 14 dias a partir de 07/10): entra hoje e 21/10; ficam fora a atrasada,
 // a de 22/10 (15 dias) e a que já está pronta.
+// Período (G01): 30 dias até 07/10 = 08/09 a 07/10.
+const mes = ultimosDias(30, HOJE);
+// Uma trilha de 2 etapas: Ana terminou dentro do período, Bia antes dele, Caio fez 1 de 2 (não concluiu).
+const trilhaPeriodo = { id: 'tp', etapas: [{}, {}], progresso: { ana: { concluidas: 2, concluidaEm: '2026-10-01' }, bia: { concluidas: 2, concluidaEm: '2026-08-01' }, caio: { concluidas: 1 } } } as unknown as Trilha;
+// Tarefas concluídas por empresa: 2 da emp1 no período e 1 fora dele; 1 da emp2 no período.
+const dadosEmpresas = {
+  empresas: [{ id: 'emp1', nomeFantasia: 'Vértice' }, { id: 'emp2', nomeFantasia: 'Aurora' }],
+  projetos: [{ ...quadro4, empresaId: 'emp1' }, { ...quadro2, empresaId: 'emp2' }],
+  tarefas: [
+    tarefa('c1', HOJE, { projetoId: 'q4', colunaId: 'p', concluidaEm: '2026-10-02' }), tarefa('c2', HOJE, { projetoId: 'q4', colunaId: 'p', concluidaEm: '2026-09-20' }),
+    tarefa('c3', HOJE, { projetoId: 'q4', colunaId: 'p', concluidaEm: '2026-08-01' }), tarefa('c4', HOJE, { projetoId: 'q2', colunaId: 'p2', concluidaEm: '2026-10-05' }),
+  ],
+} as unknown as Dados;
 const proximas = proximasEntregas('q4', {
   projetos: [quadro4],
   tarefas: [
@@ -103,6 +118,15 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'quadro de 2 colunas não tem revisão: a penúltima é A fazer e conta como em produção', obtido: resumoEntregas('q2'), esperado: '2|1|0|1|false' },
   { porque: 'projeto sem tarefas (Aurora planejado): tudo zero, sem erro', obtido: resumoEntregas('nao-existe'), esperado: '0|0|0|0|false' },
   { porque: 'próximas entregas: só não prontas com prazo de hoje a +14 dias, da mais próxima à mais distante', obtido: ids(proximas), esperado: 'pe-hoje,pe-14' },
+  { porque: 'últimos 7 dias contam hoje (02/10 a 08/10)', obtido: `${ultimosDias(7, '2026-10-08').de}|${ultimosDias(7, '2026-10-08').ate}`, esperado: '2026-10-02|2026-10-08' },
+  { porque: 'este mês vai do dia 1 até hoje', obtido: esteMes('2026-10-08').de, esperado: '2026-10-01' },
+  { porque: 'o filtro reconhece o atalho de um período da URL (30 dias) e o personalizado', obtido: `${atalhoDoPeriodo(mes, HOJE)}|${atalhoDoPeriodo({ de: '2026-01-01', ate: '2026-02-01' }, HOJE)}`, esperado: '30|personalizado' },
+  { porque: 'semanas do período: as segundas das semanas que ele toca', obtido: semanasDoPeriodo({ de: '2026-10-01', ate: '2026-10-07' }).join(','), esperado: '2026-09-28,2026-10-05' },
+  { porque: 'trilhas concluídas no período: só quem terminou dentro dele (não conta antes nem quem não terminou)', obtido: trilhasConcluidasNoPeriodo({ trilhas: [trilhaPeriodo] }, mes).map((c) => c.pessoaId).join(','), esperado: 'ana' },
+  { porque: 'evolução da turma: a conclusão cai na semana de 28/09', obtido: evolucaoDaTurma({ trilhas: [trilhaPeriodo] }, mes).filter((s) => s.valor > 0).map((s) => s.inicio).join(','), esperado: '2026-09-28' },
+  { porque: 'tarefas concluídas por empresa no período (a de agosto fica fora)', obtido: tarefasConcluidasPorEmpresa(dadosEmpresas, mes).map((e) => `${e.nome}:${e.total}`).join(','), esperado: 'Vértice:2,Aurora:1' },
+  { porque: 'sem período, entregasPorSemana continua com 8 semanas (o comportamento de antes)', obtido: entregasPorSemana('ana', dadosPainel, 8, HOJE).length, esperado: 8 },
+  { porque: 'com período de 7 dias, o histórico tem as 2 semanas que ele toca', obtido: entregasPorSemana('ana', dadosPainel, 8, HOJE, ultimosDias(7, HOJE)).length, esperado: 2 },
 ];
 
 // Roda os casos e imprime OK/FALHOU com o porquê (mesmo formato de permissoes.casos.ts).

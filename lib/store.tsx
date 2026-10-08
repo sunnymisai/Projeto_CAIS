@@ -31,7 +31,10 @@ import { ocupacaoNoDia } from './carga';
 // ⚠️ ATENÇÃO: v2 → v3 no F02 (bloco F). O seed ganhou os cenários do semáforo de carga (projeto
 // Sprint de acessibilidade, alocações novas do Diego e da Elisa e a Gabriela, livre). Os dados
 // antigos do navegador (chave v2) são DESCARTADOS: todo mundo volta para a demonstração nova.
-const CHAVE = 'cais-dados-v3';
+// ⚠️ ATENÇÃO: v3 → v4 no G01 (bloco G). O seed ganhou as datas de conclusão das trilhas
+// (`progresso.concluidaEm`) para os filtros por período e a evolução da turma no painel do admin,
+// e a Gabriela ganhou a Boas-vindas concluída. Os dados antigos do navegador (chave v3) são DESCARTADOS.
+const CHAVE = 'cais-dados-v4';
 
 /** As seis coleções que todo `Dados` precisa ter (usadas para conferir o que veio do navegador). */
 const COLECOES = ['empresas', 'pessoas', 'trilhas', 'projetos', 'alocacoes', 'tarefas'] as const;

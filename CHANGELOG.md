@@ -2,6 +2,12 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco G: lacunas do deck
+
+### G01: filtros por período nos painéis (branch `feat/filtros-periodo`)
+- Criado: `components/ui/FiltroPeriodo.tsx` (filtro e hook `usePeriodo`, que guarda `?de=&ate=` na URL; documentado em `/design-system`); em `lib/metricas.ts`, `Periodo`, `dentroDoPeriodo`, `semanasDoPeriodo`, `trilhasConcluidasNoPeriodo`, `evolucaoDaTurma`, `tarefasConcluidasPorEmpresa`, `aprovadasNoPeriodo`, `ultimosDias`, `esteMes` e `atalhoDoPeriodo` (9 casos novos em `lib/metricas.casos.ts`); `progresso.concluidaEm` em `lib/tipos.ts`; teste `testes/navegador/g01-filtros-periodo.mjs` (15 conferências).
+- Modificado: `lib/metricas.ts` (`entregasPorSemana` aceita o período, opcional), `lib/quiz.ts` (`concluirEtapa` grava `concluidaEm` ao terminar a última etapa; 2 casos novos), `lib/seed.ts` (datas de conclusão e a Boas-vindas concluída da Gabriela), `lib/store.tsx` (chave `cais-dados-v3` → `cais-dados-v4`), `app/(sistema)/painel/page.tsx` (`<Suspense>`, exigido pelo `useSearchParams`), os três painéis (filtro acima do conteúdo; admin com o bloco "No período"; empresa com as aprovadas no período; profissional com o histórico no período), `app/(sistema)/design-system/page.tsx`, os testes que limpavam a chave antiga, `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+
 ## Bloco F: semáforo de carga (branch `feat/semaforo-carga`)
 
 ### F04: semáforo na alocação, na equipe, nos painéis e na ficha

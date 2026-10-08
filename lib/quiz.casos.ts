@@ -1,7 +1,7 @@
 /* ============================================================================
    CASOS DE TESTE DO QUIZ
    O que é: script simples (sem biblioteca de testes) que confere corrigirQuiz,
-     resultadoDoQuiz, embaralhar, concluirEtapa e registrarTentativa. Cada caso tem
+     resultadoDoQuiz, embaralhar, concluirEtapa (com a data de conclusão) e registrarTentativa. Cada caso tem
      entrada, esperado e o porquê.
    Onde é usado: rodado à mão no terminal; nenhuma tela importa este arquivo.
    Depende de: lib/quiz.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
@@ -52,6 +52,8 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'sementes diferentes mudam a ordem em pelo menos um de 5 casos', obtido: [1, 2, 3, 4, 5].some((s) => JSON.stringify(embaralhar([0, 1, 2, 3], s)) !== JSON.stringify(embaralhar([0, 1, 2, 3], s + 100))), esperado: true },
   // concluirEtapa (Ana está com 2 etapas feitas: a atual é a de índice 2)
   { porque: 'concluir a etapa atual avança 2 → 3', obtido: concluirEtapa(trilha, 'ana', 2).progresso.ana.concluidas, esperado: 3 },
+  { porque: 'concluir a ÚLTIMA etapa grava a data de conclusão da trilha (G01)', obtido: concluirEtapa({ ...trilha, etapas: [{}, {}, {}] }, 'ana', 2, '2026-10-08').progresso.ana.concluidaEm, esperado: '2026-10-08' },
+  { porque: 'concluir uma etapa do meio não grava data de conclusão', obtido: concluirEtapa({ ...trilha, etapas: [{}, {}, {}, {}] }, 'ana', 2, '2026-10-08').progresso.ana.concluidaEm, esperado: undefined },
   { porque: 'rever uma etapa já feita não muda nada', obtido: concluirEtapa(trilha, 'ana', 0) === trilha, esperado: true },
   { porque: 'pular para uma etapa adiante não conclui', obtido: concluirEtapa(trilha, 'ana', 4).progresso.ana.concluidas, esperado: 2 },
   { porque: 'pessoa sem progresso começa do zero e conclui a 1ª', obtido: concluirEtapa(trilha, 'novo', 0).progresso.novo.concluidas, esperado: 1 },

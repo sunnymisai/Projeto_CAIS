@@ -2,7 +2,7 @@
    APP/(SISTEMA)/DESIGN-SYSTEM/PAGE.TSX
    O que é: a documentação viva do design system do CAIS: cada componente aparece funcionando, com todos os seus estados.
    Onde é usado: rota /design-system (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts). Regra do time (CLAUDE.md): todo componente novo de components/ui deve ganhar uma seção aqui.
-   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal, RegrasSenha, Semaforo), components/button, components/input, components/checkbox, components/CaisLogo, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
+   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal, RegrasSenha, Semaforo, FiltroPeriodo), lib/metricas (ultimosDias), components/button, components/input, components/checkbox, components/CaisLogo, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
    Contexto: docs/contexto-cais.md §9 (Design system e marca: "documentado ao vivo"), §10 (Anatomia de toda tela) e §13 (Qualidade: os quatro estados).
    ============================================================================ */
 // "use client": as demonstrações usam estado (abas, modal, interruptor) e toast,
@@ -23,6 +23,8 @@ import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
 import RegrasSenha from '@/components/ui/RegrasSenha';
 import { IndicadorCarga, LinhaDeSemanas, LegendaSemaforo } from '@/components/ui/Semaforo';
+import FiltroPeriodo from '@/components/ui/FiltroPeriodo';
+import { ultimosDias } from '@/lib/metricas';
 import { useToast } from '@/lib/toast';
 
 /* Documentação viva: cada componente aparece com seus estados, como pede
@@ -49,7 +51,7 @@ const CORES = [
 // ⚠️ ATENÇÃO: o id precisa ser igual ao id de uma <Secao>; se não for, o link âncora não rola para lugar nenhum.
 const SECOES = [
   ['tokens', 'Tokens'], ['tipografia', 'Tipografia'], ['botoes', 'Botões'], ['campos', 'Campos'], ['selecao', 'Seleção'],
-  ['etiquetas', 'Etiquetas e avatar'], ['feedback', 'Avisos e estados'], ['navegacao', 'Abas e paginação'], ['dados', 'Tabela e gráficos'], ['semaforo', 'Semáforo de carga'], ['modal', 'Modal'],
+  ['etiquetas', 'Etiquetas e avatar'], ['feedback', 'Avisos e estados'], ['navegacao', 'Abas e paginação'], ['dados', 'Tabela e gráficos'], ['semaforo', 'Semáforo de carga'], ['periodo', 'Filtro de período'], ['modal', 'Modal'],
 ] as const;
 
 /**
@@ -94,6 +96,8 @@ export default function DesignSystem() {
   const [aba, setAba] = useState<'a' | 'b' | 'c'>('a');
   const [seg, setSeg] = useState<'p' | 'e' | 'a'>('p');
   const [sw, setSw] = useState(true);
+  // Período do exemplo do FiltroPeriodo (aqui fica só no estado; nos painéis vai para a URL com usePeriodo).
+  const [periodoDemo, setPeriodoDemo] = useState(() => ultimosDias(30));
   const [pag, setPag] = useState(2);
   const [modal, setModal] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -324,6 +328,11 @@ export default function DesignSystem() {
               <LegendaSemaforo />
             </div>
           </div>
+        </Secao>
+
+        {/* Filtro de período (G01): atalhos e personalizado. Nos painéis, usePeriodo guarda o período na URL (?de=&ate=). */}
+        <Secao id="periodo" titulo="Filtro de período" descricao="Fica acima dos blocos que ele muda. Nos painéis, o período vai para a URL (?de=&ate=) e o link reabre no mesmo período.">
+          <FiltroPeriodo periodo={periodoDemo} onChange={setPeriodoDemo} />
         </Secao>
 
         {/* Modal: prende o foco, fecha com Esc ou clique fora e devolve o foco ao botão que abriu. */}

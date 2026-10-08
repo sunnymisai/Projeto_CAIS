@@ -400,15 +400,17 @@ export interface EntregasDaSemana {
  * "Concluída" = está na última coluna do projeto e tem `concluidaEm` (sem a data, não dá para saber a semana).
  * @param pessoaId - id da pessoa (responsável pela tarefa).
  * @param d - todos os dados.
- * @param semanas - quantas semanas (padrão 8).
+ * @param semanas - quantas semanas (padrão 8). Ignorado quando há `periodo`.
  * @param hoje - data de referência (padrão: hoje).
+ * @param periodo - opcional (G01): as semanas que tocam o período, e só as entregas dentro dele.
+ *   Sem período, o comportamento é o de antes (as últimas `semanas` semanas).
  * @returns uma entrada por semana, da mais antiga para a atual.
  * @example entregasPorSemana('pes_ana', d).at(-1) // { inicio: '2026-10-05', rotulo: '5/10', valor: 1 }
  */
-export function entregasPorSemana(pessoaId: string, d: Dados, semanas = 8, hoje: string = hojeISO()): EntregasDaSemana[] {
+export function entregasPorSemana(pessoaId: string, d: Dados, semanas = 8, hoje: string = hojeISO(), periodo?: Periodo): EntregasDaSemana[] {
   const segAtual = inicioDaSemana(hoje);
-  // Segundas das N semanas, da mais antiga para a atual.
-  const lista = Array.from({ length: semanas }, (_, i) => somaDias(segAtual, -7 * (semanas - 1 - i)));
+  // Segundas das semanas: as do período (G01) ou as N últimas, da mais antiga para a atual.
+  const lista = periodo ? semanasDoPeriodo(periodo) : Array.from({ length: semanas }, (_, i) => somaDias(segAtual, -7 * (semanas - 1 - i)));
   const concluidas = d.tarefas.filter((t) => {
     if (t.responsavelId !== pessoaId || !t.concluidaEm) return false;
     const projeto = d.projetos.find((p) => p.id === t.projetoId);
@@ -421,8 +423,167 @@ export function entregasPorSemana(pessoaId: string, d: Dados, semanas = 8, hoje:
     return {
       inicio,
       rotulo: `${Number(dia)}/${Number(m)}`,
-      // Comparar texto funciona porque o formato é AAAA-MM-DD.
-      valor: concluidas.filter((t) => t.concluidaEm! >= inicio && t.concluidaEm! <= fim).length,
+      // Comparar texto funciona porque o formato é AAAA-MM-DD. Com período, a semana é cortada nas pontas dele.
+      valor: concluidas.filter((t) => t.concluidaEm! >= inicio && t.concluidaEm! <= fim && (!periodo || dentroDoPeriodo(t.concluidaEm!, periodo))).length,
     };
   });
+}
+
+/* ============================================================================
+   PERÍODO (G01: filtros por período nos painéis)
+   As funções abaixo recebem um período { de, ate } (datas AAAA-MM-DD, as duas
+   pontas valem). Nas que já existiam, o período é OPCIONAL: sem ele, o
+   comportamento continua o de antes.
+   ============================================================================ */
+
+/** Um intervalo de datas, com as duas pontas incluídas. */
+export interface Periodo {
+  /** Primeiro dia (AAAA-MM-DD). */
+  de: string;
+  /** Último dia (AAAA-MM-DD). */
+  ate: string;
+}
+
+/**
+ * Diz se uma data cai dentro do período (pontas incluídas).
+ * @param data - AAAA-MM-DD.
+ * @param p - o período.
+ * @returns true se de <= data <= ate.
+ * @example dentroDoPeriodo('2026-10-01', { de: '2026-09-08', ate: '2026-10-08' }) // true
+ */
+export function dentroDoPeriodo(data: string, p: Periodo): boolean {
+  return data >= p.de && data <= p.ate;
+}
+
+/** Máximo de semanas num gráfico semanal (um período personalizado muito longo é cortado nas últimas). */
+const MAX_SEMANAS = 52;
+
+/**
+ * Segundas-feiras das semanas que tocam o período (no máximo 52, as mais recentes).
+ * @param p - o período.
+ * @returns lista de segundas, da mais antiga para a mais recente.
+ * @example semanasDoPeriodo({ de: '2026-10-01', ate: '2026-10-08' }) // ['2026-09-28', '2026-10-05']
+ */
+export function semanasDoPeriodo(p: Periodo): string[] {
+  const lista: string[] = [];
+  for (let s = inicioDaSemana(p.de); s <= p.ate; s = somaDias(s, 7)) lista.push(s);
+  return lista.slice(-MAX_SEMANAS);
+}
+
+/** Uma conclusão de trilha: quem concluiu qual trilha e quando. */
+export interface ConclusaoDeTrilha { trilhaId: string; pessoaId: string; data: string }
+
+/**
+ * Trilhas concluídas no período (cada pessoa que terminou uma trilha conta uma vez).
+ * Só entram conclusões com data (`progresso.concluidaEm`); dados antigos sem a data ficam de fora.
+ * @param d - todos os dados.
+ * @param periodo - opcional; sem ele, todas as conclusões com data.
+ * @returns as conclusões, da mais recente para a mais antiga.
+ * @example trilhasConcluidasNoPeriodo(d, { de: '2026-09-08', ate: '2026-10-08' }).length // 3
+ */
+export function trilhasConcluidasNoPeriodo(d: Pick<Dados, 'trilhas'>, periodo?: Periodo): ConclusaoDeTrilha[] {
+  const lista: ConclusaoDeTrilha[] = [];
+  for (const t of d.trilhas) {
+    for (const [pessoaId, p] of Object.entries(t.progresso)) {
+      // Concluiu = fez todas as etapas e a data foi registrada.
+      if (!p.concluidaEm || p.concluidas < t.etapas.length) continue;
+      if (periodo && !dentroDoPeriodo(p.concluidaEm, periodo)) continue;
+      lista.push({ trilhaId: t.id, pessoaId, data: p.concluidaEm });
+    }
+  }
+  return lista.sort((a, b) => b.data.localeCompare(a.data));
+}
+
+/**
+ * Turma: evolução ao longo do tempo (§6) = trilhas concluídas por semana do período.
+ * @param d - todos os dados.
+ * @param periodo - o período (as semanas que tocam ele).
+ * @returns uma entrada por semana, no mesmo formato do histórico de entregas.
+ * @example evolucaoDaTurma(d, ultimosDias(30)).map((s) => s.valor) // [0, 1, 0, 2, 0]
+ */
+export function evolucaoDaTurma(d: Pick<Dados, 'trilhas'>, periodo: Periodo): EntregasDaSemana[] {
+  const conclusoes = trilhasConcluidasNoPeriodo(d, periodo);
+  return semanasDoPeriodo(periodo).map((inicio) => {
+    const fim = somaDias(inicio, 6);
+    const [, m, dia] = inicio.split('-');
+    return { inicio, rotulo: `${Number(dia)}/${Number(m)}`, valor: conclusoes.filter((c) => c.data >= inicio && c.data <= fim).length };
+  });
+}
+
+/**
+ * Tarefas concluídas (na última coluna, com `concluidaEm`) no período, somadas por empresa.
+ * @param d - todos os dados.
+ * @param periodo - opcional; sem ele, todas as concluídas com data.
+ * @returns `{ empresaId, nome, total }` por empresa com pelo menos uma, do maior para o menor.
+ * @example tarefasConcluidasPorEmpresa(d, ultimosDias(30))[0] // { empresaId: 'emp_vertice', nome: 'Vértice Logística', total: 5 }
+ */
+export function tarefasConcluidasPorEmpresa(d: Pick<Dados, 'tarefas' | 'projetos' | 'empresas'>, periodo?: Periodo) {
+  const porEmpresa = new Map<string, number>();
+  for (const t of d.tarefas) {
+    const proj = d.projetos.find((p) => p.id === t.projetoId);
+    // "Concluída" = está na última coluna e tem a data (a mesma regra do histórico de entregas).
+    if (!proj || !t.concluidaEm || t.colunaId !== proj.colunas[proj.colunas.length - 1]?.id) continue;
+    if (periodo && !dentroDoPeriodo(t.concluidaEm, periodo)) continue;
+    porEmpresa.set(proj.empresaId, (porEmpresa.get(proj.empresaId) ?? 0) + 1);
+  }
+  return [...porEmpresa.entries()]
+    .map(([empresaId, total]) => ({ empresaId, nome: d.empresas.find((e) => e.id === empresaId)?.nomeFantasia ?? 'Empresa removida', total }))
+    .sort((a, b) => b.total - a.total);
+}
+
+/**
+ * Entregas aprovadas de um projeto no período (painel da empresa, G01).
+ * "Aprovada" = tarefa na última coluna com `concluidaEm` dentro do período (mesma regra de entregasDoProjeto).
+ * @param projetoId - id do projeto.
+ * @param d - todos os dados (só `projetos` e `tarefas` são lidos).
+ * @param periodo - o período.
+ * @returns quantas.
+ * @example aprovadasNoPeriodo('prj_portal', d, ultimosDias(30)) // 4
+ */
+export function aprovadasNoPeriodo(projetoId: string, d: Pick<Dados, 'projetos' | 'tarefas'>, periodo: Periodo): number {
+  const proj = d.projetos.find((p) => p.id === projetoId);
+  const ultima = proj?.colunas[proj.colunas.length - 1]?.id;
+  return d.tarefas.filter((t) => t.projetoId === projetoId && t.colunaId === ultima && !!t.concluidaEm && dentroDoPeriodo(t.concluidaEm, periodo)).length;
+}
+
+/** Atalhos do filtro de período (FiltroPeriodo). */
+export type AtalhoPeriodo = '7' | '30' | '90' | 'mes' | 'personalizado';
+
+/**
+ * Os últimos N dias, contando hoje.
+ * @param n - quantos dias.
+ * @param hoje - data de referência (padrão: hoje).
+ * @returns o período.
+ * @example ultimosDias(7, '2026-10-08') // { de: '2026-10-02', ate: '2026-10-08' }
+ */
+export function ultimosDias(n: number, hoje: string = hojeISO()): Periodo {
+  return { de: somaDias(hoje, -(n - 1)), ate: hoje };
+}
+
+/**
+ * Do dia 1 do mês atual até hoje.
+ * @param hoje - data de referência (padrão: hoje).
+ * @returns o período.
+ * @example esteMes('2026-10-08') // { de: '2026-10-01', ate: '2026-10-08' }
+ */
+export function esteMes(hoje: string = hojeISO()): Periodo {
+  return { de: `${hoje.slice(0, 8)}01`, ate: hoje };
+}
+
+/**
+ * Qual atalho gera exatamente este período (para o filtro marcar a opção certa ao abrir pela URL).
+ * @param p - o período.
+ * @param hoje - data de referência (padrão: hoje).
+ * @returns o atalho, ou 'personalizado' se nenhum bate.
+ * @example atalhoDoPeriodo(ultimosDias(30)) // '30'
+ */
+export function atalhoDoPeriodo(p: Periodo, hoje: string = hojeISO()): AtalhoPeriodo {
+  for (const n of [7, 30, 90] as const) {
+    const a = ultimosDias(n, hoje);
+    if (a.de === p.de && a.ate === p.ate) return String(n) as AtalhoPeriodo;
+  }
+  const m = esteMes(hoje);
+  // "Este mês" no dia 7 é igual a "últimos 7 dias"; os dias fixos acima têm a preferência.
+  if (m.de === p.de && m.ate === p.ate) return 'mes';
+  return 'personalizado';
 }

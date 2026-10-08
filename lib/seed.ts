@@ -92,7 +92,8 @@ export function criarSeed(): Dados {
           { id: 'et_5', titulo: 'Ferramentas do dia a dia', tipo: 'apresentacao', obrigatoria: false, notaMinima: 0,
             conteudo: { texto: 'Slides com as ferramentas que o time usa: CAIS, repositório e canal de mensagens.', url: 'https://example.com/slides/ferramentas' } },
         ],
-        progresso: { pes_ana: { concluidas: 5, nota: 92, tentativas: 1 }, pes_bruno: { concluidas: 5, nota: 78, tentativas: 2 }, pes_carla: { concluidas: 5, nota: 85, tentativas: 1 }, pes_diego: { concluidas: 5, nota: 74, tentativas: 2 }, pes_elisa: { concluidas: 3 }, pes_felipe: { concluidas: 0 } },
+        // concluidaEm (G01): quando cada pessoa terminou a trilha; alimenta "trilhas concluídas no período" e a evolução da turma no painel do admin.
+        progresso: { pes_ana: { concluidas: 5, nota: 92, tentativas: 1, concluidaEm: d(-40) }, pes_bruno: { concluidas: 5, nota: 78, tentativas: 2, concluidaEm: d(-33) }, pes_carla: { concluidas: 5, nota: 85, tentativas: 1, concluidaEm: d(-26) }, pes_diego: { concluidas: 5, nota: 74, tentativas: 2, concluidaEm: d(-12) }, pes_elisa: { concluidas: 3 }, pes_felipe: { concluidas: 0 }, pes_gabriela: { concluidas: 5, nota: 90, tentativas: 1, concluidaEm: d(-5) } },
       },
       {
         id: 'tri_vertice', titulo: 'Processos da Vértice', descricao: 'Regras internas, ferramentas e o fluxo de entregas do cliente.',
@@ -111,7 +112,7 @@ export function criarSeed(): Dados {
               { id: 'q_v3', enunciado: 'Onde se testa uma mudança antes da entrega?', alternativas: ['Em produção, com cuidado', 'No ambiente de homologação', 'Só no computador de quem fez'], correta: 1 },
             ] },
         ],
-        progresso: { pes_ana: { concluidas: 3, nota: 88, tentativas: 1 }, pes_bruno: { concluidas: 3, nota: 71, tentativas: 2 }, pes_carla: { concluidas: 2 }, pes_diego: { concluidas: 3, nota: 80, tentativas: 1 } },
+        progresso: { pes_ana: { concluidas: 3, nota: 88, tentativas: 1, concluidaEm: d(-6) }, pes_bruno: { concluidas: 3, nota: 71, tentativas: 2, concluidaEm: d(-4) }, pes_carla: { concluidas: 2 }, pes_diego: { concluidas: 3, nota: 80, tentativas: 1, concluidaEm: d(-2) } },
       },
       {
         id: 'tri_nivel_front', titulo: 'Nivelamento de front-end', descricao: 'React, TypeScript e o design system do CAIS.',

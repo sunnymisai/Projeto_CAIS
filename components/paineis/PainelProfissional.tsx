@@ -8,7 +8,7 @@
      (tarefasVisiveis), lib/metricas.ts (trilhasDaPessoaDetalhadas, agruparMinhasTarefas,
      entregasPorSemana), lib/carga.ts (linhaDoTempo: semáforo de carga), lib/trilhas.ts (TIPOS_ETAPA, hrefEtapa),
      components/trilhas/PrazoTrilha.tsx, components/paineis/Bloco.tsx, components/ui/ (basicos, Graficos, Semaforo),
-     components/button.tsx (classesBotao) e components/shell/Pagina.tsx.
+     components/button.tsx (classesBotao) e components/shell/Pagina.tsx e components/ui/FiltroPeriodo.tsx (filtro e período da URL, G01).
    Contexto: §6 (Dashboards: painel do profissional), §3 (funciona no celular) e §13 (quatro estados).
    ============================================================================ */
 "use client";
@@ -30,7 +30,8 @@ import Bloco, { VerTodas } from './Bloco';
 import { Colunas, COR_GRAFICO } from '@/components/ui/Graficos';
 import { classesBotao } from '@/components/button';
 import PrazoTrilha from '@/components/trilhas/PrazoTrilha';
-import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
+import { cx, dataBR, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
+import FiltroPeriodo, { usePeriodo } from '@/components/ui/FiltroPeriodo';
 
 /**
  * Painel do Profissional. Uma coluna no celular; grade de duas colunas a partir de 1024 px.
@@ -40,6 +41,8 @@ import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
 export default function PainelProfissional() {
   const { sessao } = useAuth();
   const d = useDados();
+  // Período do histórico de entregas (G01): vem da URL (?de=&ate=) para o link poder ser compartilhado.
+  const { periodo, definir } = usePeriodo();
   const pessoaId = sessao?.pessoaId ?? '';
   const pronto = d.pronto && !!sessao;
   const estado = !pronto ? 'carregando' : d.pessoa(pessoaId) ? 'pronto' : 'erro';
@@ -57,7 +60,8 @@ export default function PainelProfissional() {
   }, [pronto, pessoaId, d]);
   const estaSemana = semanasCarga[0];
   const limite = d.pessoa(pessoaId)?.cargaMax ?? 40;
-  const entregas = useMemo(() => (pronto ? entregasPorSemana(pessoaId, d, 8) : []), [pronto, pessoaId, d]);
+  // Semanas do período escolhido (G01), com só as entregas dentro dele.
+  const entregas = useMemo(() => (pronto ? entregasPorSemana(pessoaId, d, 8, hojeISO(), periodo) : []), [pronto, pessoaId, d, periodo]);
 
   // Saudação: primeiro nome e a data por extenso ("quarta-feira, 7 de outubro de 2026").
   const primeiroNome = sessao?.nome.split(' ')[0] ?? '';
@@ -82,6 +86,9 @@ export default function PainelProfissional() {
   return (
     <div className="mx-auto max-w-[1200px] p-4 sm:p-6 lg:p-8">
       <CabecalhoPagina titulo={`Olá, ${primeiroNome}`} descricao={<span className="first-letter:uppercase">{hojeExtenso}</span>} />
+
+      {/* Filtro de período (G01, §10: acima do conteúdo): muda o histórico de entregas. */}
+      <div className="mb-4"><FiltroPeriodo periodo={periodo} onChange={definir} /></div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* 1) Minhas trilhas e meu progresso */}
@@ -193,13 +200,13 @@ export default function PainelProfissional() {
         {/* 4) Meu histórico de entregas */}
         <Bloco titulo="Meu histórico de entregas" estado={estado}>
           {totalEntregas === 0 ? (
-            <EstadoVazio icone={<PackageCheck className="h-6 w-6" aria-hidden />} titulo="Nenhuma entrega nas últimas 8 semanas" descricao="Cada tarefa sua que chega em Pronto conta aqui, na semana em que foi concluída." />
+            <EstadoVazio icone={<PackageCheck className="h-6 w-6" aria-hidden />} titulo="Nenhuma entrega no período" descricao={`De ${dataBR(periodo.de)} a ${dataBR(periodo.ate)}, nenhuma tarefa sua chegou em Pronto. Escolha um período maior.`} />
           ) : (
             <div className="space-y-3">
               {/* Gráfico (role="img" com aria-label) + o mesmo resumo em texto visível. */}
               <Colunas altura={110} itens={entregas.map((e) => ({ rotulo: e.rotulo, valor: e.valor, cor: COR_GRAFICO.concluida }))} />
               <p className="text-[13px] text-tinta-suave">
-                {totalEntregas} entrega{totalEntregas > 1 ? 's' : ''} nas últimas 8 semanas, no máximo {melhor.valor} por semana.
+                {totalEntregas} entrega{totalEntregas > 1 ? 's' : ''} de {dataBR(periodo.de)} a {dataBR(periodo.ate)}, no máximo {melhor.valor} por semana.
               </p>
             </div>
           )}

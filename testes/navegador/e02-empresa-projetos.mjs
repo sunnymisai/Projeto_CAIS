@@ -31,7 +31,7 @@ const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'
 const COMENTARIO = `Comentário de teste do cliente ${Date.now()}`;
 
 try {
-  await ev(`localStorage.removeItem('cais-dados-v3')`);
+  await ev(`localStorage.removeItem('cais-dados-v4')`);
   await entrar(CONTAS.marcos);
 
   // 1) /projetos só com os da Vértice.

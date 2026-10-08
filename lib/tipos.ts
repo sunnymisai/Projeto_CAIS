@@ -144,6 +144,12 @@ export interface Trilha {
     nota?: number;
     tentativas?: number;
     quizzes?: Record<string, { tentativas: number; nota?: number; aprovado?: boolean }>;
+    /**
+     * Data (AAAA-MM-DD) em que a pessoa concluiu a ÚLTIMA etapa (G01: "trilhas concluídas no
+     * período" e a evolução da turma). Gravada por concluirEtapa (lib/quiz.ts). Opcional:
+     * quem ainda não terminou não tem, e dados antigos podem não ter.
+     */
+    concluidaEm?: string;
   }>;
   /**
    * Data (AAAA-MM-DD) da PRIMEIRA publicação; conta o prazo de quem já estava no programa.

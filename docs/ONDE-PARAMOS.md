@@ -1,6 +1,6 @@
 # Onde paramos (CAIS v4)
 
-Registro para retomar o trabalho. Atualizado em **08/10/2026**, com o bloco F completo na branch `feat/semaforo-carga` (esperando aprovação para o merge).
+Registro para retomar o trabalho. Atualizado em **08/10/2026**, durante o bloco G (G01 feito na branch `feat/filtros-periodo`).
 Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles em [`docs/prompts/00-GUIA.md`](prompts/00-GUIA.md).
 
 ## Situação dos prompts
@@ -12,8 +12,8 @@ Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles
 | C · Perfis e acesso | C01 a C08 + revisão H01 | ✅ feito, no `main` | `c8e097a` |
 | D · Profissional | D01 a D05 | ✅ feito, no `main` | `ef7633b` |
 | E · Empresa | E01, E02 | ✅ feito, no `main` | `1bb2fd6` |
-| F · Semáforo de carga | F01 a F04 | ✅ feito na branch `feat/semaforo-carga`; **falta o merge no `main` (com aprovação) e o push** | ver `git log feat/semaforo-carga` |
-| G · Lacunas do deck | G01, G02, G03 | ⏳ a fazer | — |
+| F · Semáforo de carga | F01 a F04 | ✅ feito, no `main` | `4222081` |
+| G · Lacunas do deck | G01, G02, G03 | 🔨 G01 feito na branch `feat/filtros-periodo` (não está no `main`); **próximo: G02** | ver `git log feat/filtros-periodo` |
 | H · Revisão | H01 | 🔁 rodar ao fim de cada bloco. A dos blocos D e E foi feita: relatório em [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) (branch `revisao/h01-blocos-d-e`), esperando o time escolher o que corrigir | `8b5466c` |
 
 Fora dos prompts, já no `main`:
@@ -24,8 +24,8 @@ Fora dos prompts, já no `main`:
 
 1. Abra o terminal na pasta do projeto, `Projeto_CAIS/`, e rode `npm run dev` (http://localhost:3000).
 2. No navegador, menu do perfil → **"Restaurar dados de demonstração"**, para partir do seed atual.
-3. Com aprovação, faça o merge do bloco F: `git switch main`, `git merge --ff-only feat/semaforo-carga` (traz também o relatório do H01 dos blocos D e E), auditoria de comentários com 0 pontos e `git push` do `main` e das branches `feat/semaforo-carga` e `revisao/h01-blocos-d-e`.
-4. Escolha com o time o que corrigir do [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md), rode o H01 do bloco F e depois o bloco G ([`docs/prompts/G01-filtros-por-periodo-nos-paineis.txt`](prompts/G01-filtros-por-periodo-nos-paineis.txt)) numa branch nova.
+3. Continue pelo G02 numa branch nova a partir da `feat/filtros-periodo` (`git switch -c feat/tempo-real`), depois o G03 (`feat/anexos`). Ao fim do bloco G, com aprovação: merge no `main`, auditoria de comentários com 0 pontos e `git push`.
+4. Escolha com o time o que corrigir do [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) e rode o H01 dos blocos F e G.
 5. Ao terminar cada prompt: `npx tsc --noEmit`, `npm run lint`, `npm run build`, os casos e os testes de navegador (abaixo).
 
 ## Verificações disponíveis
@@ -33,8 +33,8 @@ Fora dos prompts, já no `main`:
 ```bash
 # Casos de lógica (sem navegador)
 node --experimental-strip-types lib/permissoes.casos.ts   # 65 casos
-node --experimental-strip-types lib/quiz.casos.ts         # 27 casos
-node --experimental-strip-types lib/metricas.casos.ts     # 23 casos
+node --experimental-strip-types lib/quiz.casos.ts         # 29 casos
+node --experimental-strip-types lib/metricas.casos.ts     # 32 casos
 node --experimental-strip-types lib/carga.casos.ts        # 25 casos (semáforo de carga)
 
 # Padrão de comentários do CLAUDE.md (cabeçalho, JSDoc, useEffect, GRAVA/APAGA/NAVEGA); rode antes de todo push
@@ -49,6 +49,7 @@ node testes/navegador/e02-empresa-projetos.mjs    # 20 conferências
 node testes/navegador/f02-semaforo-painel.mjs     # 6 conferências
 node testes/navegador/f03-tela-carga.mjs          # 26 conferências
 node testes/navegador/f04-semaforo-alocacao.mjs   # 19 conferências
+node testes/navegador/g01-filtros-periodo.mjs     # 15 conferências
 node testes/navegador/h01-varredura.mjs           # parte automática do H01 (6 contas × rotas)
 node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, desktop e 375 px
 ```

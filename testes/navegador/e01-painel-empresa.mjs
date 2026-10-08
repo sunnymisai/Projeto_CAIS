@@ -38,7 +38,7 @@ const bloco = (titulo) => ev(`(() => { const h = [...document.querySelectorAll('
 
 try {
   // Parte do seed atual (o mesmo que "Restaurar dados de demonstração").
-  await ev(`localStorage.removeItem('cais-dados-v3')`);
+  await ev(`localStorage.removeItem('cais-dados-v4')`);
 
   // --- Marcos (Vértice) ---
   await entrar(CONTAS.marcos);

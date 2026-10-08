@@ -8,7 +8,7 @@
    Depende de: lib/auth.tsx (useAuth), lib/store.tsx (useDados), lib/escopo.ts
      (projetosVisiveis, tarefasVisiveis, alocacoesVisiveis), lib/metricas.ts
      (progressoProjeto, entregasDoProjeto, resumoTrilha, rótulos de status de projeto e de empresa), components/paineis/Bloco.tsx,
-     components/ui/ (basicos, Graficos) e components/shell/Pagina.tsx.
+     components/ui/ (basicos, Graficos) e components/shell/Pagina.tsx e components/ui/FiltroPeriodo.tsx (filtro e período da URL, G01).
    Contexto: §3 (empresa: "entra, entende, sai"), §6 (painel da empresa) e §13 (quatro estados).
    ============================================================================ */
 "use client";
@@ -19,12 +19,13 @@ import { BookOpenCheck, CircleAlert, FolderKanban, PackageCheck, Users } from 'l
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { alocacoesVisiveis, projetosVisiveis, tarefasVisiveis } from '@/lib/escopo';
-import { entregasDoProjeto, progressoProjeto, resumoTrilha, ROTULO_STATUS_EMPRESA, ROTULO_STATUS_PROJETO, TOM_STATUS_EMPRESA, TOM_STATUS_PROJETO } from '@/lib/metricas';
+import { aprovadasNoPeriodo, dentroDoPeriodo, entregasDoProjeto, progressoProjeto, resumoTrilha, ROTULO_STATUS_EMPRESA, ROTULO_STATUS_PROJETO, TOM_STATUS_EMPRESA, TOM_STATUS_PROJETO } from '@/lib/metricas';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import { Avatar, EstadoVazio, Etiqueta, Progresso } from '@/components/ui/basicos';
 import { BarraEmpilhada, Legenda, COR_GRAFICO } from '@/components/ui/Graficos';
 import Bloco, { VerTodas } from './Bloco';
-import { dataCurta, hojeISO } from '@/lib/utils';
+import { dataBR, dataCurta, hojeISO } from '@/lib/utils';
+import FiltroPeriodo, { usePeriodo } from '@/components/ui/FiltroPeriodo';
 
 /**
  * Painel da Empresa. Uma coluna no celular; grade de duas colunas a partir de 1024 px.
@@ -34,6 +35,8 @@ import { dataCurta, hojeISO } from '@/lib/utils';
 export default function PainelEmpresa() {
   const { sessao } = useAuth();
   const d = useDados();
+  // Período das entregas aprovadas (G01): vem da URL (?de=&ate=) para o link poder ser compartilhado.
+  const { periodo, definir } = usePeriodo();
   const pronto = d.pronto && !!sessao;
   const pessoa = pronto ? d.pessoa(sessao!.pessoaId) : undefined;
   const estado = !pronto ? 'carregando' : pessoa ? 'pronto' : 'erro';
@@ -47,8 +50,8 @@ export default function PainelEmpresa() {
   // Entregas: "feita" = está na última coluna do projeto (mesma regra do quadro).
   // TODO(PROGLOGIC): o deck fala em "entregas aprovadas"; hoje não há aprovação, então Pronto conta como entregue.
   const ultimaColuna = (projetoId: string) => { const p = d.projeto(projetoId); return p?.colunas[p.colunas.length - 1]?.id; };
-  // Últimas entregas: as aprovadas mais recentes primeiro (concluidaEm; sem ela, o prazo).
-  const feitas = tarefas.filter((t) => t.colunaId === ultimaColuna(t.projetoId))
+  // Últimas entregas DO PERÍODO (G01): aprovadas com concluidaEm dentro do período, as mais recentes primeiro.
+  const feitas = tarefas.filter((t) => t.colunaId === ultimaColuna(t.projetoId) && !!t.concluidaEm && dentroDoPeriodo(t.concluidaEm, periodo))
     .sort((a, b) => (b.concluidaEm ?? b.prazo).localeCompare(a.concluidaEm ?? a.prazo));
 
   // Trilhas da empresa (alcance "empresa", publicadas): o progresso do time dela (§6).
@@ -67,6 +70,9 @@ export default function PainelEmpresa() {
           ? <span className="flex flex-wrap items-center gap-3">{empresa.nomeFantasia}<Etiqueta tom={TOM_STATUS_EMPRESA[empresa.status]} ponto>{ROTULO_STATUS_EMPRESA[empresa.status]}</Etiqueta></span>
           : `Olá, ${primeiroNome}`}
         descricao={empresa ? `Olá, ${primeiroNome}. Veja como estão os projetos da ${empresa.nomeFantasia} no programa.` : 'Como estão os projetos da sua empresa no programa.'} />
+
+      {/* Filtro de período (G01, §10: acima do conteúdo): muda as entregas aprovadas no período. */}
+      <div className="mb-4"><FiltroPeriodo periodo={periodo} onChange={definir} /></div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* 1) Andamento dos projetos próprios */}
@@ -164,13 +170,17 @@ export default function PainelEmpresa() {
                           <Legenda itens={seg} />
                         </>
                       )}
+                      {/* Aprovadas no período escolhido (o resto da linha é a situação de hoje). */}
+                      {e.total > 0 && <p className="text-[12px] text-tinta-suave"><strong className="font-semibold text-sucesso">{aprovadasNoPeriodo(p.id, d, periodo)}</strong> aprovada{aprovadasNoPeriodo(p.id, d, periodo) !== 1 ? 's' : ''} de {dataBR(periodo.de)} a {dataBR(periodo.ate)}</p>}
                     </li>
                   );
                 })}
               </ul>
+              {/* Vazio do período: tem tarefa, mas nenhuma aprovada nas datas escolhidas. */}
+              {feitas.length === 0 && <p className="rounded-xl border border-dashed border-borda px-4 py-4 text-center text-[13px] text-tinta-suave">Nenhuma entrega aprovada de {dataBR(periodo.de)} a {dataBR(periodo.ate)}. Escolha um período maior.</p>}
               {feitas.length > 0 && (
                 <>
-                  <p className="text-[12px] font-semibold text-tinta-suave">Últimas entregas</p>
+                  <p className="text-[12px] font-semibold text-tinta-suave">Últimas entregas no período</p>
                   <ul className="space-y-1.5">
                     {feitas.slice(0, 4).map((t) => (
                       <li key={t.id}>

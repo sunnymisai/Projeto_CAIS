@@ -49,7 +49,7 @@ const valor = (rotulo) => ev(`(() => { const l = [...document.querySelectorAll('
 const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'); return document.documentElement.scrollWidth <= innerWidth + 1 && m.scrollWidth <= m.clientWidth + 1; })()`;
 
 try {
-  await ev(`localStorage.removeItem('cais-dados-v3')`);
+  await ev(`localStorage.removeItem('cais-dados-v4')`);
   await entrar(CONTAS.admin);
 
   // --- Bruno no App de agendamento (Aurora): fica vermelho e recebe a sugestão. ---
@@ -73,7 +73,7 @@ try {
   c('o fim também muda (mantém a duração em dias úteis)', (await valor('Fim')) !== fimAntes);
   c('com a data sugerida, nenhuma semana fica acima do limite', !(await dialogo()).includes('fica acima do limite'));
   await clicarTexto('Alocar', `document.querySelector('[role=dialog]')`); await espera(500);
-  const salva = await ev(`JSON.parse(localStorage.getItem('cais-dados-v3') ?? '{"alocacoes":[]}').alocacoes.find((a) => a.pessoaId === 'pes_bruno' && a.projetoId === 'prj_agenda')`);
+  const salva = await ev(`JSON.parse(localStorage.getItem('cais-dados-v4') ?? '{"alocacoes":[]}').alocacoes.find((a) => a.pessoaId === 'pes_bruno' && a.projetoId === 'prj_agenda')`);
   c('alocação do Bruno salva com o início sugerido', salva?.inicio === inicioDepois, JSON.stringify(salva));
 
   // --- Diego depois do sprint: não acusa sobrecarga. ---

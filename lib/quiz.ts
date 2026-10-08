@@ -5,13 +5,14 @@
      e calculam o progresso novo (concluir etapa, registrar tentativa).
    Onde é usado: app/(sistema)/minhas-trilhas/[id]/etapa/[etapaId]/page.tsx (player)
      e lib/quiz.casos.ts (testes rodados com Node).
-   Depende de: apenas os tipos Pergunta e Trilha de lib/tipos.ts (sem React, para rodar em Node).
+   Depende de: os tipos Pergunta e Trilha de lib/tipos.ts e hojeISO de lib/utils.ts (sem React, para rodar em Node).
    Contexto: §4 (quiz com nota mínima e tentativas).
    ============================================================================ */
 
 // ⚠️ ATENÇÃO: import com extensão .ts de propósito: lib/quiz.casos.ts roda este
 // arquivo direto no Node, que só acha o módulo com a extensão.
 import type { Pergunta, Trilha } from './tipos.ts';
+import { hojeISO } from './utils.ts';
 
 /** Como foi uma pergunta na correção. */
 export interface CorrecaoPergunta {
@@ -128,17 +129,23 @@ export function tentativasUsadas(trilha: TrilhaComProgresso, pessoaId: string, e
 /**
  * Conclui a etapa de índice `indice`, se ela for a ATUAL (as etapas são feitas em ordem).
  * Rever uma etapa já concluída, ou tentar concluir uma adiante, não muda nada.
+ * Se era a ÚLTIMA etapa (a trilha tem `etapas`), grava também `concluidaEm` = hoje (G01: trilhas
+ * concluídas no período e a evolução da turma).
  * @param trilha - a trilha.
  * @param pessoaId - quem concluiu.
  * @param indice - posição da etapa (0 = primeira).
+ * @param hoje - data da conclusão (padrão: hoje); existe para facilitar teste.
  * @returns a trilha com o progresso novo (o mesmo objeto se nada mudou).
  * @example concluirEtapa(t, 'pes_ana', 2) // concluidas: 2 → 3
  */
-export function concluirEtapa<T extends TrilhaComProgresso>(trilha: T, pessoaId: string, indice: number): T {
+export function concluirEtapa<T extends TrilhaComProgresso & { etapas?: unknown[] }>(trilha: T, pessoaId: string, indice: number, hoje: string = hojeISO()): T {
   const atual = trilha.progresso[pessoaId] ?? { concluidas: 0 };
   // Só a etapa atual (índice === concluídas) avança o progresso.
   if (indice !== atual.concluidas) return trilha;
-  return { ...trilha, progresso: { ...trilha.progresso, [pessoaId]: { ...atual, concluidas: atual.concluidas + 1 } } };
+  const concluidas = atual.concluidas + 1;
+  // Terminou a trilha agora: guarda a data (só na primeira vez que chega ao fim).
+  const terminou = !!trilha.etapas && concluidas >= trilha.etapas.length && !atual.concluidaEm;
+  return { ...trilha, progresso: { ...trilha.progresso, [pessoaId]: { ...atual, concluidas, ...(terminou ? { concluidaEm: hoje } : {}) } } };
 }
 
 /**
