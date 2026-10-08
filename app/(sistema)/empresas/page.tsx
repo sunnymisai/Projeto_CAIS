@@ -2,7 +2,7 @@
    APP/(SISTEMA)/EMPRESAS/PAGE.TSX
    O que é: tela de cadastro de empresas parceiras (lista com filtros + ficha em modal).
    Onde é usado: rota /empresas (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts), pelo card "Empresas ativas" do painel (app/(sistema)/painel/page.tsx) e pela busca global do topo (components/shell/Topbar.tsx), que abre a ficha direto com /empresas?abrir=<id>.
-   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), máscaras e validações de lib/utils.ts, componentes de components/ui e components/shell, components/acessos/PessoasDaEmpresa (aba Pessoas da ficha), API pública do ViaCEP (viacep.com.br) e useSearchParams/useRouter do Next.
+   Depende de: useDados (lib/store.tsx), useToast (lib/toast.tsx), useFormulario (lib/useFormulario.ts), máscaras e validações de lib/utils.ts, rótulos do status de empresa de lib/metricas.ts (ROTULO_STATUS_EMPRESA, TOM_STATUS_EMPRESA), componentes de components/ui e components/shell, components/acessos/PessoasDaEmpresa (aba Pessoas da ficha), API pública do ViaCEP (viacep.com.br) e useSearchParams/useRouter do Next.
    Contexto: docs/contexto-cais.md §11 (Regras de cadastro), §10 (Anatomia de toda tela) e §9 (cor tem significado); docs/notas-next16.md §2 (useSearchParams + Suspense).
    ============================================================================ */
 // "use client": a tela usa estado (useState), eventos (onClick) e useSearchParams,
@@ -24,15 +24,11 @@ import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
 import PessoasDaEmpresa from '@/components/acessos/PessoasDaEmpresa';
 import { cnpjValido, EMAIL_REGEX, hojeISO, mascaraCEP, mascaraCNPJ, mascaraTelefone, normalizar, novoId, soDigitos, dataBR } from '@/lib/utils';
+import { ROTULO_STATUS_EMPRESA, TOM_STATUS_EMPRESA } from '@/lib/metricas';
 
-/**
- * Rótulos dos três status de empresa definidos no §11.
- * A chave (negociacao, ativa, encerrada) é o valor gravado; o texto é o que aparece na tela.
- */
-const STATUS = { negociacao: 'Em negociação', ativa: 'Ativa', encerrada: 'Encerrada' } as const;
-// Cor da etiqueta por status: no CAIS cor tem significado (§9).
-// aviso = ainda negociando, sucesso = ativa, neutro = encerrada (não pede ação).
-const TOM = { negociacao: 'aviso', ativa: 'sucesso', encerrada: 'neutro' } as const;
+// Rótulos e cores do status de empresa (§11) vêm de lib/metricas.ts, compartilhados com o painel da empresa.
+const STATUS = ROTULO_STATUS_EMPRESA;
+const TOM = TOM_STATUS_EMPRESA;
 // Opções fixas dos selects de segmento e porte.
 // TODO(API): quando a API da PROGLOGIC existir, estas listas podem vir do servidor.
 const SEGMENTOS = ['Agronegócio', 'Educação', 'Financeiro', 'Indústria', 'Logística', 'Saúde', 'Serviços', 'Tecnologia', 'Varejo'];

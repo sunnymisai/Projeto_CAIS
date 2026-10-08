@@ -11,7 +11,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs` ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs` ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
 **Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts` e `lib/metricas.casos.ts`.
 
@@ -36,7 +36,7 @@ npm run dev        # http://localhost:3000
 | `/login` | Login (redireciona para `?voltar=`, só caminho interno, ou `/painel`) |
 | `/recuperar-senha` | Recuperação de senha SIMULADA em 3 passos: e-mail → "link enviado" (botão de demonstração "Abrir o link recebido") → `?token=demo&email=...` com nova senha e regras em tempo real. A mensagem de sucesso é a mesma exista ou não o e-mail |
 | `/primeiro-acesso?convite=<pessoaId>` | Primeiro acesso por convite (SIMULADO): mostra nome e e-mail, pede senha com regras em tempo real e aceite dos termos/LGPD; ao salvar ativa a pessoa e entra no `/painel`. Convite inexistente, usado ou de pessoa inativa mostra erro com botão para o login. O link é copiado na ficha de pessoa (status "convidado") |
-| `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); profissional (minhas trilhas e a próxima etapa, as 5 próximas tarefas, carga da semana e histórico de entregas de 8 semanas); empresa (andamento dos projetos próprios, quem está no time, entregas feitas/pendentes/atrasadas e progresso da trilha do time; versão de apresentação, aprofundada no E01) |
+| `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); profissional (minhas trilhas e a próxima etapa, as 5 próximas tarefas, carga da semana e histórico de entregas de 8 semanas); empresa (cabeçalho com nome fantasia e status da empresa; andamento dos projetos próprios com % pronto, atrasadas e entrega; quem está no time com papel, projeto e período, SEM as horas, por privacidade; entregas aprovadas × aguardando revisão por projeto; progresso da trilha do time) |
 | `/empresas` | Lista e ficha de empresa (CNPJ validado, CEP via ViaCEP) |
 | `/pessoas` | Lista e ficha de pessoa (campos por perfil, convite, inativar) |
 | `/trilhas` e `/trilhas/[id]` | Lista e editor de trilha (etapas, público, progresso). Cada etapa tem o painel "Conteúdo" (texto e endereço) e, no quiz, o editor de perguntas (alternativas, correta por radio, nota mínima e tentativas). Publicar exige quiz completo e grava `publicadaEm` só na primeira vez. As etapas reordenam por setas ou arrastando a alça |

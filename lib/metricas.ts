@@ -1,6 +1,6 @@
 /* ============================================================================
    MÉTRICAS (CÁLCULOS DERIVADOS)
-   O que é: funções puras que calculam público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas", a carga da semana e o histórico de entregas, e rótulos/cores de status e prioridade.
+   O que é: funções puras que calculam as entregas por projeto (painel da empresa), público, situação e prazo das trilhas (inclusive a visão do profissional), progresso dos projetos, os grupos de "Minhas tarefas", a carga da semana e o histórico de entregas, e rótulos/cores de status e prioridade.
    Onde é usado: app/(sistema)/painel, pessoas, projetos, projetos/[id], trilhas, trilhas/[id] e components/projetos/Equipe.tsx e Vistas.tsx.
    Depende de: lib/tipos.ts (Alocacao, Dados, Perfil, Pessoa, Prioridade, Projeto, Tarefa, Trilha) e lib/utils.ts (hojeISO, somaDias, diasEntre).
    Contexto: §4 (alcance das trilhas), §5 (equipe e tarefas), §6 (dashboards).
@@ -203,8 +203,45 @@ export function progressoProjeto(projetoId: string, d: Dados) {
   return { total: tarefas.length, prontas, atrasadas, pct: tarefas.length ? (prontas / tarefas.length) * 100 : 0 };
 }
 
+/**
+ * Entregas de um projeto para o painel da empresa (§6): aprovadas × aguardando revisão.
+ * - aprovadas: tarefas na ÚLTIMA coluna do quadro (mesma regra de "pronta" em progressoProjeto);
+ * - revisao: tarefas na PENÚLTIMA coluna, que no quadro padrão é "Revisão" (§5);
+ * - emProducao: o resto (A fazer, Fazendo...).
+ * Quadro com menos de 3 colunas não tem etapa de revisão: a penúltima seria "A fazer",
+ * então `temRevisao` fica false e tudo que não está pronto conta como em produção.
+ * TODO(PROGLOGIC): o deck fala em "entregas aprovadas"; não há passo de aprovação, então Pronto = aprovada.
+ * @param projetoId - id do projeto.
+ * @param d - todos os dados (só `projetos` e `tarefas` são lidos).
+ * @returns `{ total, aprovadas, revisao, emProducao, temRevisao }`.
+ * @example entregasDoProjeto('prj_portal', d) // { total: 8, aprovadas: 3, revisao: 1, emProducao: 4, temRevisao: true }
+ */
+export function entregasDoProjeto(projetoId: string, d: Pick<Dados, 'projetos' | 'tarefas'>) {
+  const proj = d.projetos.find((p) => p.id === projetoId);
+  const colunas = proj?.colunas ?? [];
+  const ultima = colunas[colunas.length - 1]?.id;
+  const temRevisao = colunas.length >= 3;
+  const penultima = temRevisao ? colunas[colunas.length - 2].id : undefined;
+  const tarefas = d.tarefas.filter((t) => t.projetoId === projetoId);
+  const aprovadas = tarefas.filter((t) => t.colunaId === ultima).length;
+  const revisao = penultima ? tarefas.filter((t) => t.colunaId === penultima).length : 0;
+  return { total: tarefas.length, aprovadas, revisao, emProducao: tarefas.length - aprovadas - revisao, temRevisao };
+}
+
 /** Nome de cada perfil de acesso, em português (Meu perfil, Acessos). */
 export const ROTULO_PERFIL: Record<Perfil, string> = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' };
+
+/**
+ * Rótulos dos três status de empresa definidos no §11.
+ * A chave (negociacao, ativa, encerrada) é o valor gravado; o texto é o que aparece na tela.
+ * Usado em /empresas e no cabeçalho do painel da empresa.
+ */
+export const ROTULO_STATUS_EMPRESA = { negociacao: 'Em negociação', ativa: 'Ativa', encerrada: 'Encerrada' } as const;
+/**
+ * Cor da etiqueta por status de empresa: no CAIS cor tem significado (§9).
+ * aviso = ainda negociando, sucesso = ativa, neutro = encerrada (não pede ação).
+ */
+export const TOM_STATUS_EMPRESA = { negociacao: 'aviso', ativa: 'sucesso', encerrada: 'neutro' } as const;
 
 /** Texto exibido para cada status de projeto. */
 export const ROTULO_STATUS_PROJETO = { planejado: 'Planejado', andamento: 'Em andamento', pausado: 'Pausado', concluido: 'Concluído' } as const;

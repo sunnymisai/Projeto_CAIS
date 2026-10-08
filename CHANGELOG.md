@@ -2,6 +2,14 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco E: empresa (branch `feat/empresa`)
+
+### E01: painel da empresa e público das trilhas
+- Público das trilhas: sem mudança, porque a regra do E01 (conta de Empresa na trilha geral e na da própria empresa) já tinha entrado no D02.
+- Criado: `entregasDoProjeto` em `lib/metricas.ts` (aprovadas = última coluna, aguardando revisão = penúltima, só em quadro com 3 ou mais colunas) com 3 casos em `lib/metricas.casos.ts`; `ROTULO_STATUS_EMPRESA` e `TOM_STATUS_EMPRESA` em `lib/metricas.ts`; teste `testes/navegador/e01-painel-empresa.mjs` (22 conferências).
+- Modificado: `components/paineis/PainelEmpresa.tsx` (cabeçalho com nome fantasia e status; % pronto escrito; período no lugar das horas em "Quem está no time", com a decisão de privacidade comentada; entregas por projeto com barra e legenda; vazio "Nenhuma entrega ainda"), `app/(sistema)/empresas/page.tsx` (usa os rótulos de status de `lib/metricas.ts`), `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+- Removido: os totais gerais Entregues/Pendentes/Atrasadas do bloco Entregas (as atrasadas continuam no card de cada projeto) e os rótulos de status de empresa que eram locais de `/empresas`.
+
 ## Auditoria de comentários antes do push (master)
 - Criado: `testes/auditar-comentarios.mjs` (confere em todo arquivo versionado: cabeçalho, JSDoc em funções e handlers, comentário em cada useEffect e rótulos GRAVA/APAGA/NAVEGA).
 - Modificado: cabeçalho no padrão em `eslint.config.mjs`, `postcss.config.mjs` e `tailwind.config.ts`; JSDoc nas funções auxiliares de `lib/*.casos.ts` e `testes/navegador/*`; comentário no ouvinte de Esc de `components/home/TopoHome.tsx`; rótulo NAVEGA no player de etapa. Resultado: 112 arquivos, 0 pontos para revisar.

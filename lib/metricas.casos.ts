@@ -1,7 +1,7 @@
 /* ============================================================================
-   CASOS DE TESTE DAS MÉTRICAS (MINHAS TAREFAS E PAINEL DO PROFISSIONAL)
+   CASOS DE TESTE DAS MÉTRICAS (MINHAS TAREFAS E PAINÉIS DO PROFISSIONAL E DA EMPRESA)
    O que é: script simples (sem biblioteca de testes) que confere fimDaSemana,
-     inicioDaSemana, agruparMinhasTarefas, cargaDaSemana e entregasPorSemana com uma
+     inicioDaSemana, agruparMinhasTarefas, cargaDaSemana, entregasPorSemana e entregasDoProjeto com uma
      data fixa. Cada caso tem entrada, esperado e o porquê.
    Onde é usado: rodado à mão no terminal; nenhuma tela importa este arquivo.
    Depende de: lib/metricas.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
@@ -9,7 +9,7 @@
    Como rodar: node --experimental-strip-types lib/metricas.casos.ts
    ============================================================================ */
 
-import { agruparMinhasTarefas, cargaDaSemana, entregasPorSemana, fimDaSemana, inicioDaSemana } from './metricas.ts';
+import { agruparMinhasTarefas, cargaDaSemana, entregasDoProjeto, entregasPorSemana, fimDaSemana, inicioDaSemana } from './metricas.ts';
 import type { Dados, Projeto, Tarefa } from './tipos.ts';
 
 // Hoje fixo: quarta-feira, 7 de outubro de 2026 (domingo da semana = dia 11).
@@ -52,6 +52,20 @@ const dadosPainel = {
 const carga = cargaDaSemana('ana', dadosPainel, HOJE);
 const entregas = entregasPorSemana('ana', dadosPainel, 8, HOJE);
 
+// Entregas do projeto (painel da empresa): quadro padrão de 4 colunas e quadro curto de 2.
+const quadro4 = { id: 'q4', colunas: [{ id: 'a', titulo: 'A fazer' }, { id: 'f', titulo: 'Fazendo' }, { id: 'r', titulo: 'Revisão' }, { id: 'p', titulo: 'Pronto' }] } as Projeto;
+const quadro2 = { id: 'q2', colunas: [{ id: 'a2', titulo: 'A fazer' }, { id: 'p2', titulo: 'Pronto' }] } as Projeto;
+const dadosEntregas = {
+  projetos: [quadro4, quadro2],
+  tarefas: [
+    tarefa('e1', HOJE, { projetoId: 'q4', colunaId: 'p' }), tarefa('e2', HOJE, { projetoId: 'q4', colunaId: 'p' }),
+    tarefa('e3', HOJE, { projetoId: 'q4', colunaId: 'r' }), tarefa('e4', HOJE, { projetoId: 'q4', colunaId: 'a' }),
+    tarefa('e5', HOJE, { projetoId: 'q2', colunaId: 'p2' }), tarefa('e6', HOJE, { projetoId: 'q2', colunaId: 'a2' }),
+  ],
+};
+/** Resume entregasDoProjeto em texto curto ("total|aprovadas|revisao|emProducao|temRevisao"), para comparar num caso. */
+const resumoEntregas = (id: string) => { const e = entregasDoProjeto(id, dadosEntregas); return `${e.total}|${e.aprovadas}|${e.revisao}|${e.emProducao}|${e.temRevisao}`; };
+
 const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'quarta → domingo da mesma semana', obtido: fimDaSemana('2026-10-07'), esperado: '2026-10-11' },
   { porque: 'domingo → ele mesmo', obtido: fimDaSemana('2026-10-11'), esperado: '2026-10-11' },
@@ -75,6 +89,9 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'rótulo da semana é dia/mês da segunda', obtido: entregas.at(-1)?.rotulo, esperado: '5/10' },
   { porque: 'conta por semana do concluidaEm (2 na semana atual, 1 na anterior)', obtido: entregas.slice(-2).map((e) => e.valor).join(','), esperado: '1,2' },
   { porque: 'tarefa concluída que voltou para outra coluna não conta como entrega', obtido: entregas.reduce((s, e) => s + e.valor, 0), esperado: 3 },
+  { porque: 'quadro de 4 colunas: Pronto = aprovada, Revisão = aguardando, o resto em produção', obtido: resumoEntregas('q4'), esperado: '4|2|1|1|true' },
+  { porque: 'quadro de 2 colunas não tem revisão: a penúltima é A fazer e conta como em produção', obtido: resumoEntregas('q2'), esperado: '2|1|0|1|false' },
+  { porque: 'projeto sem tarefas (Aurora planejado): tudo zero, sem erro', obtido: resumoEntregas('nao-existe'), esperado: '0|0|0|0|false' },
 ];
 
 // Roda os casos e imprime OK/FALHOU com o porquê (mesmo formato de permissoes.casos.ts).
