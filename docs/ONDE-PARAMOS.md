@@ -1,6 +1,6 @@
 # Onde paramos (CAIS v4)
 
-Registro para retomar o trabalho. Atualizado em **08/10/2026**, com o bloco G completo na branch `feat/anexos` (esperando aprovação para o merge).
+Registro para retomar o trabalho. Atualizado em **08/10/2026**: os blocos A a G estão no `main`; o H01 dos blocos F e G foi rodado e espera a escolha do time.
 Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles em [`docs/prompts/00-GUIA.md`](prompts/00-GUIA.md).
 
 ## Situação dos prompts
@@ -13,8 +13,8 @@ Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles
 | D · Profissional | D01 a D05 | ✅ feito, no `main` | `ef7633b` |
 | E · Empresa | E01, E02 | ✅ feito, no `main` | `1bb2fd6` |
 | F · Semáforo de carga | F01 a F04 | ✅ feito, no `main` | `4222081` |
-| G · Lacunas do deck | G01, G02, G03 | ✅ feito na branch `feat/anexos` (contém `feat/filtros-periodo` e `feat/tempo-real`); **falta o merge no `main` (com aprovação) e o push** | ver `git log feat/anexos` |
-| H · Revisão | H01 | 🔁 rodar ao fim de cada bloco. A dos blocos D e E foi feita: relatório em [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) (branch `revisao/h01-blocos-d-e`), esperando o time escolher o que corrigir | `8b5466c` |
+| G · Lacunas do deck | G01, G02, G03 | ✅ feito, no `main` | `d82b596` |
+| H · Revisão | H01 | 🔁 feita para os blocos C, D, E, F e G. Relatórios em [`docs/revisoes/`](revisoes/) (`H01-blocos-D-E.md` e `H01-blocos-F-G.md`), **esperando o time escolher o que corrigir** | `revisao/h01-blocos-f-g` |
 
 Fora dos prompts, já no `main`:
 - `b553e8d`: some a bolinha "N" do Next no `npm run dev`; os botões "Entrar como" do login ficam um embaixo do outro, com ícone.
@@ -24,8 +24,8 @@ Fora dos prompts, já no `main`:
 
 1. Abra o terminal na pasta do projeto, `Projeto_CAIS/`, e rode `npm run dev` (http://localhost:3000).
 2. No navegador, menu do perfil → **"Restaurar dados de demonstração"**, para partir do seed atual.
-3. Com aprovação, faça o merge do bloco G: `git switch main`, `git merge --ff-only feat/anexos`, auditoria de comentários com 0 pontos e `git push` do `main` e das branches `feat/filtros-periodo`, `feat/tempo-real` e `feat/anexos`.
-4. Escolha com o time o que corrigir do [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) e rode o H01 dos blocos F e G (último prompt do guia: [`docs/prompts/H01-revisao-final.txt`](prompts/H01-revisao-final.txt)).
+3. **Todos os prompts do guia (A a H) já foram executados.** O que resta é decidir o que corrigir dos dois relatórios de revisão (o mais importante: `cargaDaPessoa` devolve 0 no fim de semana) e fazer o merge das branches `revisao/h01-blocos-d-e` e `revisao/h01-blocos-f-g` no `main`, com aprovação.
+4. Depois das correções: atualizar a seção "Ainda simulado ou fora desta versão" do `SISTEMA.md` e o `CHANGELOG.md`, rodar a auditoria de comentários (0 pontos) e o `git push`.
 5. Ao terminar cada prompt: `npx tsc --noEmit`, `npm run lint`, `npm run build`, os casos e os testes de navegador (abaixo).
 
 ## Verificações disponíveis

@@ -18,7 +18,7 @@ const { ev, ir, entrar, largura, tab, erros } = nav;
 
 const PUBLICAS = ['/', '/login', '/recuperar-senha', '/primeiro-acesso?convite=pes_felipe', '/sem-permissao', '/rota-que-nao-existe'];
 const INTERNAS = ['/painel', '/empresas', '/pessoas', '/trilhas', '/trilhas/tri_boasvindas', '/projetos', '/projetos/prj_portal', '/projetos/prj_agenda',
-  '/design-system', '/acessos', '/carga', '/minhas-trilhas', '/minhas-trilhas/tri_boasvindas', '/minhas-trilhas/tri_boasvindas/etapa/et_1',
+  '/design-system', '/acessos', '/carga', '/projetos/prj_portal?aba=arquivos', '/projetos/prj_portal?aba=equipe', '/painel?de=2026-09-01&ate=2026-10-08', '/minhas-trilhas', '/minhas-trilhas/tri_boasvindas', '/minhas-trilhas/tri_boasvindas/etapa/et_1',
   '/minhas-trilhas/tri_nivel_front', '/minhas-trilhas/tri_vertice', '/minhas-tarefas', '/perfil'];
 const QUEM = { anonimo: null, admin: CONTAS.admin, ana: CONTAS.ana, elisa: CONTAS.elisa, marcos: CONTAS.marcos, patricia: CONTAS.patricia };
 
