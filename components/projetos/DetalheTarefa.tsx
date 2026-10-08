@@ -2,7 +2,8 @@
    DETALHETAREFA.TSX
    O que é: o painel (modal) com todos os dados de uma tarefa. Admin edita na hora;
                  os outros perfis veem os campos como TEXTO somente leitura (a regra
-                 está em lib/permissoes.ts). Comentar fica liberado a quem enxerga o projeto.
+                 está em lib/permissoes.ts). Comentar fica liberado a quem enxerga o projeto;
+                 comentário de quem é do perfil Empresa ganha a etiqueta "Empresa".
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, aberto ao clicar num
                  cartão do Quadro ou numa linha das vistas Lista/Cronograma.
    Depende de: lib/store (useDados), lib/auth (useAuth, autor do comentário),
@@ -25,7 +26,7 @@ import { ROTULO_PRIORIDADE } from '@/lib/metricas';
 import Modal from '@/components/ui/Modal';
 import Button from '@/components/button';
 import { Select } from '@/components/ui/form';
-import { Avatar, EtiquetaTarefa, Progresso, corEtiqueta } from '@/components/ui/basicos';
+import { Avatar, Etiqueta, EtiquetaTarefa, Progresso, corEtiqueta } from '@/components/ui/basicos';
 import { cx, dataBR, novoId, tempoRelativo, hojeISO } from '@/lib/utils';
 
 // Etiquetas oferecidas como atalho; o usuário pode criar outras no campo "Nova etiqueta".
@@ -216,7 +217,16 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
                   <li key={c.id} className="flex gap-3">
                     <Avatar nome={autor?.nome ?? '?'} tamanho={32} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px]"><strong className="text-tinta">{autor?.nome}</strong> <span className="text-tinta-suave">{tempoRelativo(c.data)}</span></p>
+                      {/* Comentário do cliente (perfil Empresa) ganha a etiqueta "Empresa" ao lado do nome,
+                        * para o time identificar quem é o cliente na conversa (E02). O nome da empresa vai
+                        * no title (tooltip); a etiqueta é texto, não só cor. */}
+                      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+                        <strong className="text-tinta">{autor?.nome}</strong>
+                        {autor?.perfil === 'empresa' && (
+                          <span title={d.empresa(autor.empresaId ?? '')?.nomeFantasia}><Etiqueta tom="primaria">Empresa</Etiqueta></span>
+                        )}
+                        <span className="text-tinta-suave">{tempoRelativo(c.data)}</span>
+                      </p>
                       <p className="mt-1 rounded-xl border border-borda bg-superficie px-3 py-2 text-sm text-tinta">{c.texto}</p>
                     </div>
                   </li>

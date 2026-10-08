@@ -1,7 +1,7 @@
 /* ============================================================================
    CASOS DE TESTE DAS MÉTRICAS (MINHAS TAREFAS E PAINÉIS DO PROFISSIONAL E DA EMPRESA)
    O que é: script simples (sem biblioteca de testes) que confere fimDaSemana,
-     inicioDaSemana, agruparMinhasTarefas, cargaDaSemana, entregasPorSemana e entregasDoProjeto com uma
+     inicioDaSemana, agruparMinhasTarefas, cargaDaSemana, entregasPorSemana, entregasDoProjeto e proximasEntregas com uma
      data fixa. Cada caso tem entrada, esperado e o porquê.
    Onde é usado: rodado à mão no terminal; nenhuma tela importa este arquivo.
    Depende de: lib/metricas.ts e lib/tipos.ts (imports com extensão .ts para o Node achar os módulos).
@@ -9,7 +9,7 @@
    Como rodar: node --experimental-strip-types lib/metricas.casos.ts
    ============================================================================ */
 
-import { agruparMinhasTarefas, cargaDaSemana, entregasDoProjeto, entregasPorSemana, fimDaSemana, inicioDaSemana } from './metricas.ts';
+import { agruparMinhasTarefas, cargaDaSemana, entregasDoProjeto, entregasPorSemana, fimDaSemana, inicioDaSemana, proximasEntregas } from './metricas.ts';
 import type { Dados, Projeto, Tarefa } from './tipos.ts';
 
 // Hoje fixo: quarta-feira, 7 de outubro de 2026 (domingo da semana = dia 11).
@@ -63,6 +63,16 @@ const dadosEntregas = {
     tarefa('e5', HOJE, { projetoId: 'q2', colunaId: 'p2' }), tarefa('e6', HOJE, { projetoId: 'q2', colunaId: 'a2' }),
   ],
 };
+// Próximas entregas (janela de 14 dias a partir de 07/10): entra hoje e 21/10; ficam fora a atrasada,
+// a de 22/10 (15 dias) e a que já está pronta.
+const proximas = proximasEntregas('q4', {
+  projetos: [quadro4],
+  tarefas: [
+    tarefa('pe-14', '2026-10-21', { projetoId: 'q4', colunaId: 'f' }), tarefa('pe-hoje', HOJE, { projetoId: 'q4', colunaId: 'a' }),
+    tarefa('pe-15', '2026-10-22', { projetoId: 'q4', colunaId: 'a' }), tarefa('pe-atrasada', '2026-10-06', { projetoId: 'q4', colunaId: 'a' }),
+    tarefa('pe-pronta', '2026-10-10', { projetoId: 'q4', colunaId: 'p' }),
+  ],
+}, 14, HOJE);
 /** Resume entregasDoProjeto em texto curto ("total|aprovadas|revisao|emProducao|temRevisao"), para comparar num caso. */
 const resumoEntregas = (id: string) => { const e = entregasDoProjeto(id, dadosEntregas); return `${e.total}|${e.aprovadas}|${e.revisao}|${e.emProducao}|${e.temRevisao}`; };
 
@@ -92,6 +102,7 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'quadro de 4 colunas: Pronto = aprovada, Revisão = aguardando, o resto em produção', obtido: resumoEntregas('q4'), esperado: '4|2|1|1|true' },
   { porque: 'quadro de 2 colunas não tem revisão: a penúltima é A fazer e conta como em produção', obtido: resumoEntregas('q2'), esperado: '2|1|0|1|false' },
   { porque: 'projeto sem tarefas (Aurora planejado): tudo zero, sem erro', obtido: resumoEntregas('nao-existe'), esperado: '0|0|0|0|false' },
+  { porque: 'próximas entregas: só não prontas com prazo de hoje a +14 dias, da mais próxima à mais distante', obtido: ids(proximas), esperado: 'pe-hoje,pe-14' },
 ];
 
 // Roda os casos e imprime OK/FALHOU com o porquê (mesmo formato de permissoes.casos.ts).

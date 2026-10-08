@@ -1,6 +1,6 @@
 # Onde paramos (CAIS v4)
 
-Registro para retomar o trabalho. Atualizado em **08/10/2026**, depois do E01 (na branch `feat/empresa`).
+Registro para retomar o trabalho. Atualizado em **08/10/2026**, depois do E02 (bloco E completo na branch `feat/empresa`).
 Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles em [`docs/prompts/00-GUIA.md`](prompts/00-GUIA.md).
 
 ## Situação dos prompts
@@ -11,7 +11,7 @@ Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles
 | B · Homepage | B01 a B04 | ✅ feito, no `main` | `c82712d` |
 | C · Perfis e acesso | C01 a C08 + revisão H01 | ✅ feito, no `main` | `c8e097a` |
 | D · Profissional | D01 a D05 | ✅ feito, no `main` | `ef7633b` |
-| E · Empresa | E01, E02 | 🔨 E01 feito na branch `feat/empresa` (ainda não está no `main`); **próximo: E02** | ver `git log feat/empresa` |
+| E · Empresa | E01, E02 | ✅ feito na branch `feat/empresa`; falta o merge no `main` (com aprovação) e o push | ver `git log feat/empresa` |
 | F · Semáforo de carga | F01 a F04 | ⏳ a fazer (depende de C03; o F04 usa o D05) | — |
 | G · Lacunas do deck | G01, G02, G03 | ⏳ a fazer | — |
 | H · Revisão | H01 | 🔁 rodar ao fim de cada bloco (a do bloco D ainda não foi feita) | — |
@@ -24,8 +24,8 @@ Fora dos prompts, já no `main`:
 
 1. Abra o terminal na pasta do projeto, `Projeto_CAIS/`, e rode `npm run dev` (http://localhost:3000).
 2. No navegador, menu do perfil → **"Restaurar dados de demonstração"**, para partir do seed atual.
-3. Continue na branch do bloco: `git switch feat/empresa`.
-4. Rode o prompt [`docs/prompts/E02-empresa-projetos-e-trilha.txt`](prompts/E02-empresa-projetos-e-trilha.txt) em modo de planejamento. O último prompt do bloco pede o merge no `main` (só com aprovação) e depois o `git push`.
+3. Se o bloco E ainda não estiver no `main`: com aprovação, `git switch main`, `git merge --ff-only feat/empresa`, auditoria de comentários com 0 pontos e `git push`.
+4. Rode o H01 dos blocos D e E (ainda pendente) e depois o [`docs/prompts/F01-semaforo-regra.txt`](prompts/F01-semaforo-regra.txt) numa branch nova (`git switch -c feat/semaforo`), em modo de planejamento.
 5. Ao terminar cada prompt: `npx tsc --noEmit`, `npm run lint`, `npm run build`, os casos e os testes de navegador (abaixo).
 
 ## Verificações disponíveis
@@ -34,7 +34,7 @@ Fora dos prompts, já no `main`:
 # Casos de lógica (sem navegador)
 node --experimental-strip-types lib/permissoes.casos.ts   # 65 casos
 node --experimental-strip-types lib/quiz.casos.ts         # 27 casos
-node --experimental-strip-types lib/metricas.casos.ts     # 22 casos
+node --experimental-strip-types lib/metricas.casos.ts     # 23 casos
 
 # Padrão de comentários do CLAUDE.md (cabeçalho, JSDoc, useEffect, GRAVA/APAGA/NAVEGA); rode antes de todo push
 node testes/auditar-comentarios.mjs                # deve terminar com "0 ponto(s) para revisar"
@@ -44,6 +44,7 @@ node testes/navegador/d02-minhas-trilhas.mjs      # 25 conferências
 node testes/navegador/d03-player-e-quiz.mjs       # 32 conferências
 node testes/navegador/d04-minhas-tarefas.mjs      # 24 conferências
 node testes/navegador/e01-painel-empresa.mjs      # 22 conferências
+node testes/navegador/e02-empresa-projetos.mjs    # 20 conferências
 node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, desktop e 375 px
 ```
 

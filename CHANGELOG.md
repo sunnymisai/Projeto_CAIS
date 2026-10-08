@@ -4,6 +4,11 @@ Cada entrada lista o que foi criado, modificado e removido.
 
 ## Bloco E: empresa (branch `feat/empresa`)
 
+### E02: visão da empresa nos projetos e na trilha
+- Conferido (C04 já cobria, sem mudança): `/projetos` só com os da empresa, quadro sem arrastar e sem "Nova tarefa", detalhe da tarefa em leitura com comentário liberado, projeto de outra empresa pela URL → `/sem-permissao`, e `/minhas-trilhas` com a trilha geral e a da empresa.
+- Criado: `proximasEntregas` e `DIAS_PROXIMAS_ENTREGAS` em `lib/metricas.ts` (com 1 caso em `lib/metricas.casos.ts`); teste `testes/navegador/e02-empresa-projetos.mjs` (20 conferências).
+- Modificado: `app/(sistema)/projetos/[id]/page.tsx` (card "Próximas entregas" na Visão geral), `components/projetos/Equipe.tsx` (o perfil Empresa não vê as colunas Carga e Trilhas nem a soma de horas: privacidade, a mesma regra do E01), `components/projetos/DetalheTarefa.tsx` (comentário de quem é do perfil Empresa ganha a etiqueta "Empresa"), `components/shell/Topbar.tsx` (nome da empresa ao lado do avatar no perfil Empresa), `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+
 ### E01: painel da empresa e público das trilhas
 - Público das trilhas: sem mudança, porque a regra do E01 (conta de Empresa na trilha geral e na da própria empresa) já tinha entrado no D02.
 - Criado: `entregasDoProjeto` em `lib/metricas.ts` (aprovadas = última coluna, aguardando revisão = penúltima, só em quadro com 3 ou mais colunas) com 3 casos em `lib/metricas.casos.ts`; `ROTULO_STATUS_EMPRESA` e `TOM_STATUS_EMPRESA` em `lib/metricas.ts`; teste `testes/navegador/e01-painel-empresa.mjs` (22 conferências).

@@ -11,7 +11,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs` ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs` ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
 **Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts` e `lib/metricas.casos.ts`.
 
@@ -40,7 +40,7 @@ npm run dev        # http://localhost:3000
 | `/empresas` | Lista e ficha de empresa (CNPJ validado, CEP via ViaCEP) |
 | `/pessoas` | Lista e ficha de pessoa (campos por perfil, convite, inativar) |
 | `/trilhas` e `/trilhas/[id]` | Lista e editor de trilha (etapas, público, progresso). Cada etapa tem o painel "Conteúdo" (texto e endereço) e, no quiz, o editor de perguntas (alternativas, correta por radio, nota mínima e tentativas). Publicar exige quiz completo e grava `publicadaEm` só na primeira vez. As etapas reordenam por setas ou arrastando a alça |
-| `/projetos` e `/projetos/[id]` | Lista, ficha, equipe e tarefas (quadro, lista, cronograma) |
+| `/projetos` e `/projetos/[id]` | Lista, ficha, equipe e tarefas (quadro, lista, cronograma). A Visão geral tem "Próximas entregas" (prazo nos próximos 14 dias). Para a Empresa: só os projetos dela, quadro sem arrastar e sem criar, detalhe da tarefa em leitura com comentário liberado e Equipe só com pessoa, papel e período (sem carga nem trilhas) |
 | `/design-system` | Documentação viva dos componentes |
 | `/acessos` | Admin: tabela de contas (pessoa, e-mail/login, perfil, empresa, status, último acesso) com filtros e menu por linha (reenviar convite, redefinir senha para `Cais@2026`, mudar perfil com explicação do que ganha e perde, inativar/reativar) e o quadro "O que cada perfil pode fazer", gerado de `ROTAS_POR_PERFIL` e `podeFazer` |
 | `/carga` | Admin: carga da equipe ("Em construção") |
@@ -70,7 +70,8 @@ As regras ficam em funções puras, sem React, e podem ser testadas com Node:
 |---|---|---|---|
 | Criar projeto, editar projeto, alocar, criar/editar/excluir tarefa, criar/renomear/excluir lista | sim | não | não |
 | Mover tarefa (arrastar ou "Status" no detalhe) | sim | não | só as próprias |
-| Comentar | sim | sim, no projeto dela | sim, no projeto em que está |
+| Comentar | sim | sim, no projeto dela (o comentário aparece com a etiqueta "Empresa") | sim, no projeto em que está |
+| Ver carga e trilhas das pessoas da equipe | sim | não (privacidade: são dados de outros clientes) | sim |
 
 Botões sem permissão são **escondidos** (não desabilitados); campos sem permissão viram **texto** somente leitura. Tudo isso é conveniência de interface: a segurança real é do back-end da PROGLOGIC (§7). Regras ambíguas estão marcadas `// TODO(PROGLOGIC): confirmar`.
 

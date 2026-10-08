@@ -1,7 +1,8 @@
 /* ============================================================================
    APP/(SISTEMA)/PROJETOS/[ID]/PAGE.TSX (FICHA DO PROJETO)
    O que é: a ficha de um projeto com três abas (Visão geral, Equipe,
-     Tarefas), as vistas quadro/lista/cronograma e o detalhe da tarefa.
+     Tarefas), as vistas quadro/lista/cronograma e o detalhe da tarefa. A Visão
+     geral tem o card "Próximas entregas" (prazo nos próximos 14 dias).
      Projeto fora do escopo do perfil (inclusive digitado na URL) manda para
      /sem-permissao; os botões que o perfil não pode usar são escondidos.
    Onde é usado: rota /projetos/[id] (ex.: /projetos/p1?aba=equipe&tarefa=t3).
@@ -30,7 +31,7 @@ import { useToast } from '@/lib/toast';
 import { useAuth } from '@/lib/auth';
 import { podeVerProjeto } from '@/lib/escopo';
 import { podeFazer } from '@/lib/permissoes';
-import { progressoProjeto, ROTULO_STATUS_PROJETO, TOM_STATUS_PROJETO, ROTULO_PRIORIDADE } from '@/lib/metricas';
+import { progressoProjeto, proximasEntregas, DIAS_PROXIMAS_ENTREGAS, ROTULO_STATUS_PROJETO, TOM_STATUS_PROJETO, ROTULO_PRIORIDADE } from '@/lib/metricas';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import Button from '@/components/button';
 import Input from '@/components/input';
@@ -43,7 +44,8 @@ import DetalheTarefa from '@/components/projetos/DetalheTarefa';
 import { VistaLista, VistaCronograma } from '@/components/projetos/Vistas';
 import Equipe from '@/components/projetos/Equipe';
 import FormProjeto from '@/components/projetos/FormProjeto';
-import { cx, dataBR, diasEntre, hojeISO, novoId, somaDias } from '@/lib/utils';
+import { cx, dataBR, dataCurta, diasEntre, hojeISO, novoId, somaDias } from '@/lib/utils';
+import Link from 'next/link';
 
 /** As três abas da ficha; o valor vai na URL como ?aba=. */
 type Aba = 'geral' | 'equipe' | 'tarefas';
@@ -292,6 +294,8 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
   const lider = d.pessoa(projeto.liderId);
   const empresa = d.empresa(projeto.empresaId);
   const hoje = hojeISO();
+  // Tarefas que vencem nos próximos 14 dias e ainda não estão prontas (lib/metricas.ts).
+  const proximas = proximasEntregas(projeto.id, d, DIAS_PROXIMAS_ENTREGAS, hoje);
   // Tempo decorrido em %: dias desde o início ÷ duração total × 100.
   // Math.max(1, ...) evita divisão por zero (início = entrega) e o
   // Math.max(0, Math.min(100, ...)) prende o resultado entre 0% e 100%
@@ -341,6 +345,40 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
               {pr.pct + 10 < decorrido && pr.total > 0 && <Aviso tipo="aviso">O tempo está andando mais rápido que as entregas.</Aviso>}
             </div>
             <Colunas itens={porColuna} altura={110} />
+          </div>
+        </Card>
+        {/* Próximas entregas (E02): o que vence nos próximos 14 dias e ainda não está pronto.
+          * Útil para a empresa saber o que esperar; vale para todos os perfis. Atrasadas ficam no Andamento. */}
+        <Card>
+          <CardTitulo titulo="Próximas entregas" descricao={`Tarefas com prazo nos próximos ${DIAS_PROXIMAS_ENTREGAS} dias`} />
+          <div className="px-5 pb-5">
+            {proximas.length === 0 ? (
+              // Estado vazio: diz o que significa e não exige ação.
+              <p className="rounded-xl border border-dashed border-borda px-4 py-6 text-center text-sm text-tinta-suave">Nenhuma tarefa vence nos próximos {DIAS_PROXIMAS_ENTREGAS} dias.</p>
+            ) : (
+              <ul className="divide-y divide-borda">
+                {proximas.map((t) => {
+                  const resp = d.pessoa(t.responsavelId);
+                  const faltam = diasEntre(hoje, t.prazo);
+                  return (
+                    <li key={t.id}>
+                      {/* NAVEGA: abre a tarefa por cima do quadro (aba Tarefas). */}
+                      <Link href={`/projetos/${projeto.id}?aba=tarefas&tarefa=${t.id}`}
+                        className="flex items-center gap-3 rounded-lg px-1 py-2.5 hover:bg-superficie-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-tinta">{t.titulo}</span>
+                          <span className="block truncate text-[12px] text-tinta-suave">{resp?.nome ?? 'Sem responsável'}</span>
+                        </span>
+                        {/* Faltando 3 dias ou menos fica âmbar, sempre com texto (cor nunca sozinha). */}
+                        <span className={cx('shrink-0 text-right text-[12px] tabular-nums', faltam <= 3 ? 'font-semibold text-aviso' : 'text-tinta-suave')}>
+                          {dataCurta(t.prazo)}<span className="block">{faltam === 0 ? 'vence hoje' : `em ${faltam} dia${faltam > 1 ? 's' : ''}`}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </Card>
       </div>

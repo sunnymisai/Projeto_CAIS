@@ -228,6 +228,29 @@ export function entregasDoProjeto(projetoId: string, d: Pick<Dados, 'projetos' |
   return { total: tarefas.length, aprovadas, revisao, emProducao: tarefas.length - aprovadas - revisao, temRevisao };
 }
 
+/** Janela padrão de "Próximas entregas" na Visão geral do projeto, em dias (E02). */
+export const DIAS_PROXIMAS_ENTREGAS = 14;
+
+/**
+ * Tarefas que vencem logo: ainda não estão prontas e o prazo cai entre hoje e hoje + `dias`.
+ * Atrasadas ficam de fora de propósito (já aparecem no Andamento como "atrasadas").
+ * @param projetoId - id do projeto.
+ * @param d - todos os dados (só `projetos` e `tarefas` são lidos).
+ * @param dias - tamanho da janela (padrão 14).
+ * @param hoje - data de referência (padrão: hoje); existe para facilitar teste.
+ * @returns as tarefas, do prazo mais próximo para o mais distante.
+ * @example proximasEntregas('prj_portal', d) // tarefas com prazo de hoje até daqui a 14 dias
+ */
+export function proximasEntregas(projetoId: string, d: Pick<Dados, 'projetos' | 'tarefas'>, dias: number = DIAS_PROXIMAS_ENTREGAS, hoje: string = hojeISO()) {
+  const proj = d.projetos.find((p) => p.id === projetoId);
+  const ultima = proj?.colunas[proj.colunas.length - 1]?.id;
+  const limite = somaDias(hoje, dias);
+  // Comparar texto funciona porque as datas estão em AAAA-MM-DD.
+  return d.tarefas
+    .filter((t) => t.projetoId === projetoId && t.colunaId !== ultima && t.prazo >= hoje && t.prazo <= limite)
+    .sort((a, b) => a.prazo.localeCompare(b.prazo));
+}
+
 /** Nome de cada perfil de acesso, em português (Meu perfil, Acessos). */
 export const ROTULO_PERFIL: Record<Perfil, string> = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' };
 

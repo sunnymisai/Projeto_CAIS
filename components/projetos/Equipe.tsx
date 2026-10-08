@@ -2,6 +2,7 @@
    EQUIPE.TSX
    O que é: a aba Equipe do projeto (tabela de alocações + modal para alocar/editar).
                Editar e remover alocação só aparecem para quem pode alocar (Admin).
+               O perfil Empresa não vê carga nem trilhas das pessoas (privacidade, E02).
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, na aba "Equipe".
    Depende de: lib/store (useDados: alocacoes, pessoa, cargaDaPessoa, salvar,
                remover), lib/auth (useAuth), lib/permissoes (podeFazer), lib/toast, lib/useFormulario, lib/metricas
@@ -34,7 +35,8 @@ const PAPEIS = ['Líder', 'Front-end', 'Back-end', 'UX', 'QA', 'Dados'];
 
 /**
  * Equipe do projeto: a pessoa formada vira pessoa alocada (slide 19).
- * Colunas: pessoa, papel, período, carga e trilhas concluídas (§5).
+ * Colunas: pessoa, papel, período, carga e trilhas concluídas (§5). Para o perfil Empresa,
+ * só pessoa, papel e período (privacidade: ver verDetalhesDaPessoa).
  *
  * O botão "Alocar pessoa" fica no cabeçalho da página; por isso o estado
  * `alocando` vem de fora (a página controla, este componente abre o modal).
@@ -52,6 +54,11 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
   // não desabilitados: para os outros perfis a tabela é só leitura e um botão sem uso
   // geraria dúvida (e seria anunciado como "indisponível" por leitores de tela).
   const podeAlocar = !!sessao && podeFazer(sessao.perfil, 'alocar');
+  // PRIVACIDADE (E02, mesma regra do painel da empresa no E01): o perfil Empresa vê pessoa,
+  // papel e período, mas NÃO a carga nem as trilhas. A carga (e a soma no title) revela quanto
+  // a pessoa trabalha para OUTROS clientes; a contagem de trilhas inclui trilhas de outras empresas.
+  // TODO(PROGLOGIC): confirmar se a empresa pode ver ao menos as horas no projeto dela.
+  const verDetalhesDaPessoa = sessao?.perfil !== 'empresa';
   // Alocação aberta no modal de edição (null = nenhuma).
   const [editando, setEditando] = useState<Alocacao | null>(null);
   const equipe = d.alocacoes.filter((a) => a.projetoId === projeto.id);
@@ -68,7 +75,7 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
           <>
             <Tabela rotulo="Equipe do projeto">
               {/* sr-only: o título "Ações" existe só para leitores de tela. */}
-              <thead><tr><Th>Pessoa</Th><Th>Papel</Th><Th>Período</Th><Th>Carga</Th><Th>Trilhas</Th><Th className="w-24"><span className="sr-only">Ações</span></Th></tr></thead>
+              <thead><tr><Th>Pessoa</Th><Th>Papel</Th><Th>Período</Th>{verDetalhesDaPessoa && <><Th>Carga</Th><Th>Trilhas</Th></>}{podeAlocar && <Th className="w-24"><span className="sr-only">Ações</span></Th>}</tr></thead>
               <tbody>
                 {equipe.map((a) => {
                   // Alocação de pessoa que não existe mais: pula a linha.
@@ -94,16 +101,19 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
                       <Td>{a.papel}</Td>
                       {/* slice(0, 5) corta o ano: "dd/mm/aaaa" vira "dd/mm". */}
                       <Td className="tabular-nums text-tinta-suave">{dataBR(a.inicio).slice(0, 5)} a {dataBR(a.fim).slice(0, 5)}</Td>
-                      <Td>
-                        {/* Mostra a carga DESTE projeto; o title revela a soma de todos quando passa do limite. */}
-                        <span className={cx('inline-flex items-center gap-1.5 tabular-nums', acima && 'font-semibold text-aviso')} title={acima ? `Soma de todos os projetos: ${total} h/sem` : undefined}>
-                          {acima && <TriangleAlert className="h-3.5 w-3.5" aria-label="Acima do limite" />}{a.carga} h/sem
-                        </span>
-                      </Td>
-                      {/* Âmbar quando ainda faltam trilhas obrigatórias. */}
-                      <Td className={cx('tabular-nums', tr.concluidas < tr.total && 'text-aviso')}>{tr.concluidas} de {tr.total}</Td>
-                      <Td>
-                        {podeAlocar && <div className="flex justify-end gap-0.5">
+                      {/* Carga e trilhas: escondidas para o perfil Empresa (ver verDetalhesDaPessoa). */}
+                      {verDetalhesDaPessoa && <>
+                        <Td>
+                          {/* Mostra a carga DESTE projeto; o title revela a soma de todos quando passa do limite. */}
+                          <span className={cx('inline-flex items-center gap-1.5 tabular-nums', acima && 'font-semibold text-aviso')} title={acima ? `Soma de todos os projetos: ${total} h/sem` : undefined}>
+                            {acima && <TriangleAlert className="h-3.5 w-3.5" aria-label="Acima do limite" />}{a.carga} h/sem
+                          </span>
+                        </Td>
+                        {/* Âmbar quando ainda faltam trilhas obrigatórias. */}
+                        <Td className={cx('tabular-nums', tr.concluidas < tr.total && 'text-aviso')}>{tr.concluidas} de {tr.total}</Td>
+                      </>}
+                      {podeAlocar && <Td>
+                        <div className="flex justify-end gap-0.5">
                           <button onClick={() => setEditando(a)} aria-label={`Editar alocação de ${p.nome}`} className="rounded-lg p-1.5 text-tinta-fraca hover:bg-superficie-alt hover:text-tinta"><Pencil className="h-4 w-4" /></button>
                           {/*
                             * APAGA: tira a pessoa da equipe (remove só a alocação; a
@@ -111,17 +121,19 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
                             * TODO(API): trocar por DELETE da alocação.
                             */}
                           <button onClick={() => { d.remover('alocacoes', a.id); avisar(`${p.nome} saiu da equipe.`); }} aria-label={`Remover ${p.nome} da equipe`} className="rounded-lg p-1.5 text-tinta-fraca hover:bg-erro/10 hover:text-erro"><Trash2 className="h-4 w-4" /></button>
-                        </div>}
-                      </Td>
+                        </div>
+                      </Td>}
                     </Tr>
                   );
                 })}
               </tbody>
             </Tabela>
-            {/* Legenda dos sinais da tabela (o ícone nunca aparece sem explicação). */}
-            <p className="flex items-center gap-1.5 px-4 py-3 text-[12px] text-tinta-suave">
-              <TriangleAlert className="h-3.5 w-3.5 text-aviso" aria-hidden />soma de todos os projetos passa do limite da pessoa. É aviso, não bloqueio. <strong className="ml-1 text-tinta">Trilhas:</strong> quantas concluídas das atribuídas.
-            </p>
+            {/* Legenda dos sinais da tabela (o ícone nunca aparece sem explicação); só faz sentido com as colunas de carga e trilhas. */}
+            {verDetalhesDaPessoa && (
+              <p className="flex items-center gap-1.5 px-4 py-3 text-[12px] text-tinta-suave">
+                <TriangleAlert className="h-3.5 w-3.5 text-aviso" aria-hidden />soma de todos os projetos passa do limite da pessoa. É aviso, não bloqueio. <strong className="ml-1 text-tinta">Trilhas:</strong> quantas concluídas das atribuídas.
+              </p>
+            )}
           </>
         )}
       </div>

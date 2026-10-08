@@ -3,6 +3,7 @@
    O que é: a faixa no alto de toda tela logada, com busca global (Ctrl+K),
    avisos (atrasos e sobrecarga), troca de tema e menu do perfil. Busca e avisos
    só mostram o que o perfil da sessão pode ver (lib/escopo.ts e lib/permissoes.ts).
+   No perfil Empresa, o nome da empresa aparece ao lado do avatar.
    Onde é usado: app/(sistema)/layout.tsx (em todas as telas logadas).
    Depende de: lib/auth (useAuth), lib/store (useDados), lib/toast (useToast),
    lib/escopo (filtros por sessão), lib/permissoes (podeAcessar), lib/utils, next/navigation (useRouter), next/link, lucide-react,
@@ -40,6 +41,10 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
   const { sessao, sair } = useAuth();
   // Dados do protótipo (lib/store): projetos, empresas, pessoas, trilhas e tarefas.
   const dados = useDados();
+  // Nome fantasia da empresa da sessão (só no perfil Empresa), mostrado ao lado do avatar.
+  const nomeDaEmpresa = sessao?.perfil === 'empresa'
+    ? dados.empresa(dados.pessoa(sessao.pessoaId)?.empresaId ?? '')?.nomeFantasia
+    : undefined;
   // Mostra mensagens rápidas (toast) de confirmação.
   const avisar = useToast();
   const router = useRouter();
@@ -235,8 +240,14 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
             {/* Nome e perfil ficam escondidos no celular; lá aparece só o avatar. */}
             <span className="hidden text-left sm:block">
               <span className="block text-[13px] font-semibold leading-tight text-tinta">{sessao?.nome}</span>
-              {/* Etiqueta com o perfil da sessão (texto, não só cor: §9). */}
-              {sessao && <span className="mt-0.5 block"><Etiqueta tom="neutro">{NOME_PERFIL[sessao.perfil]}</Etiqueta></span>}
+              {/* Etiqueta com o perfil da sessão (texto, não só cor: §9). No perfil Empresa, o nome
+                * da empresa vem ao lado, para o cliente ver em nome de quem está no sistema (E02). */}
+              {sessao && (
+                <span className="mt-0.5 flex items-center gap-1.5">
+                  <Etiqueta tom="neutro">{NOME_PERFIL[sessao.perfil]}</Etiqueta>
+                  {nomeDaEmpresa && <span className="max-w-[160px] truncate text-[12px] font-medium text-tinta-suave">{nomeDaEmpresa}</span>}
+                </span>
+              )}
             </span>
           </button>
         )}>
