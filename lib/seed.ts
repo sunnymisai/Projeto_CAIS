@@ -2,12 +2,13 @@
    SEED (DADOS DE DEMONSTRAÇÃO, FICTÍCIOS)
    O que é: cria o conjunto inicial de empresas, pessoas, trilhas, projetos, alocações e tarefas do protótipo.
    Onde é usado: lib/store.tsx (estado inicial e "Restaurar demonstração" do Topbar) e components/projetos/FormProjeto.tsx (COLUNAS_PADRAO).
-   Depende de: lib/tipos.ts (Dados, Coluna) e lib/utils.ts (hojeISO, somaDias).
+   Depende de: lib/tipos.ts (Dados, Coluna), lib/utils.ts (hojeISO, somaDias) e lib/carga.ts (segundaDaSemana, para alinhar o cenário da Elisa às semanas).
    Contexto: §5 (as 4 colunas padrão do quadro), §16 (Bruno passa de 40 h de propósito, para mostrar o aviso de carga).
    ============================================================================ */
 
 import type { Dados, Coluna } from './tipos';
 import { hojeISO, somaDias } from './utils';
+import { segundaDaSemana } from './carga';
 
 /*
  * As datas são geradas a partir de hoje, para que prazos, atrasos e
@@ -39,6 +40,8 @@ export function criarSeed(): Dados {
   const h = hojeISO();
   // Atalho: d(-14) = 14 dias atrás; d(45) = daqui a 45 dias (AAAA-MM-DD).
   const d = (n: number) => somaDias(h, n);
+  // Segunda-feira daqui a 2 semanas: o cenário da Elisa (F02) ocupa exatamente as semanas que começam nela e na seguinte.
+  const s2 = somaDias(segundaDaSemana(h), 14);
   // Data-hora ISO de "N horas atrás", usada nos comentários (3600000 ms = 1 h).
   const agoraMenos = (horas: number) => new Date(Date.now() - horas * 3600000).toISOString();
 
@@ -60,6 +63,8 @@ export function criarSeed(): Dados {
       { id: 'pes_diego', nome: 'Diego Alves', email: 'diego.alves@cais.example', telefone: '(81) 99000-0004', cargo: 'Analista de testes', perfil: 'profissional', status: 'ativo', dataEntrada: d(-60), area: 'QA', nivel: 'Júnior', cargaMax: 40, habilidades: ['Testes', 'Cypress'], empresaId: '' },
       { id: 'pes_elisa', nome: 'Elisa Rocha', email: 'elisa.rocha@cais.example', telefone: '(81) 99000-0005', cargo: 'Desenvolvedora', perfil: 'profissional', status: 'ativo', dataEntrada: d(-20), area: 'Front-end', nivel: 'Júnior', cargaMax: 30, habilidades: ['JavaScript'], empresaId: '' },
       { id: 'pes_felipe', nome: 'Felipe Andrade', email: 'felipe.andrade@cais.example', telefone: '(81) 99000-0006', cargo: 'Desenvolvedor', perfil: 'profissional', status: 'convidado', dataEntrada: d(-2), area: 'Back-end', nivel: 'Estágio', cargaMax: 20, habilidades: ['Python'], empresaId: '' },
+      // Semáforo (F02): profissional ativa e totalmente livre nas próximas semanas (nenhuma alocação), para a tela /carga mostrar o nível "Livre".
+      { id: 'pes_gabriela', nome: 'Gabriela Costa', email: 'gabriela.costa@cais.example', telefone: '(81) 99000-0007', cargo: 'Desenvolvedora', perfil: 'profissional', status: 'ativo', dataEntrada: d(-40), area: 'Back-end', nivel: 'Pleno', cargaMax: 40, habilidades: ['Node.js', 'SQL'], empresaId: '' },
       { id: 'pes_marcos', nome: 'Marcos Vieira', email: 'marcos@vertice.example', telefone: '(81) 99876-1122', cargo: 'Gerente de TI', perfil: 'empresa', status: 'ativo', dataEntrada: d(-60), area: '', nivel: '', cargaMax: 0, habilidades: [], empresaId: 'emp_vertice' },
       { id: 'pes_patricia', nome: 'Patrícia Melo', email: 'patricia@aurora.example', telefone: '(81) 98765-3344', cargo: 'Diretora de Produto', perfil: 'empresa', status: 'ativo', dataEntrada: d(-30), area: '', nivel: '', cargaMax: 0, habilidades: [], empresaId: 'emp_aurora' },
     ],
@@ -151,17 +156,27 @@ export function criarSeed(): Dados {
     projetos: [
       { id: 'prj_portal', nome: 'Portal de pedidos', tipo: 'Aplicação web', empresaId: 'emp_vertice', contatoNome: 'Marcos Vieira', descricao: 'Portal para os clientes da Vértice acompanharem pedidos, entregas e notas fiscais em tempo real.', inicio: d(-42), entrega: d(45), prioridade: 'alta', liderId: 'pes_ana', status: 'andamento', cor: 'roxo', colunas: COLUNAS_PADRAO },
       { id: 'prj_estoque', nome: 'Painel de estoque', tipo: 'Dashboard', empresaId: 'emp_vertice', contatoNome: 'Marcos Vieira', descricao: 'Painel interno com níveis de estoque por centro de distribuição.', inicio: d(-7), entrega: d(30), prioridade: 'media', liderId: 'pes_bruno', status: 'andamento', cor: 'verde', colunas: COLUNAS_PADRAO },
+      // Semáforo (F02, o exemplo do time no §16): projeto curto, de hoje até daqui a 7 dias.
+      { id: 'prj_sprint', nome: 'Sprint de acessibilidade', tipo: 'Melhoria', empresaId: 'emp_vertice', contatoNome: 'Marcos Vieira', descricao: 'Revisão de acessibilidade do portal antes da próxima entrega: contraste, teclado e leitores de tela.', inicio: d(0), entrega: d(7), prioridade: 'alta', liderId: 'pes_diego', status: 'andamento', cor: 'azul', colunas: COLUNAS_PADRAO },
       { id: 'prj_agenda', nome: 'App de agendamento', tipo: 'Aplicativo móvel', empresaId: 'emp_aurora', contatoNome: 'Patrícia Melo', descricao: 'Agendamento de consultas pelo celular, com lembretes e confirmação.', inicio: d(7), entrega: d(80), prioridade: 'media', liderId: 'pes_carla', status: 'planejado', cor: 'ambar', colunas: COLUNAS_PADRAO },
     ],
-    // Bruno soma 30 h + 15 h = 45 h (acima das 40 h) de propósito: mostra o aviso de carga (§5: "é aviso, não bloqueio").
+    // Cenários do semáforo de carga (F02, lib/carga.ts):
+    // - Bruno soma 30 h + 15 h = 45 h nos mesmos dias (112,5%): VERMELHO de propósito (§5: "é aviso, não bloqueio");
+    // - Diego (o exemplo do time, §16): 10 h/sem no Sprint de hoje a d(7) e 30 h/sem no Portal a partir de d(8).
+    //   As duas nunca estão ativas no mesmo dia: o pico é 75% e ele NUNCA fica vermelho;
+    // - Elisa (limite 30 h): 20 h no Estoque + 15 h no App de agendamento só nas semanas de s2 e s2+7 → 117%,
+    //   vermelha só nessas 2 semanas;
+    // - Gabriela: nenhuma alocação (livre).
     alocacoes: [
       { id: 'alo_1', projetoId: 'prj_portal', pessoaId: 'pes_ana', papel: 'Líder', inicio: d(-42), fim: d(45), carga: 20, obs: '' },
       { id: 'alo_2', projetoId: 'prj_portal', pessoaId: 'pes_bruno', papel: 'Front-end', inicio: d(-14), fim: d(45), carga: 30, obs: '' },
       { id: 'alo_3', projetoId: 'prj_portal', pessoaId: 'pes_carla', papel: 'UX', inicio: d(-9), fim: d(20), carga: 15, obs: '' },
-      { id: 'alo_4', projetoId: 'prj_portal', pessoaId: 'pes_diego', papel: 'QA', inicio: d(0), fim: d(45), carga: 20, obs: '' },
+      { id: 'alo_4', projetoId: 'prj_portal', pessoaId: 'pes_diego', papel: 'QA', inicio: d(8), fim: d(45), carga: 30, obs: 'Começa quando o Sprint de acessibilidade termina.' },
+      { id: 'alo_8', projetoId: 'prj_sprint', pessoaId: 'pes_diego', papel: 'Líder', inicio: d(0), fim: d(7), carga: 10, obs: '' },
       { id: 'alo_5', projetoId: 'prj_estoque', pessoaId: 'pes_bruno', papel: 'Líder', inicio: d(-7), fim: d(30), carga: 15, obs: 'Soma com o Portal passa de 40 h.' },
       { id: 'alo_6', projetoId: 'prj_estoque', pessoaId: 'pes_elisa', papel: 'Front-end', inicio: d(-7), fim: d(30), carga: 20, obs: '' },
       { id: 'alo_7', projetoId: 'prj_agenda', pessoaId: 'pes_carla', papel: 'Líder', inicio: d(7), fim: d(80), carga: 15, obs: '' },
+      { id: 'alo_9', projetoId: 'prj_agenda', pessoaId: 'pes_elisa', papel: 'Front-end', inicio: s2, fim: somaDias(s2, 11), carga: 15, obs: 'Reforço de 2 semanas: soma com o Estoque passa do limite dela.' },
     ],
     // Tarefas nas 4 colunas; algumas com prazo já vencido (d(-2), d(-1)) para mostrar atraso.
     tarefas: [

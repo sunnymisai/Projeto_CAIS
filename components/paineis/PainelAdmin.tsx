@@ -8,7 +8,7 @@
      (components/LoginForm.tsx) e o botão "Ir para o painel" da 404
      (app/not-found.tsx).
    Depende de: lib/store.tsx (useDados: empresas, pessoas, projetos, tarefas,
-     trilhas e cargaDaPessoa), lib/auth.tsx (useAuth: nome de quem entrou),
+     trilhas), lib/carga.ts (ocupacaoNaSemana e os níveis do semáforo), lib/auth.tsx (useAuth: nome de quem entrou),
      lib/metricas.ts (resumoTrilha, progressoProjeto), lib/utils.ts (datas e
      cx), components/ui/basicos.tsx e components/ui/Graficos.tsx.
    Contexto: §6 (Dashboards: painel do admin — trilhas, projetos, pessoas),
@@ -29,6 +29,7 @@ import { Card, CardTitulo, Esqueleto, Etiqueta, Avatar, Progresso } from '@/comp
 import { BarraEmpilhada, Legenda, Rosca, BarrasComLimite, Colunas, COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
 import { resumoTrilha, progressoProjeto } from '@/lib/metricas';
 import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
+import { ocupacaoNaSemana, segundaDaSemana, ROTULO_NIVEL, TOM_NIVEL } from '@/lib/carga';
 
 /*
  * Cores dos gráficos de trilha (verde = concluída, roxo = em andamento,
@@ -105,6 +106,14 @@ export default function PainelAdmin() {
   // mostra o esqueleto no lugar dos cartões, nunca uma tela em branco.
   // SIMULADO: a store finge a demora da API para este esqueleto aparecer.
   if (!d.pronto) return <EsqueletoPainel />;
+
+  // Semáforo da semana atual por profissional (card "Alocação e carga"), da maior ocupação para a menor.
+  // Horas = pico diário em horas (pct × limite ÷ 100), arredondado para caber no "45 / 40 h".
+  const segunda = segundaDaSemana(hojeISO());
+  const cargas = m.profissionais
+    .map((p) => ({ p, o: ocupacaoNaSemana(p, segunda, d) }))
+    .sort((a, b) => b.o.pct - a.o.pct)
+    .map(({ p, o }) => ({ rotulo: p.nome, sub: p.area, valor: Math.round((o.pct * p.cargaMax) / 100), limite: p.cargaMax, nivel: { rotulo: ROTULO_NIVEL[o.nivel], tom: TOM_NIVEL[o.nivel] } }));
 
   // Os 4 cartões de número (KPIs) do topo. Cada um tem: rótulo, número
   // grande (valor), linha de apoio (sub), ícone, para onde o clique leva
@@ -286,24 +295,20 @@ export default function PainelAdmin() {
           <div className="p-5"><Colunas itens={m.porColuna} /></div>
         </Card>
 
-        {/* Carga (§6: pessoas — alocação e carga; §16: semáforo de carga).
-          * Para cada profissional: valor = d.cargaDaPessoa(id) (lib/store.tsx),
-          * a soma das horas/semana das alocações dele que ainda não terminaram
-          * (fim >= hoje); limite = p.cargaMax (40 h por padrão, §11).
-          * Passar do limite é AVISO, NÃO BLOQUEIO (§5). */}
+        {/* Carga (§6: pessoas — alocação e carga; §16: semáforo de carga por período, F02).
+          * Para cada profissional, a SEMANA ATUAL (ocupacaoNaSemana, lib/carga.ts): valor = horas
+          * do dia mais cheio da semana (pico), limite = p.cargaMax, e o nível do semáforo em texto.
+          * Conta o QUANDO de cada alocação: duas que não se cruzam no tempo não se somam
+          * (o caso do Diego). Passar do limite é AVISO, NÃO BLOQUEIO (§5). */}
         <Card className="xl:col-span-3">
-          <CardTitulo titulo="Alocação e carga" descricao="Horas semanais somadas em todos os projetos ativos. A marca indica o limite de cada pessoa." />
-          {/* Lista ordenada da maior para a menor carga e cortada ao meio:
+          <CardTitulo titulo="Alocação e carga" descricao="Semana atual: as horas do dia mais cheio de cada pessoa, somando só os projetos ativos naquele dia. A marca indica o limite." />
+          {/* Lista ordenada da maior para a menor ocupação e cortada ao meio:
             * a 1ª metade vai na coluna da esquerda e o resto na da direita.
             * Math.ceil: com número ímpar, a coluna da esquerda fica com 1 a mais.
             * maximoEscala={50}: a barra cheia vale 50 h, folga acima das 40 h. */}
           <div className="grid gap-x-10 p-5 md:grid-cols-2">
-            <BarrasComLimite maximoEscala={50}
-              itens={m.profissionais.map((p) => ({ rotulo: p.nome, sub: p.area, valor: d.cargaDaPessoa(p.id), limite: p.cargaMax }))
-                .sort((a, b) => b.valor - a.valor).slice(0, Math.ceil(m.profissionais.length / 2))} />
-            <BarrasComLimite maximoEscala={50}
-              itens={m.profissionais.map((p) => ({ rotulo: p.nome, sub: p.area, valor: d.cargaDaPessoa(p.id), limite: p.cargaMax }))
-                .sort((a, b) => b.valor - a.valor).slice(Math.ceil(m.profissionais.length / 2))} />
+            <BarrasComLimite maximoEscala={50} itens={cargas.slice(0, Math.ceil(cargas.length / 2))} />
+            <BarrasComLimite maximoEscala={50} itens={cargas.slice(Math.ceil(cargas.length / 2))} />
           </div>
         </Card>
       </div>

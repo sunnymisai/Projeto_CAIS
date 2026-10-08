@@ -128,28 +128,36 @@ export function Rosca({ segmentos, tamanho = 148, centro, subcentro }: { segment
 /**
  * Barras horizontais com linha de limite (ex.: carga semanal x 40 h, §5).
  * Passar do limite pinta a barra de âmbar: "é aviso, não bloqueio".
- * @param itens lista de { rotulo, valor, limite, sub? }.
+ * @param itens lista de { rotulo, valor, limite, sub?, nivel? }. `nivel` (semáforo de carga) troca a cor
+ *   pela do nível e escreve o texto dele ao lado do número (ex.: "45 / 40 h · Acima do limite").
  * @param maximoEscala valor que corresponde a 100% da largura (ex.: 60 h).
  * @returns lista de barras.
  * @example <BarrasComLimite maximoEscala={60} itens={[{ rotulo: 'Ana', valor: 44, limite: 40 }]} />
  */
 export function BarrasComLimite({ itens, maximoEscala }: {
-  itens: { rotulo: string; valor: number; limite: number; sub?: string }[]; maximoEscala: number;
+  itens: { rotulo: string; valor: number; limite: number; sub?: string; nivel?: { rotulo: string; tom: 'neutro' | 'sucesso' | 'aviso' | 'erro' } }[]; maximoEscala: number;
 }) {
+  // Classes por tom do nível (semáforo de carga): texto e barra com a mesma cor semântica.
+  const TEXTO = { neutro: 'text-tinta-suave', sucesso: 'text-sucesso', aviso: 'text-aviso', erro: 'text-erro' } as const;
+  const BARRA = { neutro: 'bg-tinta-fraca', sucesso: 'bg-sucesso', aviso: 'bg-aviso', erro: 'bg-erro' } as const;
   return (
     <ul className="space-y-3">
       {itens.map((i) => {
-        // Acima do limite → cor de aviso (âmbar) e texto extra para o leitor de tela.
+        // Sem nível (uso antigo): acima do limite → âmbar. Com nível (semáforo): a cor vem do nível
+        // e o texto dele aparece ao lado do número (cor nunca sozinha, §9).
         const acima = i.valor > i.limite;
+        const tom = i.nivel?.tom ?? (acima ? 'aviso' : undefined);
         return (
           <li key={i.rotulo}>
             <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
               <span className="truncate font-medium text-tinta">{i.rotulo}{i.sub && <span className="ml-1.5 font-normal text-tinta-suave">{i.sub}</span>}</span>
-              <span className={cx('shrink-0 font-semibold tabular-nums', acima ? 'text-aviso' : 'text-tinta-suave')}>{i.valor} / {i.limite} h</span>
+              <span className={cx('shrink-0 font-semibold tabular-nums', tom ? TEXTO[tom] : 'text-tinta-suave')}>
+                {i.valor} / {i.limite} h{i.nivel && <span className="font-medium"> · {i.nivel.rotulo}</span>}
+              </span>
             </div>
-            <div className="relative h-2 rounded-full bg-superficie-alt" role="img" aria-label={`${i.rotulo}: ${i.valor} de ${i.limite} horas${acima ? ', acima do limite' : ''}`}>
+            <div className="relative h-2 rounded-full bg-superficie-alt" role="img" aria-label={`${i.rotulo}: ${i.valor} de ${i.limite} horas${i.nivel ? `, ${i.nivel.rotulo.toLowerCase()}` : acima ? ', acima do limite' : ''}`}>
               {/* Largura limitada a 100% para a barra não vazar da caixa. */}
-              <div className={cx('h-full rounded-full transition-[width] duration-500', acima ? 'bg-aviso' : 'bg-primaria')}
+              <div className={cx('h-full rounded-full transition-[width] duration-500', tom ? BARRA[tom] : 'bg-primaria')}
                 style={{ width: `${Math.min(100, (i.valor / maximoEscala) * 100)}%` }} />
               {/* Risquinho vertical que marca onde fica o limite na escala. */}
               <span className="absolute -top-1 h-4 w-0.5 rounded bg-tinta/40" style={{ left: `${(i.limite / maximoEscala) * 100}%` }} aria-hidden />

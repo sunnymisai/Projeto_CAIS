@@ -2,7 +2,7 @@
    STORE (CAMADA DE DADOS)
    O que é: o "banco de dados" do protótipo — guarda empresas, pessoas, trilhas, projetos, alocações e tarefas e expõe ações para ler, salvar e apagar.
    Onde é usado: app/providers.tsx (monta o DadosProvider), lib/auth.tsx (lerPessoasSalvas, para o login saber quem existe) e, via useDados(), nas telas de app/(sistema)/ (painel, empresas, pessoas, projetos, projetos/[id], trilhas, trilhas/[id]) e nos componentes components/projetos/* (Quadro, CartaoTarefa, DetalheTarefa, Equipe, FormProjeto, Vistas) e components/shell/Topbar.tsx.
-   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO) e o localStorage do navegador.
+   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO), lib/carga.ts (ocupacaoNoDia, para cargaDaPessoa) e o localStorage do navegador.
    Contexto: §5 (Projetos, alocação e tarefas), §7 (back-end é da PROGLOGIC), §14 (no protótipo, "ligado à store"), §16 (semáforo de carga).
    ============================================================================ */
 
@@ -12,6 +12,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Alocacao, Dados, Empresa, Pessoa, Projeto, Tarefa, Trilha } from './tipos';
 import { criarSeed } from './seed';
 import { hojeISO } from './utils';
+import { ocupacaoNoDia } from './carga';
 
 /*
  * Por que existe uma store?
@@ -27,7 +28,10 @@ import { hojeISO } from './utils';
 // ganharam perguntas e as trilhas publicadas ganharam `publicadaEm`. Os dados antigos do
 // navegador (chave v1) são DESCARTADOS: todo mundo volta para a demonstração nova.
 // A sessão ('cais-sessao') e as senhas trocadas ('cais-senhas-demo') não são afetadas.
-const CHAVE = 'cais-dados-v2';
+// ⚠️ ATENÇÃO: v2 → v3 no F02 (bloco F). O seed ganhou os cenários do semáforo de carga (projeto
+// Sprint de acessibilidade, alocações novas do Diego e da Elisa e a Gabriela, livre). Os dados
+// antigos do navegador (chave v2) são DESCARTADOS: todo mundo volta para a demonstração nova.
+const CHAVE = 'cais-dados-v3';
 
 /** As seis coleções que todo `Dados` precisa ter (usadas para conferir o que veio do navegador). */
 const COLECOES = ['empresas', 'pessoas', 'trilhas', 'projetos', 'alocacoes', 'tarefas'] as const;
@@ -116,9 +120,9 @@ interface DadosCtx extends Dados {
   /** Busca um projeto pelo id (undefined se não existir). */
   projeto: (id: string) => Projeto | undefined;
   /**
-   * Soma das horas semanais (`carga`) das alocações da pessoa que ainda não
-   * terminaram. `ignorarAlocacaoId` serve para editar uma alocação sem contá-la
-   * duas vezes.
+   * Horas semanais das alocações da pessoa ATIVAS HOJE (semáforo de carga, lib/carga.ts).
+   * `ignorarAlocacaoId` serve para editar uma alocação sem contá-la duas vezes.
+   * Para semanas futuras ou um período, use as funções de lib/carga.ts.
    * @example d.cargaDaPessoa('pes_bruno') // 45 → passou de 40 h: mostra aviso
    */
   cargaDaPessoa: (pessoaId: string, ignorarAlocacaoId?: string) => number;
@@ -294,17 +298,18 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     empresa: (id) => dados.empresas.find((e) => e.id === id),
     pessoa: (id) => dados.pessoas.find((p) => p.id === id),
     projeto: (id) => dados.projetos.find((p) => p.id === id),
-    // Soma a carga (h/sem) das alocações da pessoa cujo fim é hoje ou depois.
-    // ⚠️ ATENÇÃO: limitação atual — soma TODAS as alocações que terminam a
-    // partir de hoje, mesmo as que nunca se sobrepõem no tempo (ex.: uma que
-    // acaba em 7 dias e outra que só começa daqui a 1 mês contam juntas).
-    // Por isso o aviso de "mais de 40 h" pode aparecer sem a pessoa estar de
-    // fato sobrecarregada. Será substituída pelo semáforo de carga por período
-    // (bloco F, §16). Quem usa: painel, pessoas, Equipe e Topbar — mudar a
-    // assinatura quebra essas telas.
-    cargaDaPessoa: (pessoaId, ignorar) => dados.alocacoes
-      .filter((a) => a.pessoaId === pessoaId && a.id !== ignorar && a.fim >= hojeISO())
-      .reduce((s, a) => s + a.carga, 0),
+    // Horas semanais ATIVAS HOJE (lib/carga.ts → ocupacaoNoDia).
+    // MUDANÇA DE COMPORTAMENTO (F02): antes somava TODAS as alocações que terminavam a partir
+    // de hoje, mesmo as que nunca se cruzam no tempo (uma que acaba em 7 dias e outra que só
+    // começa no 8º contavam juntas). Agora só conta o que está ativo hoje, em dia útil; projeto
+    // concluído e pessoa inativa ficam fora. Em fim de semana o resultado é 0 (não é dia útil).
+    // A assinatura não mudou de propósito: quem usa (painel do admin, /pessoas, Equipe, modal de
+    // alocação e Topbar) continua funcionando. A visão por período fica em lib/carga.ts.
+    // ⚠️ ATENÇÃO: pessoa que não existe nos dados dá 0.
+    cargaDaPessoa: (pessoaId, ignorar) => {
+      const p = dados.pessoas.find((x) => x.id === pessoaId);
+      return p ? ocupacaoNoDia(p, hojeISO(), dados, ignorar).horas : 0;
+    },
   }), [dados, pronto, erro, tentarDeNovo, salvar, remover, moverTarefa, restaurarDemonstracao]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;

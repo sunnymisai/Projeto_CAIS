@@ -73,6 +73,17 @@ export const ROTULO_NIVEL: Record<NivelCarga, string> = {
   vermelho: 'Acima do limite',
 };
 
+/**
+ * Tom (cor semântica, §9) de cada nível, nos nomes das etiquetas do design system.
+ * Cor nunca aparece sozinha: as telas mostram também ROTULO_NIVEL e um ícone.
+ */
+export const TOM_NIVEL: Record<NivelCarga, 'neutro' | 'sucesso' | 'aviso' | 'erro'> = {
+  livre: 'neutro',
+  verde: 'sucesso',
+  amarelo: 'aviso',
+  vermelho: 'erro',
+};
+
 /* ---------------------------------------------------------------------------
    DATAS
    --------------------------------------------------------------------------- */

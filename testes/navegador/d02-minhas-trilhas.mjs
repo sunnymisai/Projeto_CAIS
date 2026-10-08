@@ -94,11 +94,11 @@ try {
   // ---------- Estado vazio ----------
   // A store só grava depois da 1ª alteração, então o teste monta dados completos: só a Patrícia e nenhuma trilha.
   const soPatricia = { id: 'pes_patricia', nome: 'Patrícia Melo', email: 'patricia@aurora.example', telefone: '', cargo: '', perfil: 'empresa', status: 'ativo', dataEntrada: '2026-01-01', area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId: 'emp_aurora' };
-  await ev(`localStorage.setItem('cais-dados-v2', ${JSON.stringify(JSON.stringify({ empresas: [], pessoas: [soPatricia], trilhas: [], projetos: [], alocacoes: [], tarefas: [] }))})`);
+  await ev(`localStorage.setItem('cais-dados-v3', ${JSON.stringify(JSON.stringify({ empresas: [], pessoas: [soPatricia], trilhas: [], projetos: [], alocacoes: [], tarefas: [] }))})`);
   await ir('/minhas-trilhas');
   c('sem trilhas: estado vazio com a frase do prompt', (await ev(`document.querySelector('main').innerText`)).includes('Nenhuma trilha atribuída a você ainda.'));
   // Devolve a demonstração para não atrapalhar o próximo teste.
-  await ev(`localStorage.removeItem('cais-dados-v2')`);
+  await ev(`localStorage.removeItem('cais-dados-v3')`);
 
   c('nenhum erro no console', erros.length === 0, erros.join(' || '));
 } finally {

@@ -11,9 +11,9 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs` ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
-**Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts` e `lib/metricas.casos.ts`.
+**Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts`, `lib/metricas.casos.ts` e `lib/carga.casos.ts` (semáforo de carga).
 
 **Padrão de comentários** (rode antes de todo push): `node testes/auditar-comentarios.mjs`, que deve terminar com "0 ponto(s) para revisar".
 
@@ -50,6 +50,14 @@ npm run dev        # http://localhost:3000
 | `/minhas-tarefas` | Só profissional: as tarefas em que é responsável, de todos os projetos, agrupadas em Atrasadas, Hoje, Esta semana (até domingo) e Depois, mais "Concluídas recentemente" (últimos 7 dias, recolhida). Filtros de projeto e prioridade, contagem no rodapé. Clicar abre o detalhe da tarefa por cima (`?tarefa=`), e mudar o Status move a tarefa no quadro |
 | `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
+
+## Semáforo de carga (bloco F)
+
+A regra fica em `lib/carga.ts` (funções puras, testadas em `lib/carga.casos.ts`). A conta é por **dia útil**: a ocupação do dia é a soma das horas semanais das alocações **ativas naquele dia** dividida pelo limite da pessoa; a da semana é o **pico** entre os dias úteis. Níveis: Livre (0%), Com folga (até 75%), No limite (até 100%) e Acima do limite (mais de 100%), em `LIMIARES`. Projeto concluído não conta; pausado conta (`CONTAR_PAUSADOS`); pessoa inativa fica fora. Acima do limite é aviso, não bloqueio (`BLOQUEAR_SOBRECARGA = false`).
+
+- `cargaDaPessoa` (store) devolve as horas ativas **hoje**; para semanas e períodos, use `ocupacaoNaSemana`, `linhaDoTempo`, `picoNoPeriodo`, `simularAlocacao` e `proximaJanelaLivre`.
+- O card "Alocação e carga" do painel do admin mostra a semana atual com o nível em texto.
+- Cenários do seed: **Bruno** acima do limite (30 + 15 h nos mesmos dias); **Diego**, o exemplo do time (§16): 10 h/sem no Sprint de acessibilidade até daqui a 7 dias e 30 h/sem no Portal a partir do 8º dia, nunca acima do limite; **Elisa** (limite 30 h) acima do limite só em 2 semanas; **Gabriela** livre.
 
 ## Permissões por perfil
 
@@ -92,7 +100,7 @@ A autenticação e os dados passam por dois arquivos:
 - **`lib/auth.tsx`**: troque o corpo de `autenticar()` pelo `fetch` do login e guarde o token.
 - **`lib/store.tsx`**: reescreva `salvar`, `remover` e `moverTarefa` com `fetch`. As telas usam só `useDados()` e não precisam mudar.
 
-Hoje os dados ficam no `localStorage` (chave `cais-dados-v2`). O menu do perfil tem a opção "Restaurar dados de demonstração".
+Hoje os dados ficam no `localStorage` (chave `cais-dados-v3`). O menu do perfil tem a opção "Restaurar dados de demonstração".
 
 ## Estrutura
 
@@ -126,6 +134,6 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Público das trilhas: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`, com `TODO(PROGLOGIC)`). Por isso o Marcos e a Patrícia contam como "não iniciada" nos números do admin.
 - Redefinir senha na tela Acessos grava a senha temporária `Cais@2026` sem forçar a troca no próximo login (SIMULADO).
 - Permissão no servidor: as regras de perfil só existem no navegador.
-- Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v2`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).
+- Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v3`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).
 - Revisão H01 do bloco C (pendências cosméticas que ficaram para depois): `dark:text-[#14161F]` em 5 componentes (virar token `--sobre-cor`), `#B9A7FF` no item ativo da barra lateral (virar token `--marca-clara`) e as paletas fixas de avatares (`components/ui/basicos.tsx`) e de capas de projeto (`components/projetos/cores.ts`), que hoje são exceção documentada.
 - Conteúdo das etapas é só texto e endereço: não há envio de arquivo (vídeo, PDF, áudio). O padrão de 3 tentativas no quiz e a regra do prazo da trilha (a data mais recente entre a publicação e a entrada da pessoa, mais os dias de prazo) esperam confirmação da PROGLOGIC (`TODO(PROGLOGIC)` em `lib/trilhas.ts` e `lib/metricas.ts`).

@@ -2,6 +2,15 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Bloco F: semáforo de carga (branch `feat/semaforo-carga`)
+
+### F02: semáforo integrado à store e cenários de demonstração
+- Criado: `TOM_NIVEL` em `lib/carga.ts`; projeto "Sprint de acessibilidade" (`prj_sprint`, Vértice), alocações `alo_8` (Diego no Sprint) e `alo_9` (Elisa no App de agendamento por 2 semanas) e a profissional livre Gabriela Costa (`pes_gabriela`) em `lib/seed.ts`; teste `testes/navegador/f02-semaforo-painel.mjs`.
+- Modificado: `lib/store.tsx` (`cargaDaPessoa` passa a devolver as horas ativas HOJE via `ocupacaoNoDia`, com a mesma assinatura; chave `cais-dados-v2` → `cais-dados-v3`, que descarta os dados antigos do navegador), `lib/seed.ts` (Diego no Portal a partir do 8º dia com 30 h/sem), `components/paineis/PainelAdmin.tsx` (card "Alocação e carga" com a semana atual e o nível em texto), `components/ui/Graficos.tsx` (`BarrasComLimite` aceita `nivel`), os testes de navegador que limpavam a chave antiga e `SISTEMA.md` (seção "Semáforo de carga").
+
+### F01: regra do semáforo de carga por período
+- Criado: `lib/carga.ts` (dia útil, ocupação do dia e da semana pelo pico, níveis em `LIMIARES`, `CONTAR_PAUSADOS`, `BLOQUEAR_SOBRECARGA`, `simularAlocacao`, `proximaJanelaLivre` e afins) e `lib/carga.casos.ts` (25 casos).
+
 ## Bloco E: empresa (branch `feat/empresa`)
 
 ### E02: visão da empresa nos projetos e na trilha

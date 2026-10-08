@@ -36,7 +36,7 @@ const LARGO = `(() => { const m = document.querySelector('#conteudo'); return Ma
 
 const res = [];
 try {
-  await ev(`localStorage.removeItem('cais-dados-v2')`);
+  await ev(`localStorage.removeItem('cais-dados-v3')`);
   for (const [conta, sessao] of Object.entries(QUEM)) {
     await entrar(sessao);
     for (const rota of sessao ? ['/', '/sem-permissao', ...INTERNAS] : PUBLICAS) {
