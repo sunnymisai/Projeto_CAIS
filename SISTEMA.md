@@ -11,7 +11,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `f03-tela-carga.mjs`, `f04-semaforo-alocacao.mjs`, `g01-filtros-periodo.mjs`, `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `f03-tela-carga.mjs`, `f04-semaforo-alocacao.mjs`, `g01-filtros-periodo.mjs`, `g02-tempo-real.mjs` (usa duas abas), `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
 **Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts`, `lib/metricas.casos.ts` e `lib/carga.casos.ts` (semáforo de carga).
 
@@ -50,6 +50,10 @@ npm run dev        # http://localhost:3000
 | `/minhas-tarefas` | Só profissional: as tarefas em que é responsável, de todos os projetos, agrupadas em Atrasadas, Hoje, Esta semana (até domingo) e Depois, mais "Concluídas recentemente" (últimos 7 dias, recolhida). Filtros de projeto e prioridade, contagem no rodapé. Clicar abre o detalhe da tarefa por cima (`?tarefa=`), e mudar o Status move a tarefa no quadro |
 | `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
+
+## Quadro em tempo real (G02, simulado)
+
+`lib/tempoReal.ts` define o contrato `CanalTempoReal` (`publicar` e `assinar`) e uma implementação SIMULADA com `BroadcastChannel` (`cais-tempo-real`), que só conversa entre abas do **mesmo navegador**. A store publica `tarefa_movida`, `tarefa_salva`, `tarefa_removida` e `comentario_novo` depois de gravar e, ao receber um evento de outra aba, relê os dados do navegador (a aba que publicou ignora o próprio evento, o que evita laço). O quadro mostra o indicador "Ao vivo", pisca o cartão mexido por 2,5 s (só o anel, sem pulso, para quem pediu menos movimento) e anuncia, em `aria-live`, "Ana moveu 'Tela de login' para Revisão". Para ligar ao WebSocket da PROGLOGIC, escreva outro canal com a mesma interface (modelo no cabeçalho de `lib/tempoReal.ts`).
 
 ## Filtros por período (G01)
 

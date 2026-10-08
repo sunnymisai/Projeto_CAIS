@@ -31,10 +31,11 @@ import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
  * @param onAbrir abre o detalhe da tarefa (clique, Enter ou Espaço).
  * @param onDragStart chamado quando o usuário começa a arrastar o cartão.
  * @param onDragEnd chamado quando o arraste termina (soltou ou cancelou).
+ * @param destaque true por alguns segundos quando OUTRA pessoa mexeu no cartão (tempo real, G02).
  * @returns o cartão clicável e arrastável.
  */
-export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel, cadeado, onAbrir, onDragStart, onDragEnd }: {
-  tarefa: Tarefa; concluida: boolean; arrastando: boolean; arrastavel: boolean; cadeado: boolean;
+export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel, cadeado, onAbrir, onDragStart, onDragEnd, destaque = false }: {
+  tarefa: Tarefa; concluida: boolean; arrastando: boolean; arrastavel: boolean; cadeado: boolean; destaque?: boolean;
   onAbrir: () => void; onDragStart: (e: DragEvent) => void; onDragEnd: () => void;
 }) {
   const d = useDados();
@@ -86,7 +87,10 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
         'group select-none rounded-xl border border-borda bg-superficie p-3 shadow-[0_1px_0_rgba(20,22,31,0.06)] transition-[box-shadow,transform,opacity,border-color] duration-150',
         arrastavel ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         'hover:border-primaria/40 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60',
-        arrastando && 'rotate-[1.5deg] opacity-40'
+        arrastando && 'rotate-[1.5deg] opacity-40',
+        // Destaque do tempo real: anel roxo; o pulso só acontece com motion-safe (quem pediu menos
+        // movimento no sistema, prefers-reduced-motion, vê só o anel parado).
+        destaque && 'ring-2 ring-primaria motion-safe:animate-pulse'
       )}
     >
       {/* Etiquetas só aparecem se a tarefa tiver alguma (não deixa faixa vazia). */}

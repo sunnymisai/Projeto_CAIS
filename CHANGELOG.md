@@ -4,6 +4,10 @@ Cada entrada lista o que foi criado, modificado e removido.
 
 ## Bloco G: lacunas do deck
 
+### G02: quadro em tempo real simulado entre abas (branch `feat/tempo-real`)
+- Criado: `lib/tempoReal.ts` (contrato `CanalTempoReal`, canal simulado com `BroadcastChannel`, instruções para trocar pelo WebSocket); teste `testes/navegador/g02-tempo-real.mjs` (9 conferências, com duas abas).
+- Modificado: `lib/store.tsx` (publica o evento depois de gravar as mudanças de tarefa; assina o canal, relê os dados e expõe `eventoExterno`), `components/projetos/Quadro.tsx` (indicador "Ao vivo", aviso `aria-live` e destaque do cartão), `components/projetos/CartaoTarefa.tsx` (prop `destaque`; o pulso só roda com `motion-safe`), `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+
 ### G01: filtros por período nos painéis (branch `feat/filtros-periodo`)
 - Criado: `components/ui/FiltroPeriodo.tsx` (filtro e hook `usePeriodo`, que guarda `?de=&ate=` na URL; documentado em `/design-system`); em `lib/metricas.ts`, `Periodo`, `dentroDoPeriodo`, `semanasDoPeriodo`, `trilhasConcluidasNoPeriodo`, `evolucaoDaTurma`, `tarefasConcluidasPorEmpresa`, `aprovadasNoPeriodo`, `ultimosDias`, `esteMes` e `atalhoDoPeriodo` (9 casos novos em `lib/metricas.casos.ts`); `progresso.concluidaEm` em `lib/tipos.ts`; teste `testes/navegador/g01-filtros-periodo.mjs` (15 conferências).
 - Modificado: `lib/metricas.ts` (`entregasPorSemana` aceita o período, opcional), `lib/quiz.ts` (`concluirEtapa` grava `concluidaEm` ao terminar a última etapa; 2 casos novos), `lib/seed.ts` (datas de conclusão e a Boas-vindas concluída da Gabriela), `lib/store.tsx` (chave `cais-dados-v3` → `cais-dados-v4`), `app/(sistema)/painel/page.tsx` (`<Suspense>`, exigido pelo `useSearchParams`), os três painéis (filtro acima do conteúdo; admin com o bloco "No período"; empresa com as aprovadas no período; profissional com o histórico no período), `app/(sistema)/design-system/page.tsx`, os testes que limpavam a chave antiga, `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.

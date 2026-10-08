@@ -1,10 +1,11 @@
 /* ============================================================================
    QUADRO.TSX
-   O que é: o quadro kanban de um projeto (listas + cartões com arrastar e soltar).
+   O que é: o quadro kanban de um projeto (listas + cartões com arrastar e soltar), com o
+     indicador "Ao vivo" e o destaque do cartão que outra pessoa mexeu (tempo real simulado, G02).
                Respeita o perfil: só quem pode mover arrasta, e os botões de criar
                cartão/lista e de editar lista só existem para quem pode usá-los.
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, na vista "quadro" da aba Tarefas.
-   Depende de: lib/store (useDados: moverTarefa, salvar, alocacoes, pessoa),
+   Depende de: lib/store (useDados: moverTarefa, salvar, alocacoes, pessoa, eventoExterno do tempo real),
                lib/auth (useAuth), lib/permissoes (podeFazer), lib/toast (useToast), lib/utils (cx, hojeISO, novoId, somaDias),
                components/button, components/ui/Menu, ./CartaoTarefa e ./cores.
                Arrastar e soltar é a API nativa do HTML5 (sem biblioteca).
@@ -13,7 +14,7 @@
    ============================================================================ */
 "use client";
 
-import { DragEvent, useRef, useState } from 'react';
+import { DragEvent, useEffect, useRef, useState } from 'react';
 import { Plus, X, MoreHorizontal } from 'lucide-react';
 import { useDados, Projeto, Tarefa } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
@@ -70,6 +71,28 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
   const [arrastando, setArrastando] = useState<string | null>(null);
   // Onde o cartão cairia se fosse solto agora: lista e posição dentro dela.
   const [alvo, setAlvo] = useState<{ colunaId: string; indice: number } | null>(null);
+  // TEMPO REAL (G02): cartão que outra pessoa acabou de mexer (destaque) e a frase do aviso.
+  const [destaque, setDestaque] = useState<string | null>(null);
+  const [anuncio, setAnuncio] = useState('');
+  // Roda quando chega um evento de outra aba (d.eventoExterno muda). Só reage aos deste projeto.
+  // Limpeza: cancela o timer que apaga o destaque, se outro evento chegar antes dos 2,5 s.
+  useEffect(() => {
+    const e = d.eventoExterno;
+    if (!e || e.projetoId !== projeto.id) return;
+    const quem = e.autorNome?.split(' ')[0] ?? 'Alguém';
+    const coluna = projeto.colunas.find((c) => c.id === e.colunaId)?.titulo ?? 'outra lista';
+    const frase = e.tipo === 'tarefa_movida' ? `${quem} moveu '${e.titulo}' para ${coluna}`
+      : e.tipo === 'comentario_novo' ? `${quem} comentou em '${e.titulo}'`
+      : e.tipo === 'tarefa_removida' ? `${quem} removeu '${e.titulo}'`
+      : `${quem} atualizou '${e.titulo}'`;
+    // O efeito existe para isto: reagir a algo de FORA do React (o canal entre abas).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDestaque(e.tipo === 'tarefa_removida' ? null : e.tarefaId);
+    setAnuncio(frase);
+    const t = setTimeout(() => setDestaque(null), 2500);
+    return () => clearTimeout(t);
+  }, [d.eventoExterno, projeto.id, projeto.colunas]);
+
   // No celular só uma lista aparece por vez; esta é a aba escolhida.
   const [colunaMobile, setColunaMobile] = useState(projeto.colunas[0]?.id);
   // Texto da nova lista; null = formulário de "Adicionar lista" fechado.
@@ -163,6 +186,15 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
   return (
     // O fundo do quadro vem da cor escolhida no projeto (gradiente de ./cores).
     <div className="flex h-full flex-col overflow-hidden rounded-2xl" style={{ background: cor.fundo }}>
+      {/* "Ao vivo" (G02): o quadro se atualiza sozinho quando alguém mexe em outra aba (SIMULADO entre abas;
+        * TODO(API): com o WebSocket, entre pessoas). A frase do último movimento aparece ao lado e é
+        * anunciada pelo leitor de tela sem interromper (aria-live="polite"). */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 pt-3 text-[12px] font-semibold text-white/90">
+        <span className="inline-flex items-center gap-1.5" title="Atualiza sozinho quando alguém mexe no quadro em outra aba (simulado)">
+          <span className="h-2 w-2 rounded-full bg-sucesso motion-safe:animate-pulse" aria-hidden />Ao vivo
+        </span>
+        <span role="status" aria-live="polite" className="font-medium text-white/80">{anuncio}</span>
+      </div>
       {/* Abas de lista no celular (md:hidden some no desktop). §5: no celular colunas viram abas. */}
       <div className="rolagem flex gap-1.5 overflow-x-auto p-3 md:hidden" role="tablist" aria-label="Listas do quadro">
         {projeto.colunas.map((c) => (
@@ -244,7 +276,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
                     <div key={t.id}>
                       {/* Espaço tracejado ANTES do cartão cuja posição é o alvo (estado "soltando"). */}
                       {destacada && pos === alvo!.indice && t.id !== arrastando && <Espaco />}
-                      <CartaoTarefa tarefa={t} concluida={col.id === ultima} arrastando={arrastando === t.id}
+                      <CartaoTarefa tarefa={t} concluida={col.id === ultima} arrastando={arrastando === t.id} destaque={destaque === t.id}
                         // arrastavel: Admin sempre; Profissional só o próprio. cadeado: só quando é
                         // Profissional olhando tarefa alheia (Empresa não arrasta e não precisa de cadeado:
                         // a regra dela é geral, não "só o responsável").

@@ -2,7 +2,7 @@
    STORE (CAMADA DE DADOS)
    O que é: o "banco de dados" do protótipo — guarda empresas, pessoas, trilhas, projetos, alocações e tarefas e expõe ações para ler, salvar e apagar.
    Onde é usado: app/providers.tsx (monta o DadosProvider), lib/auth.tsx (lerPessoasSalvas, para o login saber quem existe) e, via useDados(), nas telas de app/(sistema)/ (painel, empresas, pessoas, projetos, projetos/[id], trilhas, trilhas/[id]) e nos componentes components/projetos/* (Quadro, CartaoTarefa, DetalheTarefa, Equipe, FormProjeto, Vistas) e components/shell/Topbar.tsx.
-   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO), lib/carga.ts (ocupacaoNoDia, para cargaDaPessoa) e o localStorage do navegador.
+   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO), lib/carga.ts (ocupacaoNoDia, para cargaDaPessoa), lib/tempoReal.ts (canal entre abas, G02), lib/auth.tsx (autor dos eventos) e o localStorage do navegador.
    Contexto: §5 (Projetos, alocação e tarefas), §7 (back-end é da PROGLOGIC), §14 (no protótipo, "ligado à store"), §16 (semáforo de carga).
    ============================================================================ */
 
@@ -13,6 +13,10 @@ import type { Alocacao, Dados, Empresa, Pessoa, Projeto, Tarefa, Trilha } from '
 import { criarSeed } from './seed';
 import { hojeISO } from './utils';
 import { ocupacaoNoDia } from './carga';
+import { canalTempoReal, type EventoTempoReal } from './tempoReal';
+// ⚠️ ATENÇÃO: lib/auth.tsx também importa daqui (lerPessoasSalvas). O import circular é seguro porque
+// useAuth só é chamado dentro do componente, nunca quando o arquivo carrega.
+import { useAuth } from './auth';
 
 /*
  * Por que existe uma store?
@@ -99,6 +103,11 @@ interface DadosCtx extends Dados {
   /** Tenta ler os dados de novo (volta a mostrar o esqueleto enquanto lê). */
   tentarDeNovo: () => void;
   /**
+   * Último evento de tempo real vindo de OUTRA aba (G02), com o instante em que chegou.
+   * O Quadro usa para destacar o cartão e anunciar "Ana moveu ...". null até chegar o primeiro.
+   */
+  eventoExterno: (EventoTempoReal & { recebidoEm: number }) | null;
+  /**
    * Cria o item se o `id` ainda não existe; se existe, substitui pelo novo.
    * @example d.salvar('empresas', { ...empresa, status: 'ativa' })
    */
@@ -151,6 +160,41 @@ export function DadosProvider({ children }: { children: ReactNode }) {
   // Ref (e não state) porque só serve de "trava" para o efeito de salvar:
   // mudar um ref não provoca novo desenho da tela.
   const carregou = useRef(false);
+  // TEMPO REAL (G02, lib/tempoReal.ts):
+  // - quem está logado entra no evento como autor ("Ana moveu ...");
+  // - dadosRef: os dados mais recentes, para as ações montarem o evento sem esperar o React;
+  // - pendentes: eventos esperando a gravação no navegador (ver o efeito de persistir);
+  // - eventoExterno: o último evento que chegou de outra aba.
+  const { sessao } = useAuth();
+  const sessaoRef = useRef(sessao);
+  const dadosRef = useRef(dados);
+  const pendentes = useRef<EventoTempoReal[]>([]);
+  const [eventoExterno, setEventoExterno] = useState<(EventoTempoReal & { recebidoEm: number }) | null>(null);
+  // Roda depois de cada render: mantém as refs com os valores atuais. Sem limpeza.
+  useEffect(() => { sessaoRef.current = sessao; dadosRef.current = dados; });
+
+  /**
+   * Põe um evento na fila para publicar depois que os dados forem gravados.
+   * @param e - o evento (sem autor: o autor vem da sessão aqui).
+   */
+  const enfileirar = useCallback((e: Omit<EventoTempoReal, 'autorId' | 'autorNome' | 'origem'>) => {
+    pendentes.current.push({ ...e, autorId: sessaoRef.current?.pessoaId, autorNome: sessaoRef.current?.nome });
+  }, []);
+
+  // Assina o canal: quando OUTRA aba muda uma tarefa, relê os dados do navegador e guarda o evento.
+  // Roda uma vez ([]); a limpeza cancela a assinatura quando o provider sai da tela.
+  // POR QUE NÃO ENTRA EM LAÇO: (1) o canal não entrega à aba o próprio evento (origem); (2) recarregar
+  // aqui NÃO enfileira evento nenhum, então a gravação que vem em seguida não publica nada de volta.
+  // TODO(API): com o WebSocket, buscar a tarefa na API em vez de reler o localStorage.
+  useEffect(() => canalTempoReal().assinar((evento) => {
+    try {
+      const bruto = localStorage.getItem(CHAVE);
+      const lido: unknown = bruto ? JSON.parse(bruto) : null;
+      // GRAVA: troca os dados desta aba pelos que a outra aba acabou de gravar.
+      if (formatoValido(lido)) setDados(lido);
+    } catch { /* dado danificado: fica com o que tem; a próxima leitura completa mostra o erro */ }
+    setEventoExterno({ ...evento, recebidoEm: Date.now() });
+  }), []);
 
   // Carrega do navegador (simula a latência da API para mostrar o esqueleto)
   // Roda ao abrir e de novo a cada "Tentar de novo" (dependência `tentativa`).
@@ -197,6 +241,10 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     // do que a pessoa já tinha salvo, antes mesmo de ler.
     if (!carregou.current) return;
     try { localStorage.setItem(CHAVE, JSON.stringify(dados)); } catch { /* cota cheia */ }
+    // GRAVA (tempo real): publica os eventos da fila só DEPOIS de gravar, para a outra aba já
+    // encontrar os dados novos quando reler o navegador.
+    const fila = pendentes.current.splice(0);
+    for (const e of fila) canalTempoReal().publicar(e);
   }, [dados]);
 
   /**
@@ -207,6 +255,14 @@ export function DadosProvider({ children }: { children: ReactNode }) {
   // GRAVA: altera a coleção na store (e, pelo efeito acima, no localStorage).
   // TODO(API): virar fetch POST (item novo) ou PUT/PATCH (item existente).
   const salvar = useCallback(<K extends Salvavel>(colecao: K, item: ItemDe<K>) => {
+    // GRAVA (tempo real): tarefa salva vira evento. Comentário novo e troca de coluna têm tipo próprio.
+    if (colecao === 'tarefas') {
+      const t = item as Tarefa;
+      const antes = dadosRef.current.tarefas.find((x) => x.id === t.id);
+      const tipo = antes && t.comentarios.length > antes.comentarios.length ? 'comentario_novo'
+        : antes && antes.colunaId !== t.colunaId ? 'tarefa_movida' : 'tarefa_salva';
+      enfileirar({ tipo, projetoId: t.projetoId, tarefaId: t.id, titulo: t.titulo, colunaId: t.colunaId });
+    }
     setDados((d) => {
       const lista = d[colecao] as ItemDe<K>[];
       // Se já existe um item com o mesmo id, é edição; senão, é criação.
@@ -214,7 +270,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
       // Nunca altera o array antigo: cria um novo (o React só redesenha se a referência mudar).
       return { ...d, [colecao]: existe ? lista.map((x) => (x.id === item.id ? item : x)) : [...lista, item] };
     });
-  }, []);
+  }, [enfileirar]);
 
   /**
    * Apaga um item de qualquer coleção pelo id.
@@ -229,6 +285,11 @@ export function DadosProvider({ children }: { children: ReactNode }) {
   // (ficam apontando para um id que não existe mais).
   // TODO(API): virar fetch DELETE; a cascata passa a ser responsabilidade do back-end.
   const remover = useCallback((colecao: Salvavel, id: string) => {
+    // GRAVA (tempo real): tarefa removida vira evento (o título vem dos dados antes de apagar).
+    if (colecao === 'tarefas') {
+      const t = dadosRef.current.tarefas.find((x) => x.id === id);
+      if (t) enfileirar({ tipo: 'tarefa_removida', projetoId: t.projetoId, tarefaId: id, titulo: t.titulo });
+    }
     setDados((d) => {
       const prox = { ...d, [colecao]: (d[colecao] as { id: string }[]).filter((x) => x.id !== id) } as Dados;
       // Remoções em cascata
@@ -239,12 +300,15 @@ export function DadosProvider({ children }: { children: ReactNode }) {
       }
       return prox;
     });
-  }, []);
+  }, [enfileirar]);
 
   /** Move uma tarefa para outra coluna/posição e renumera a ordem. */
   // GRAVA: altera colunaId, ordem e concluidaEm das tarefas afetadas.
   // TODO(API): virar fetch PATCH; com WebSocket (§5) os colegas veem o cartão mudar.
   const moverTarefa = useCallback((tarefaId: string, colunaId: string, indice: number) => {
+    // GRAVA (tempo real): o movimento vira evento "tarefa_movida" (só se a tarefa existe).
+    const t = dadosRef.current.tarefas.find((x) => x.id === tarefaId);
+    if (t) enfileirar({ tipo: 'tarefa_movida', projetoId: t.projetoId, tarefaId, titulo: t.titulo, colunaId });
     setDados((d) => {
       const alvo = d.tarefas.find((t) => t.id === tarefaId);
       // Tarefa não encontrada (ex.: apagada por outra aba): não muda nada.
@@ -275,7 +339,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
         }),
       };
     });
-  }, []);
+  }, [enfileirar]);
 
   // GRAVA: substitui tudo pela demonstração (o efeito de persistir grava no localStorage).
   // APAGA: tudo o que foi criado ou editado no navegador se perde.
@@ -294,6 +358,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     pronto,
     erro,
     tentarDeNovo,
+    eventoExterno,
     salvar,
     remover,
     moverTarefa,
@@ -313,7 +378,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
       const p = dados.pessoas.find((x) => x.id === pessoaId);
       return p ? ocupacaoNoDia(p, hojeISO(), dados, ignorar).horas : 0;
     },
-  }), [dados, pronto, erro, tentarDeNovo, salvar, remover, moverTarefa, restaurarDemonstracao]);
+  }), [dados, pronto, erro, tentarDeNovo, eventoExterno, salvar, remover, moverTarefa, restaurarDemonstracao]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }
