@@ -11,9 +11,9 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `f03-tela-carga.mjs`, `f04-semaforo-alocacao.mjs`, `g01-filtros-periodo.mjs`, `g02-tempo-real.mjs` (usa duas abas), `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `f03-tela-carga.mjs`, `f04-semaforo-alocacao.mjs`, `g01-filtros-periodo.mjs`, `g02-tempo-real.mjs` (usa duas abas), `g03-anexos.mjs`, `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
-**Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts`, `lib/metricas.casos.ts` e `lib/carga.casos.ts` (semáforo de carga).
+**Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts`, `lib/metricas.casos.ts` e `lib/carga.casos.ts` (semáforo de carga) e `lib/anexos.casos.ts`.
 
 **Padrão de comentários** (rode antes de todo push): `node testes/auditar-comentarios.mjs`, que deve terminar com "0 ponto(s) para revisar".
 
@@ -51,13 +51,17 @@ npm run dev        # http://localhost:3000
 | `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
 
+## Anexos e aba Arquivos (G03, simulados)
+
+A tarefa tem a área **Anexos** no detalhe: botão "Escolher arquivo" (campo nativo, acionável pelo teclado) e arrastar e soltar. Cada arquivo tem até **10 MB**; acima disso a mensagem diz o tamanho e o limite. A lista mostra o ícone por tipo, o tamanho legível ("1,2 MB"), quem enviou e quando; remover pede confirmação na própria linha (Esc cancela). A aba **Arquivos** do projeto junta os anexos de todas as tarefas, com filtro por tipo e link para a tarefa de origem. **SIMULADO: guardamos só os metadados** (nome, tipo, tamanho, autor e data), nunca o conteúdo, porque o localStorage tem limite de poucos MB; o upload de verdade é do back-end (`TODO(API)` em `lib/tipos.ts` e `lib/anexos.ts`). Permissão `anexar_arquivo`: admin em qualquer tarefa, profissional só nas próprias, empresa só vê. Chave do navegador: `cais-dados-v5`.
+
 ## Quadro em tempo real (G02, simulado)
 
 `lib/tempoReal.ts` define o contrato `CanalTempoReal` (`publicar` e `assinar`) e uma implementação SIMULADA com `BroadcastChannel` (`cais-tempo-real`), que só conversa entre abas do **mesmo navegador**. A store publica `tarefa_movida`, `tarefa_salva`, `tarefa_removida` e `comentario_novo` depois de gravar e, ao receber um evento de outra aba, relê os dados do navegador (a aba que publicou ignora o próprio evento, o que evita laço). O quadro mostra o indicador "Ao vivo", pisca o cartão mexido por 2,5 s (só o anel, sem pulso, para quem pediu menos movimento) e anuncia, em `aria-live`, "Ana moveu 'Tela de login' para Revisão". Para ligar ao WebSocket da PROGLOGIC, escreva outro canal com a mesma interface (modelo no cabeçalho de `lib/tempoReal.ts`).
 
 ## Filtros por período (G01)
 
-Os três painéis têm o filtro de período (`components/ui/FiltroPeriodo.tsx`): Últimos 7, 30 e 90 dias, Este mês e Personalizado (o fim não pode vir antes do início). O padrão é 30 dias. O período vai para a URL (`/painel?de=AAAA-MM-DD&ate=AAAA-MM-DD`), então o link reabre no mesmo período. O que ele muda: **admin**, o bloco "No período" (Turma: evolução ao longo do tempo, com as trilhas concluídas por semana, e as tarefas concluídas por empresa); **empresa**, as entregas aprovadas no período por projeto e as últimas entregas; **profissional**, o histórico de entregas. A conclusão de uma trilha agora tem data (`progresso.concluidaEm`, gravada quando a pessoa termina a última etapa). Chave do navegador: `cais-dados-v4`.
+Os três painéis têm o filtro de período (`components/ui/FiltroPeriodo.tsx`): Últimos 7, 30 e 90 dias, Este mês e Personalizado (o fim não pode vir antes do início). O padrão é 30 dias. O período vai para a URL (`/painel?de=AAAA-MM-DD&ate=AAAA-MM-DD`), então o link reabre no mesmo período. O que ele muda: **admin**, o bloco "No período" (Turma: evolução ao longo do tempo, com as trilhas concluídas por semana, e as tarefas concluídas por empresa); **empresa**, as entregas aprovadas no período por projeto e as últimas entregas; **profissional**, o histórico de entregas. A conclusão de uma trilha agora tem data (`progresso.concluidaEm`, gravada quando a pessoa termina a última etapa). Chave do navegador: `cais-dados-v5`.
 
 ## Semáforo de carga (bloco F)
 
@@ -110,7 +114,7 @@ A autenticação e os dados passam por dois arquivos:
 - **`lib/auth.tsx`**: troque o corpo de `autenticar()` pelo `fetch` do login e guarde o token.
 - **`lib/store.tsx`**: reescreva `salvar`, `remover` e `moverTarefa` com `fetch`. As telas usam só `useDados()` e não precisam mudar.
 
-Hoje os dados ficam no `localStorage` (chave `cais-dados-v4`). O menu do perfil tem a opção "Restaurar dados de demonstração".
+Hoje os dados ficam no `localStorage` (chave `cais-dados-v5`). O menu do perfil tem a opção "Restaurar dados de demonstração".
 
 ## Estrutura
 
@@ -144,6 +148,6 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Público das trilhas: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`, com `TODO(PROGLOGIC)`). Por isso o Marcos e a Patrícia contam como "não iniciada" nos números do admin.
 - Redefinir senha na tela Acessos grava a senha temporária `Cais@2026` sem forçar a troca no próximo login (SIMULADO).
 - Permissão no servidor: as regras de perfil só existem no navegador.
-- Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v4`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).
+- Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v5`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).
 - Revisão H01 do bloco C (pendências cosméticas que ficaram para depois): `dark:text-[#14161F]` em 5 componentes (virar token `--sobre-cor`), `#B9A7FF` no item ativo da barra lateral (virar token `--marca-clara`) e as paletas fixas de avatares (`components/ui/basicos.tsx`) e de capas de projeto (`components/projetos/cores.ts`), que hoje são exceção documentada.
 - Conteúdo das etapas é só texto e endereço: não há envio de arquivo (vídeo, PDF, áudio). O padrão de 3 tentativas no quiz e a regra do prazo da trilha (a data mais recente entre a publicação e a entrada da pessoa, mais os dias de prazo) esperam confirmação da PROGLOGIC (`TODO(PROGLOGIC)` em `lib/trilhas.ts` e `lib/metricas.ts`).

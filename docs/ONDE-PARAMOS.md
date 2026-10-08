@@ -1,6 +1,6 @@
 # Onde paramos (CAIS v4)
 
-Registro para retomar o trabalho. Atualizado em **08/10/2026**, durante o bloco G (G01 e G02 feitos nas branches `feat/filtros-periodo` e `feat/tempo-real`).
+Registro para retomar o trabalho. Atualizado em **08/10/2026**, com o bloco G completo na branch `feat/anexos` (esperando aprovação para o merge).
 Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles em [`docs/prompts/00-GUIA.md`](prompts/00-GUIA.md).
 
 ## Situação dos prompts
@@ -13,7 +13,7 @@ Os prompts originais estão em [`docs/prompts/`](prompts/) e o guia de uso deles
 | D · Profissional | D01 a D05 | ✅ feito, no `main` | `ef7633b` |
 | E · Empresa | E01, E02 | ✅ feito, no `main` | `1bb2fd6` |
 | F · Semáforo de carga | F01 a F04 | ✅ feito, no `main` | `4222081` |
-| G · Lacunas do deck | G01, G02, G03 | 🔨 G01 e G02 feitos (branch `feat/tempo-real`, que já contém a `feat/filtros-periodo`); não estão no `main`; **próximo: G03** | ver `git log feat/tempo-real` |
+| G · Lacunas do deck | G01, G02, G03 | ✅ feito na branch `feat/anexos` (contém `feat/filtros-periodo` e `feat/tempo-real`); **falta o merge no `main` (com aprovação) e o push** | ver `git log feat/anexos` |
 | H · Revisão | H01 | 🔁 rodar ao fim de cada bloco. A dos blocos D e E foi feita: relatório em [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) (branch `revisao/h01-blocos-d-e`), esperando o time escolher o que corrigir | `8b5466c` |
 
 Fora dos prompts, já no `main`:
@@ -24,15 +24,16 @@ Fora dos prompts, já no `main`:
 
 1. Abra o terminal na pasta do projeto, `Projeto_CAIS/`, e rode `npm run dev` (http://localhost:3000).
 2. No navegador, menu do perfil → **"Restaurar dados de demonstração"**, para partir do seed atual.
-3. Continue pelo G03 numa branch nova a partir da `feat/tempo-real` (`git switch -c feat/anexos`). Ao fim do bloco G, com aprovação: merge no `main`, auditoria de comentários com 0 pontos e `git push`.
-4. Escolha com o time o que corrigir do [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) e rode o H01 dos blocos F e G.
+3. Com aprovação, faça o merge do bloco G: `git switch main`, `git merge --ff-only feat/anexos`, auditoria de comentários com 0 pontos e `git push` do `main` e das branches `feat/filtros-periodo`, `feat/tempo-real` e `feat/anexos`.
+4. Escolha com o time o que corrigir do [`docs/revisoes/H01-blocos-D-E.md`](revisoes/H01-blocos-D-E.md) e rode o H01 dos blocos F e G (último prompt do guia: [`docs/prompts/H01-revisao-final.txt`](prompts/H01-revisao-final.txt)).
 5. Ao terminar cada prompt: `npx tsc --noEmit`, `npm run lint`, `npm run build`, os casos e os testes de navegador (abaixo).
 
 ## Verificações disponíveis
 
 ```bash
 # Casos de lógica (sem navegador)
-node --experimental-strip-types lib/permissoes.casos.ts   # 65 casos
+node --experimental-strip-types lib/permissoes.casos.ts   # 69 casos
+node --experimental-strip-types lib/anexos.casos.ts       # 17 casos
 node --experimental-strip-types lib/quiz.casos.ts         # 29 casos
 node --experimental-strip-types lib/metricas.casos.ts     # 32 casos
 node --experimental-strip-types lib/carga.casos.ts        # 25 casos (semáforo de carga)
@@ -51,6 +52,7 @@ node testes/navegador/f03-tela-carga.mjs          # 26 conferências
 node testes/navegador/f04-semaforo-alocacao.mjs   # 19 conferências
 node testes/navegador/g01-filtros-periodo.mjs     # 15 conferências
 node testes/navegador/g02-tempo-real.mjs          # 9 conferências (duas abas)
+node testes/navegador/g03-anexos.mjs              # 26 conferências
 node testes/navegador/h01-varredura.mjs           # parte automática do H01 (6 contas × rotas)
 node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, desktop e 375 px
 ```

@@ -1,7 +1,7 @@
 /* ============================================================================
    APP/(SISTEMA)/PROJETOS/[ID]/PAGE.TSX (FICHA DO PROJETO)
-   O que é: a ficha de um projeto com três abas (Visão geral, Equipe,
-     Tarefas), as vistas quadro/lista/cronograma e o detalhe da tarefa. A Visão
+   O que é: a ficha de um projeto com quatro abas (Visão geral, Equipe,
+     Tarefas e Arquivos), as vistas quadro/lista/cronograma e o detalhe da tarefa. A Visão
      geral tem o card "Próximas entregas" (prazo nos próximos 14 dias).
      Projeto fora do escopo do perfil (inclusive digitado na URL) manda para
      /sem-permissao; os botões que o perfil não pode usar são escondidos.
@@ -14,7 +14,7 @@
      lib/store.tsx (useDados), lib/auth.tsx (useAuth), lib/escopo.ts
      (podeVerProjeto), lib/permissoes.ts (podeFazer), lib/toast.tsx (useToast), lib/metricas.ts,
      lib/utils.ts e components/projetos/ (Quadro, DetalheTarefa, Vistas,
-     Equipe, FormProjeto), além de components/ui/.
+     Equipe, ArquivosDoProjeto, FormProjeto), além de components/ui/.
    Contexto: §5 (Projetos: quatro níveis, três vistas, tarefa com responsável
      e prazo, detalhe abre por cima do quadro), §12 fluxos 3 e 4, §13 e
      docs/notas-next16.md §2 (params e searchParams).
@@ -43,12 +43,13 @@ import Quadro from '@/components/projetos/Quadro';
 import DetalheTarefa from '@/components/projetos/DetalheTarefa';
 import { VistaLista, VistaCronograma } from '@/components/projetos/Vistas';
 import Equipe from '@/components/projetos/Equipe';
+import ArquivosDoProjeto from '@/components/projetos/ArquivosDoProjeto';
 import FormProjeto from '@/components/projetos/FormProjeto';
 import { cx, dataBR, dataCurta, diasEntre, hojeISO, novoId, somaDias } from '@/lib/utils';
 import Link from 'next/link';
 
 /** As três abas da ficha; o valor vai na URL como ?aba=. */
-type Aba = 'geral' | 'equipe' | 'tarefas';
+type Aba = 'geral' | 'equipe' | 'tarefas' | 'arquivos';
 /** As três formas de ver as tarefas (§5): quadro (kanban), lista e cronograma. */
 type Vista = 'quadro' | 'lista' | 'cronograma';
 
@@ -70,7 +71,7 @@ export default function PaginaProjeto() {
  *
  * Parâmetros lidos da URL:
  * - [id] (pedaço do caminho) → qual projeto mostrar.
- * - ?aba= → qual aba está aberta: "geral", "equipe" ou "tarefas" (padrão).
+ * - ?aba= → qual aba está aberta: "geral", "equipe", "arquivos" ou "tarefas" (padrão).
  * - ?tarefa= → id da tarefa cujo detalhe está aberto por cima do quadro.
  * Guardar aba e tarefa na URL (e não só em useState) permite copiar o link,
  * recarregar a página ou voltar pelo navegador sem perder onde estava, e
@@ -175,6 +176,8 @@ function FichaProjeto() {
   );
 
   const empresa = d.empresa(projeto.empresaId);
+  // Quantos arquivos o projeto tem no total (contagem da aba Arquivos).
+  const totalAnexos = tarefas.reduce((n, t) => n + (t.anexos?.length ?? 0), 0);
   // Alocações deste projeto (quem trabalha nele, com papel e carga).
   const equipe = d.alocacoes.filter((a) => a.projetoId === projeto.id);
   // Opções dos filtros, montadas a partir das tarefas existentes.
@@ -204,7 +207,7 @@ function FichaProjeto() {
 
       {/* GRAVA na URL: trocar de aba muda o ?aba= (via navegar). */}
       <Abas rotulo="Seções do projeto" ativa={aba} onChange={(a) => navegar({ aba: a })}
-        abas={[{ id: 'geral', rotulo: 'Visão geral' }, { id: 'equipe', rotulo: 'Equipe', contagem: equipe.length }, { id: 'tarefas', rotulo: 'Tarefas', contagem: tarefas.length }]} />
+        abas={[{ id: 'geral', rotulo: 'Visão geral' }, { id: 'equipe', rotulo: 'Equipe', contagem: equipe.length }, { id: 'tarefas', rotulo: 'Tarefas', contagem: tarefas.length }, { id: 'arquivos', rotulo: 'Arquivos', contagem: totalAnexos }]} />
 
       {/* role="tabpanel" + aria-labelledby ligam este painel à aba ativa,
         * para leitores de tela. No quadro: flex-1 ocupa o resto da altura e
@@ -222,6 +225,9 @@ function FichaProjeto() {
             <Equipe projeto={projeto} alocando={alocando} setAlocando={setAlocando} />
           </>
         )}
+
+        {/* Aba Arquivos (G03): todos os anexos das tarefas do projeto, com filtro por tipo. SIMULADO: só metadados. */}
+        {aba === 'arquivos' && <ArquivosDoProjeto projetoId={projeto.id} />}
 
         {aba === 'tarefas' && (
           <>

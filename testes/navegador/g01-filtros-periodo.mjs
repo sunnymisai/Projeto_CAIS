@@ -56,7 +56,7 @@ const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'
 const pronto = `(document.querySelector('main')?.innerText ?? '').includes('Turma: evolução ao longo do tempo')`;
 
 try {
-  await ev(`localStorage.removeItem('cais-dados-v4')`);
+  await ev(`localStorage.removeItem('cais-dados-v5')`);
   await entrar(CONTAS.admin);
 
   // --- Admin: padrão 30 dias; 7 e 90 mudam o número; a URL guarda o período. ---

@@ -9,9 +9,9 @@
    Depende de: lib/store (useDados), lib/auth (useAuth, autor do comentário),
                lib/permissoes (podeFazer), lib/escopo (podeVerProjeto), lib/metricas,
                lib/toast (useToast), components/ui/Modal, components/button,
-               components/ui/form (Select), components/ui/basicos e lib/utils.
+               components/ui/form (Select), components/ui/basicos, components/projetos/AnexosDaTarefa e lib/utils.
    Contexto: §5 Projetos (tarefa com responsável e prazo obrigatórios,
-             checklist, etiquetas, comentários; detalhe abre por cima do quadro).
+             checklist, etiquetas, anexos, comentários; detalhe abre por cima do quadro).
    ============================================================================ */
 "use client";
 
@@ -24,6 +24,7 @@ import { podeFazer } from '@/lib/permissoes';
 import { podeVerProjeto } from '@/lib/escopo';
 import { ROTULO_PRIORIDADE } from '@/lib/metricas';
 import Modal from '@/components/ui/Modal';
+import AnexosDaTarefa from './AnexosDaTarefa';
 import Button from '@/components/button';
 import { Select } from '@/components/ui/form';
 import { Avatar, Etiqueta, EtiquetaTarefa, Progresso, corEtiqueta } from '@/components/ui/basicos';
@@ -73,6 +74,8 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
   const podeMover = !!sessao && podeFazer(sessao.perfil, 'mover_tarefa', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   // Comentar: qualquer perfil que enxerga o projeto (escopo em lib/escopo.ts).
   const podeComentar = !!sessao && podeFazer(sessao.perfil, 'comentar_tarefa', { enxergaProjeto: podeVerProjeto(sessao, t.projetoId, d) });
+  // Anexar e remover arquivo (G03): admin em qualquer tarefa; profissional só nas próprias; Empresa só vê.
+  const podeAnexar = !!sessao && podeFazer(sessao.perfil, 'anexar_arquivo', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   const coluna = projeto.colunas.find((c) => c.id === t.colunaId);
   const feitos = t.checklist.filter((c) => c.feito).length;
   // Opções de responsável: equipe alocada + o responsável atual (mesmo que
@@ -194,6 +197,9 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
             </form>}
             {!podeEditar && t.checklist.length === 0 && <p className="text-[13px] text-tinta-suave">Esta tarefa não tem checklist.</p>}
           </section>
+
+          {/* Anexos (G03, SIMULADO: só metadados) — entre o checklist e os comentários. */}
+          <AnexosDaTarefa tarefa={t} podeAnexar={podeAnexar} />
 
           <section>
             <h3 className={secao}><MessageSquare className="h-4 w-4" aria-hidden />Comentários</h3>

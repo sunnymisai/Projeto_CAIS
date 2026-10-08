@@ -38,7 +38,9 @@ import { useAuth } from './auth';
 // ⚠️ ATENÇÃO: v3 → v4 no G01 (bloco G). O seed ganhou as datas de conclusão das trilhas
 // (`progresso.concluidaEm`) para os filtros por período e a evolução da turma no painel do admin,
 // e a Gabriela ganhou a Boas-vindas concluída. Os dados antigos do navegador (chave v3) são DESCARTADOS.
-const CHAVE = 'cais-dados-v4';
+// ⚠️ ATENÇÃO: v4 → v5 no G03 (bloco G). O seed ganhou anexos de exemplo em algumas tarefas
+// (`Tarefa.anexos`, só metadados). Os dados antigos do navegador (chave v4) são DESCARTADOS.
+const CHAVE = 'cais-dados-v5';
 
 /** As seis coleções que todo `Dados` precisa ter (usadas para conferir o que veio do navegador). */
 const COLECOES = ['empresas', 'pessoas', 'trilhas', 'projetos', 'alocacoes', 'tarefas'] as const;

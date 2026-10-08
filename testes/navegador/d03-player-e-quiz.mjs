@@ -20,7 +20,7 @@ const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'
 /** Texto visível da área principal da tela (onde ficam as páginas). */
 const textoMain = () => ev(`document.querySelector('main')?.innerText ?? ''`);
 /** Progresso salvo no navegador de uma pessoa numa trilha (lido do localStorage). */
-const progressoDe = (trilhaId, pessoaId) => ev(`JSON.parse(localStorage.getItem('cais-dados-v4')).trilhas.find((t) => t.id === '${trilhaId}').progresso['${pessoaId}']`);
+const progressoDe = (trilhaId, pessoaId) => ev(`JSON.parse(localStorage.getItem('cais-dados-v5')).trilhas.find((t) => t.id === '${trilhaId}').progresso['${pessoaId}']`);
 /** Marca, em cada pergunta visível, a alternativa cujo texto está na lista (ou a primeira que NÃO está, para errar). */
 const responder = (lista, errar = false) => ev(`(() => {
   const certas = ${JSON.stringify(lista)};

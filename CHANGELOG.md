@@ -4,6 +4,10 @@ Cada entrada lista o que foi criado, modificado e removido.
 
 ## Bloco G: lacunas do deck
 
+### G03: anexos e aba Arquivos simulados (branch `feat/anexos`)
+- Criado: `lib/anexos.ts` (limite de 10 MB, validação, tamanho legível, categoria por tipo e anexos de um projeto) e `lib/anexos.casos.ts` (17 casos); `components/projetos/AnexosDaTarefa.tsx` (botão, arrastar e soltar, lista com ícone, remover com confirmação na linha); `components/projetos/ArquivosDoProjeto.tsx` (aba Arquivos com filtro por tipo e quatro estados); teste `testes/navegador/g03-anexos.mjs` (26 conferências, com arquivos de verdade).
+- Modificado: `lib/tipos.ts` (`Anexo` e `Tarefa.anexos`), `lib/permissoes.ts` (ação `anexar_arquivo`, também na matriz da tela `/acessos`) e `lib/permissoes.casos.ts` (4 casos novos, 69 no total), `lib/seed.ts` (3 anexos de exemplo), `lib/store.tsx` (chave `cais-dados-v4` → `cais-dados-v5`), `components/projetos/DetalheTarefa.tsx` (área Anexos), `app/(sistema)/projetos/[id]/page.tsx` (aba Arquivos), os testes que limpavam a chave antiga, `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+
 ### G02: quadro em tempo real simulado entre abas (branch `feat/tempo-real`)
 - Criado: `lib/tempoReal.ts` (contrato `CanalTempoReal`, canal simulado com `BroadcastChannel`, instruções para trocar pelo WebSocket); teste `testes/navegador/g02-tempo-real.mjs` (9 conferências, com duas abas).
 - Modificado: `lib/store.tsx` (publica o evento depois de gravar as mudanças de tarefa; assina o canal, relê os dados e expõe `eventoExterno`), `components/projetos/Quadro.tsx` (indicador "Ao vivo", aviso `aria-live` e destaque do cartão), `components/projetos/CartaoTarefa.tsx` (prop `destaque`; o pulso só roda com `motion-safe`), `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.

@@ -78,13 +78,14 @@ export type Acao =
   | 'alocar'
   | 'editar_projeto'
   | 'mover_tarefa'
-  | 'comentar_tarefa';
+  | 'comentar_tarefa'
+  | 'anexar_arquivo';
 
 /** Informação extra que algumas ações precisam para decidir. */
 export interface ContextoAcao {
-  /** id da pessoa logada (para 'mover_tarefa'). */
+  /** id da pessoa logada (para 'mover_tarefa' e 'anexar_arquivo'). */
   pessoaId?: string;
-  /** id do responsável da tarefa (para 'mover_tarefa'). */
+  /** id do responsável da tarefa (para 'mover_tarefa' e 'anexar_arquivo'). */
   responsavelId?: string;
   /** true se a pessoa enxerga o projeto (para 'comentar_tarefa'; veja lib/escopo.ts). */
   enxergaProjeto?: boolean;
@@ -128,6 +129,14 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
     case 'comentar_tarefa':
       if (perfil === 'admin') return true;
       return contexto.enxergaProjeto === true;
+
+    // G03: anexar e remover arquivo seguem a regra de mover: admin em qualquer tarefa; profissional
+    // só nas próprias; Empresa só vê (§5). Sem pessoaId ou responsavelId no contexto, nega (lado seguro).
+    // TODO(PROGLOGIC): confirmar
+    case 'anexar_arquivo':
+      if (perfil === 'admin') return true;
+      if (perfil === 'profissional') return !!contexto.pessoaId && contexto.pessoaId === contexto.responsavelId;
+      return false;
   }
 }
 
@@ -216,13 +225,14 @@ export const ROTULO_DAS_ACOES: Record<Acao, string> = {
   editar_projeto: 'Criar ou editar projeto',
   mover_tarefa: 'Mover tarefa de coluna',
   comentar_tarefa: 'Comentar em tarefa',
+  anexar_arquivo: 'Anexar e remover arquivos da tarefa',
 };
 
 /**
  * Todas as ações, na ordem em que aparecem na tabela de permissões.
  * ⚠️ ATENÇÃO: ação nova em `Acao` precisa entrar aqui e em ROTULO_DAS_ACOES (o TypeScript cobra o rótulo).
  */
-export const TODAS_AS_ACOES: Acao[] = ['criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista', 'alocar', 'editar_projeto', 'mover_tarefa', 'comentar_tarefa'];
+export const TODAS_AS_ACOES: Acao[] = ['criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista', 'alocar', 'editar_projeto', 'mover_tarefa', 'comentar_tarefa', 'anexar_arquivo'];
 
 /**
  * Prefixos de rota que o perfil pode abrir (na ordem de ROTAS_POR_PERFIL).
@@ -253,6 +263,7 @@ export function permissaoDaAcao(perfil: Perfil, acao: Acao): 'sim' | 'nao' | 'co
 /** Explicação da condição, para as ações que podem ser 'condicional'. */
 export const CONDICAO_DA_ACAO: Partial<Record<Acao, string>> = {
   mover_tarefa: 'só as próprias tarefas',
+  anexar_arquivo: 'só as próprias tarefas',
   comentar_tarefa: 'só nos projetos que enxerga',
 };
 

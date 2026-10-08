@@ -102,7 +102,7 @@ try {
 
   // ---------- Estado vazio ----------
   const soAna = { id: 'pes_ana', nome: 'Ana Souza', email: 'ana.souza@cais.example', telefone: '', cargo: '', perfil: 'profissional', status: 'ativo', dataEntrada: '2026-01-01', area: '', nivel: '', cargaMax: 40, habilidades: [], empresaId: '' };
-  await ev(`localStorage.setItem('cais-dados-v4', ${JSON.stringify(JSON.stringify({ empresas: [], pessoas: [soAna], trilhas: [], projetos: [], alocacoes: [], tarefas: [] }))})`);
+  await ev(`localStorage.setItem('cais-dados-v5', ${JSON.stringify(JSON.stringify({ empresas: [], pessoas: [soAna], trilhas: [], projetos: [], alocacoes: [], tarefas: [] }))})`);
   await ir('/minhas-tarefas');
   c('sem tarefas: "Nenhuma tarefa com você. Bom trabalho!" com link para Projetos', /Nenhuma tarefa com você\. Bom trabalho!/.test(await textoMain()) && await ev(`!!document.querySelector('main a[href="/projetos"]')`));
   await ev(`localStorage.clear(); sessionStorage.clear()`);

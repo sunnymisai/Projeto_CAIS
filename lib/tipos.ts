@@ -222,6 +222,26 @@ export interface Comentario {
   data: string; // ISO
 }
 
+/**
+ * Anexo de uma tarefa (§5): SÓ os metadados do arquivo, nunca o conteúdo.
+ * ⚠️ ATENÇÃO: o localStorage tem limite de poucos MB (em geral 5 a 10 MB por endereço); guardar o
+ * arquivo aqui estouraria isso com um único PDF. O upload de verdade é do back-end da PROGLOGIC.
+ * TODO(API): trocar `nome` e `tamanho` por uma `url` devolvida pelo upload.
+ */
+export interface Anexo {
+  id: string;
+  /** Nome do arquivo como a pessoa escolheu (ex.: "layout-final.pdf"). */
+  nome: string;
+  /** Tipo MIME informado pelo navegador (ex.: "application/pdf"); pode vir vazio. */
+  tipo: string;
+  /** Tamanho em bytes. */
+  tamanho: number;
+  /** id da pessoa que anexou. */
+  autorId: string;
+  /** Data e hora do envio (ISO). */
+  data: string;
+}
+
 /** Tarefa do dia a dia, que vive numa coluna do quadro (§5). */
 export interface Tarefa {
   id: string;
@@ -242,6 +262,8 @@ export interface Tarefa {
   ordem: number;
   /** AAAA-MM-DD em que entrou na última coluna; undefined enquanto não está pronta. */
   concluidaEm?: string;
+  /** Arquivos anexados (G03, SIMULADO: só metadados). Opcional: dados antigos não têm. */
+  anexos?: Anexo[];
 }
 
 /**
