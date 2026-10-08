@@ -62,7 +62,12 @@ try {
   c('375 px: última etapa não fica coberta pela barra', await ev(`(() => { const ult = [...document.querySelectorAll('main ol > li')].at(-1).getBoundingClientRect(); const barra = document.querySelector('main div.fixed.bottom-0').getBoundingClientRect(); return ult.bottom <= barra.top; })()`));
   c('375 px: detalhe sem rolagem horizontal', await ev(`(() => { const m = document.querySelector('#conteudo'); return document.documentElement.scrollWidth <= innerWidth + 1 && m.scrollWidth <= m.clientWidth + 1; })()`));
   // O botão leva ao player (provisório do D03), não a um 404.
-  await clicar('main div.fixed.bottom-0 a'); await espera(2500);
+  // Espera o endereço mudar (até 15 s) em vez de um tempo fixo: no `npm run dev` a rota do
+  // player é compilada na primeira visita, e com a máquina ocupada isso pode passar de 2,5 s.
+  await clicar('main div.fixed.bottom-0 a');
+  for (let i = 0; i < 30 && (await ev('location.pathname')) === '/minhas-trilhas/tri_nivel_front'; i++) await espera(500);
+  // Depois da troca de endereço, dá um tempo para o player desenhar antes de conferir o texto.
+  await espera(1000);
   c('"Continuar" abre o player da etapa atual (sem 404)', (await ev('location.pathname')) === '/minhas-trilhas/tri_nivel_front/etapa/et_n3' && !/404|não encontrada/i.test(await ev(`document.querySelector('main')?.innerText ?? ''`)), await ev('location.pathname'));
   await largura(1280, 900);
 
