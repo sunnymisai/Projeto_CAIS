@@ -20,6 +20,9 @@ Fora dos prompts, já no `main`:
 - `b553e8d`: some a bolinha "N" do Next no `npm run dev`; os botões "Entrar como" do login ficam um embaixo do outro, com ícone.
 - `9d1c03f`: **painel da Empresa em versão de apresentação** (andamento dos projetos, quem está no time, entregas e trilha do time). O **E01 deve partir dele** e aprofundar, não recomeçar do zero.
 
+Ainda **fora do `main`** (esperando aprovação do merge):
+- Branch `docs/mapa-do-codigo`: comentários `[PV-n]` em todo o código e o `docs/MAPA-DO-CODIGO.md` (mapa por arquivo de onde mudar cada regra, texto, cor, rota, limite e integração). Veja o `CHANGELOG.md` e a regra 6 do `CLAUDE.md`.
+
 ## Como retomar amanhã
 
 1. Abra o terminal na pasta do projeto, `Projeto_CAIS/`, e rode `npm run dev` (http://localhost:3000).
@@ -38,8 +41,10 @@ node --experimental-strip-types lib/quiz.casos.ts         # 29 casos
 node --experimental-strip-types lib/metricas.casos.ts     # 32 casos
 node --experimental-strip-types lib/carga.casos.ts        # 25 casos (semáforo de carga)
 
-# Padrão de comentários do CLAUDE.md (cabeçalho, JSDoc, useEffect, GRAVA/APAGA/NAVEGA); rode antes de todo push
+# Padrão de comentários do CLAUDE.md (cabeçalho, JSDoc, useEffect, GRAVA/APAGA/NAVEGA, pontos vitais [PV-n] e mapa); rode antes de todo push
 node testes/auditar-comentarios.mjs                # deve terminar com "0 ponto(s) para revisar"
+# Mapa do código (docs/MAPA-DO-CODIGO.md é GERADO; regenere depois de mexer nos [PV-n] ou nas linhas acima deles)
+node testes/mapa-do-codigo.mjs                     # grava o mapa; com --conferir só confere
 
 # Testes de navegador (com o npm run dev aberto; usam o Chrome instalado)
 node testes/navegador/d02-minhas-trilhas.mjs      # 25 conferências

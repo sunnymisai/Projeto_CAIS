@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Mapa do código (branch `docs/mapa-do-codigo`)
+- Criado: comentários `[PV-n]` (ponto vital de alteração) em 110 arquivos `.ts`, `.tsx` e `.css` (522 pontos), numerados por arquivo; `docs/MAPA-DO-CODIGO.md`, o mapa por arquivo para achar onde mudar uma regra, texto, cor, rota, limite ou integração; `testes/mapa-do-codigo.mjs`, que GERA o mapa dos comentários (e descreve `package.json` e `tsconfig.json`, que não aceitam comentário) e confere a numeração (`--conferir`).
+- Modificado: `testes/auditar-comentarios.mjs` passa a acusar numeração quebrada e mapa desatualizado; `CLAUDE.md` ganha a regra 6 do padrão de comentários; o comentário do porteiro em `app/(sistema)/layout.tsx` agora diz que a trava da trilha obrigatória está ligada.
+- Removido: nada.
+
 ## Regras da PROGLOGIC de 09/10/2026 (branch `feat/regras-da-empresa`)
 - Criado: ação `aprovar_entrega` e `colunaAceitaAprovacao` (lib/permissoes.ts e lib/metricas.ts); `Tarefa.aprovadaEm` e `aprovadaPorId` (lib/tipos.ts); seção "Aprovação da entrega" no detalhe da tarefa e selo "Aprovada" no cartão; `LIMITE_TENTATIVAS` e `tentativasDoQuiz` (lib/quiz.ts); interruptor "Prazo indeterminado" no editor da trilha; teste `testes/navegador/e03-regras-da-empresa.mjs` (32 conferências) e 14 casos novos (permissões 77, quiz 34, métricas 36).
 - Modificado: `alocar` agora vale para a empresa nos projetos dela (lib/permissoes.ts; Equipe e a ficha do projeto); a empresa vê as horas por semana de cada pessoa no projeto dela (aba Equipe e painel), sem o semáforo nem as trilhas; `entregasDoProjeto` e `aprovadasNoPeriodo` passam a contar a aprovação da empresa (antes era "Pronto = aprovada"); `prazoDaPessoaNaTrilha` devolve null com `prazoDias` 0; o campo de tentativas do quiz vai de 1 a 10; `moverTarefa` apaga a aprovação ao sair de Revisão ou Pronto; seed (6 entregas aprovadas, 4 aguardando e a trilha de LGPD sem prazo); chave do navegador `cais-dados-v5` → `cais-dados-v6`; testes `e01` e `e02`; `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.

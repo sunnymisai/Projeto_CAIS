@@ -92,6 +92,17 @@ novo) · Com dado. Sem os quatro, a tela não está pronta.
    `// TODO(API):` muda quando a API da PROGLOGIC existir
    `// SIMULADO:` comportamento fingido no protótipo
 5. Não deixe código comentado "para depois": o Git guarda o histórico.
+6. Pontos vitais de alteração: onde alguém mexeria para mudar uma regra, um texto,
+   uma cor, uma rota, um limite ou a ligação com a API, coloque um comentário
+   `[PV-n]` (`// [PV-1] ...`, `{/* [PV-1] ... */}` no JSX, `/* [PV-1] ... */` no CSS).
+   O número recomeça em 1 em cada arquivo, sem buraco e sem repetição. O texto diz
+   o que controla e como mudar; leia o código antes de descrever. Depois de mexer
+   neles (ou em qualquer linha acima deles), regenere o mapa:
+       node testes/mapa-do-codigo.mjs
+   O `docs/MAPA-DO-CODIGO.md` é GERADO dos comentários: não edite à mão. Os pontos
+   de `package.json` e `tsconfig.json` (que não aceitam comentário) ficam na constante
+   `EXTRAS_JSON` do próprio gerador. `node testes/mapa-do-codigo.mjs --conferir`
+   e a auditoria (`testes/auditar-comentarios.mjs`) acusam numeração quebrada e mapa velho.
 
 ## Verificação antes de dizer que terminou
 

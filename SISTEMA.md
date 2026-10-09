@@ -117,6 +117,12 @@ Parâmetros úteis: `/projetos/[id]?aba=equipe|tarefas|geral&tarefa=<id>` e `/em
 
 **Vínculo pessoa-empresa.** A ficha da empresa tem a aba "Pessoas" (pessoas com perfil Empresa, profissionais alocados nos projetos e "Vincular pessoa"); a ficha da pessoa mostra a empresa como link.
 
+## Onde mudar cada coisa (mapa do código)
+
+Para saber **onde mexer** para mudar uma regra, um texto, uma cor, uma rota, um limite ou a ligação com a API, abra [`docs/MAPA-DO-CODIGO.md`](docs/MAPA-DO-CODIGO.md): ele lista, arquivo por arquivo, os pontos numerados (`1.`, `2.`...). No código, procure o mesmo número como `[PV-3]` dentro do arquivo indicado.
+
+O mapa é **gerado** dos comentários `[PV-n]` do código: não edite à mão. Depois de mexer neles, rode `node testes/mapa-do-codigo.mjs`; a auditoria de comentários avisa se o mapa ficou velho.
+
 ## Onde ligar a API da PROGLOGIC
 
 A autenticação e os dados passam por dois arquivos:

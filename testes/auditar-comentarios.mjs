@@ -6,7 +6,8 @@
      2) JSDoc (ou ao menos um comentário) logo acima de cada função/componente,
         inclusive as funções de dentro dos componentes (handlers);
      3) comentário explicando cada useEffect;
-     4) rótulo GRAVA/APAGA/NAVEGA perto de quem grava, apaga ou navega.
+     4) rótulo GRAVA/APAGA/NAVEGA perto de quem grava, apaga ou navega;
+     5) pontos vitais [PV-n] numerados em ordem e o mapa docs/MAPA-DO-CODIGO.md atualizado.
    Onde é usado: rodado à mão antes de um push: node testes/auditar-comentarios.mjs
    Depende de: git (lista os arquivos versionados) e Node 22+. Nenhuma biblioteca.
    Contexto: CLAUDE.md, seção "PADRÃO DE COMENTÁRIOS (obrigatório em todo código novo ou alterado)".
@@ -15,6 +16,7 @@
    ============================================================================ */
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { problemasDoMapa } from './mapa-do-codigo.mjs';
 
 // Arquivos de código versionados (o que vai para o repositório).
 const arquivos = execSync('git ls-files', { encoding: 'utf8' }).split('\n')
@@ -73,6 +75,9 @@ for (const arquivo of arquivos) {
     if (/(localStorage|sessionStorage)\.(setItem|removeItem|clear)\(/.test(linha) && !arquivo.startsWith('testes/') && !rotuladoPerto(i, 8)) anotar(arquivo, i + 1, 'storage sem GRAVA/APAGA', linha);
   });
 }
+
+// 5) Pontos vitais [PV-n]: numeração sem buraco e docs/MAPA-DO-CODIGO.md em dia com o código (testes/mapa-do-codigo.mjs).
+for (const m of problemasDoMapa()) anotar(m.arquivo, 1, m.regra, m.detalhe);
 
 // Relatório agrupado por regra.
 const porRegra = Object.groupBy(problemas, (p) => p.regra);
