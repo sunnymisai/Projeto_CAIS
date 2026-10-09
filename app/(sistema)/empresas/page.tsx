@@ -180,6 +180,8 @@ function Empresas() {
 
 /** Valores editáveis do formulário: a Empresa inteira, menos o id (que é gerado ao salvar). */
 type ValEmpresa = Omit<Empresa, 'id'>;
+/** Campos que usamos da resposta de CNPJ (formato da BrasilAPI; a CNPJ.ws é convertida para ele). */
+type DadosCnpj = { razao_social?: string; nome_fantasia?: string; cep?: string; descricao_tipo_de_logradouro?: string; logradouro?: string; numero?: string; municipio?: string; uf?: string; descricao_situacao_cadastral?: string };
 // [PV-7] OS VALORES DE UMA EMPRESA NOVA: status "em negociação" e data de entrada hoje.
 // Formulário em branco para "Nova empresa": status começa em negociação e a data de entrada é hoje.
 const VAZIA: ValEmpresa = { razaoSocial: '', nomeFantasia: '', cnpj: '', segmento: '', porte: '', site: '', cep: '', logradouro: '', numero: '', cidadeUf: '', contatoNome: '', contatoEmail: '', contatoTelefone: '', contatoCargo: '', status: 'negociacao', dataEntrada: hojeISO() };
@@ -246,7 +248,7 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
   // Ao editar, começa com uma cópia da empresa; ao criar, com o formulário em branco.
   const f = useFormulario<ValEmpresa>(empresa ? { ...empresa } : VAZIA, validar);
 
-  // [PV-9] A BUSCA DE CNPJ: ao sair do campo, com o CNPJ válido, consulta a BrasilAPI (serviço público externo, dados da Receita) e preenche só os campos ainda vazios: razão social, nome fantasia, CEP, logradouro, número e cidade/UF. Falha nunca bloqueia o cadastro.
+  // [PV-9] A BUSCA DE CNPJ: ao sair do campo, com o CNPJ válido, consulta a BrasilAPI (e, se ela falhar, a CNPJ.ws; serviços públicos externos com dados da Receita) e preenche só os campos ainda vazios: razão social, nome fantasia, CEP, logradouro, número e cidade/UF. Falha nunca bloqueia o cadastro.
   /**
    * Busca os dados da empresa na BrasilAPI quando o usuário sai do campo CNPJ (onBlur).
    * Só preenche o que está vazio, para nunca apagar o que a pessoa digitou. Se a Receita
@@ -260,15 +262,31 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
     if (!cnpjValido(f.valores.cnpj)) return;
     setBuscandoCnpj(true); setAvisoCnpj('');
     try {
-      // Fetch externo para a API pública da BrasilAPI (não é da PROGLOGIC, não precisa de token).
-      const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${soDigitos(f.valores.cnpj)}`);
-      if (r.status === 404) { setAvisoCnpj('CNPJ não encontrado na Receita. Preencha os dados manualmente.'); return; }
-      if (!r.ok) throw new Error(String(r.status));
-      const j = await r.json();
+      // Fetch externo para APIs públicas (não são da PROGLOGIC, não precisam de token). A BrasilAPI é a
+      // principal; ela oscila (erro 5xx), então, se falhar, tenta a CNPJ.ws (limite de 3 consultas por minuto).
+      const digitos = soDigitos(f.valores.cnpj);
+      let j: DadosCnpj | null = null;
+      let naoExiste = false;
+      try {
+        const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digitos}`);
+        if (r.ok) j = await r.json();
+        else if (r.status === 404) naoExiste = true;
+      } catch { /* cai para a segunda API */ }
+      if (!j && !naoExiste) {
+        const r2 = await fetch(`https://publica.cnpj.ws/cnpj/${digitos}`);
+        if (r2.status === 404) naoExiste = true;
+        else if (r2.ok) {
+          // A CNPJ.ws usa outro formato: converte para o da BrasilAPI.
+          const w = await r2.json();
+          const e = w.estabelecimento ?? {};
+          j = { razao_social: w.razao_social, nome_fantasia: e.nome_fantasia, cep: e.cep, descricao_tipo_de_logradouro: e.tipo_logradouro, logradouro: e.logradouro, numero: e.numero, municipio: e.cidade?.nome, uf: e.estado?.sigla, descricao_situacao_cadastral: e.situacao_cadastral };
+        } else throw new Error(String(r2.status));
+      }
+      if (!j) { setAvisoCnpj('CNPJ não encontrado na Receita. Preencha os dados manualmente.'); setBuscandoCnpj(false); return; }
       const v = f.valores;
       // GRAVA: preenche os campos do formulário que estão vazios; todos continuam editáveis.
       if (!v.razaoSocial.trim() && j.razao_social) f.set('razaoSocial', j.razao_social);
-      if (!v.nomeFantasia.trim() && (j.nome_fantasia || j.razao_social)) f.set('nomeFantasia', j.nome_fantasia || j.razao_social);
+      if (!v.nomeFantasia.trim() && (j.nome_fantasia || j.razao_social)) f.set('nomeFantasia', j.nome_fantasia || j.razao_social || '');
       if (!v.cep && j.cep) f.set('cep', mascaraCEP(String(j.cep)));
       if (!v.logradouro.trim() && j.logradouro) f.set('logradouro', [j.descricao_tipo_de_logradouro, j.logradouro].filter(Boolean).join(' '));
       if (!v.numero.trim() && j.numero) f.set('numero', String(j.numero));

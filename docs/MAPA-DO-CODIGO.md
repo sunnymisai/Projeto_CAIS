@@ -54,12 +54,12 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 4. QUANTAS EMPRESAS POR PÁGINA na tabela: 8. _(linha 39)_
 5. A FICHA ABERTA POR LINK: ?abrir=<id> (vem da busca do topo e de outras telas) abre a ficha da empresa; id que não existe não abre nada. _(linha 66)_
 6. A BUSCA E OS FILTROS: nome fantasia ou razão social (sem acento) ou CNPJ só com dígitos, mais status e segmento; ordem alfabética. _(linha 76)_
-7. OS VALORES DE UMA EMPRESA NOVA: status "em negociação" e data de entrada hoje. _(linha 183)_
-8. AS REGRAS DA EMPRESA (§11): CNPJ válido e único, CEP com 8 dígitos, site começando com https://, e-mail do contato único no sistema todo (ele vira o login do perfil Empresa). _(linha 209)_
-9. A BUSCA DE CNPJ: ao sair do campo, com o CNPJ válido, consulta a BrasilAPI (serviço público externo, dados da Receita) e preenche só os campos ainda vazios: razão social, nome fantasia, CEP, logradouro, número e cidade/UF. Falha nunca bloqueia o cadastro. _(linha 249)_
-10. A BUSCA DE CEP: ao sair do campo consulta o ViaCEP (serviço público externo) e preenche logradouro e cidade/UF, que continuam editáveis. Falha nunca bloqueia o cadastro. _(linha 285)_
-11. O SALVAR DA EMPRESA: valida tudo, grava com id novo "emp" se for cadastro. SIMULADO: espera 350 ms. TODO(API): POST ou PUT na API da PROGLOGIC. _(linha 323)_
-12. A EXCLUSÃO DA EMPRESA: o botão só aparece para empresa sem projetos e não apaga em cascata (pessoas vinculadas ficam apontando para uma empresa que não existe mais). _(linha 351)_
+7. OS VALORES DE UMA EMPRESA NOVA: status "em negociação" e data de entrada hoje. _(linha 185)_
+8. AS REGRAS DA EMPRESA (§11): CNPJ válido e único, CEP com 8 dígitos, site começando com https://, e-mail do contato único no sistema todo (ele vira o login do perfil Empresa). _(linha 211)_
+9. A BUSCA DE CNPJ: ao sair do campo, com o CNPJ válido, consulta a BrasilAPI (e, se ela falhar, a CNPJ.ws; serviços públicos externos com dados da Receita) e preenche só os campos ainda vazios: razão social, nome fantasia, CEP, logradouro, número e cidade/UF. Falha nunca bloqueia o cadastro. _(linha 251)_
+10. A BUSCA DE CEP: ao sair do campo consulta o ViaCEP (serviço público externo) e preenche logradouro e cidade/UF, que continuam editáveis. Falha nunca bloqueia o cadastro. _(linha 303)_
+11. O SALVAR DA EMPRESA: valida tudo, grava com id novo "emp" se for cadastro. SIMULADO: espera 350 ms. TODO(API): POST ou PUT na API da PROGLOGIC. _(linha 341)_
+12. A EXCLUSÃO DA EMPRESA: o botão só aparece para empresa sem projetos e não apaga em cascata (pessoas vinculadas ficam apontando para uma empresa que não existe mais). _(linha 369)_
 
 ### `app/(sistema)/layout.tsx`
 *a casca (menu lateral + topo + área de conteúdo) de todas as telas internas, e o "porteiro" que barra quem não está logado ou cujo perfil não pode abrir a rota (lib/permissoes.ts).*
