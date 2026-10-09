@@ -16,6 +16,7 @@ import { ReactNode, KeyboardEvent, useRef, HTMLAttributes } from 'react';
 import { CircleAlert, CircleCheck, Info, TriangleAlert, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cx, iniciais } from '@/lib/utils';
 
+// [PV-1] O cartão branco (borda, raio, sombra) que envolve todo bloco das telas. Para mudar o visual de TODOS os cartões, mude as classes aqui.
 /* ---------------- Card ---------------- */
 /**
  * Caixa com borda e cantos arredondados: o "fundo" padrão dos blocos de conteúdo.
@@ -32,6 +33,7 @@ export function Card({ className, children, ...rest }: HTMLAttributes<HTMLDivEle
   );
 }
 
+// [PV-2] O cabeçalho padrão de um cartão: título, descrição e o link ou botão de ação no canto.
 /**
  * Cabeçalho de um Card: título, descrição opcional e uma ação à direita.
  * @param titulo texto principal (vira <h2>).
@@ -55,6 +57,7 @@ export function CardTitulo({ titulo, descricao, acao }: { titulo: string; descri
 /* ---------------- Etiqueta (badge) ---------------- */
 /** Tons possíveis da etiqueta. Cada tom tem um significado fixo (§9: "cor tem significado"). */
 export type Tom = 'neutro' | 'primaria' | 'sucesso' | 'aviso' | 'erro';
+// [PV-3] AS CORES DAS ETIQUETAS por tom (neutro, primária, sucesso, aviso, erro). Cor tem significado fixo no CAIS (§9): verde = sucesso, âmbar = atenção, vermelho = erro, roxo = ação.
 // Tom → classes Tailwind. "bg-sucesso/12" = a cor de sucesso com 12% de opacidade (fundo suave).
 const TONS: Record<Tom, string> = {
   neutro: 'bg-superficie-alt text-tinta-suave',
@@ -83,6 +86,7 @@ export function Etiqueta({ tom = 'neutro', children, ponto, className }: { tom?:
   );
 }
 
+// [PV-4] A paleta das etiquetas de tarefa (estilo Trello): seis cores sólidas com contraste AA. Cor nova entra na lista.
 /* Cores sólidas das etiquetas de tarefa (estilo Trello). Todas com
    contraste AA para o texto, nos dois temas. */
 const CORES_ETIQUETA = [
@@ -93,9 +97,11 @@ const CORES_ETIQUETA = [
   { bg: '#BE185D', fg: '#FFFFFF' }, // rosa
   { bg: '#5B6075', fg: '#FFFFFF' }, // cinza
 ];
+// [PV-5] Quais etiquetas conhecidas têm cor fixa (Front, UX, API, QA, Login, Gráfico, Back). Etiqueta nova da lista: acrescente aqui.
 // Etiquetas comuns têm cor fixa (posição em CORES_ETIQUETA) para ficarem iguais em todo o sistema.
 const FIXAS: Record<string, number> = { Front: 0, UX: 4, API: 3, QA: 1, Login: 5, Gráfico: 2, Back: 3 };
 
+// [PV-6] Como uma etiqueta ganha cor: as da lista FIXAS usam a cor combinada; as outras recebem uma cor estável calculada pelo nome.
 /**
  * Escolhe a cor de uma etiqueta de tarefa a partir do nome.
  * Nomes conhecidos (FIXAS) usam a cor combinada; os demais recebem uma cor
@@ -133,6 +139,7 @@ export function EtiquetaTarefa({ nome, compacta }: { nome: string; compacta?: bo
   );
 }
 
+// [PV-7] A paleta das bolinhas com iniciais (avatares): cores escuras o bastante para o texto branco.
 /* ---------------- Avatar ---------------- */
 // Paleta dos avatares: cores escuras o bastante para o texto branco ter contraste.
 const CORES_AVATAR = ['#6A4AF0', '#047857', '#B45309', '#2563EB', '#BE185D', '#0E7490'];
@@ -189,6 +196,7 @@ export function GrupoAvatares({ nomes, max = 4, tamanho = 28 }: { nomes: string[
   );
 }
 
+// [PV-8] O visual de cada tipo de aviso (info, sucesso, aviso, erro): caixa, ícone e cor. Aviso de erro é anunciado na hora pelo leitor de tela.
 /* ---------------- Aviso (alert) ---------------- */
 // Visual de cada tipo de aviso: classes da caixa, ícone e cor do ícone.
 const AVISO = {
@@ -225,6 +233,7 @@ export function Aviso({ tipo = 'info', titulo, children, acao }: { tipo?: keyof 
   );
 }
 
+// [PV-9] As abas do sistema: navegáveis pelas setas do teclado, com contagem opcional. Todas as telas com abas usam este componente.
 /* ---------------- Abas (tabs) — navegação por setas ---------------- */
 /**
  * Abas acessíveis (padrão WAI-ARIA "tabs") com navegação pelas setas.
@@ -286,6 +295,7 @@ export function Abas<T extends string>({ abas, ativa, onChange, rotulo }: {
   );
 }
 
+// [PV-10] A paginação das listas: quantos itens por página (porPagina), a contagem do resultado e o nome do item no rodapé.
 /* ---------------- Paginação ---------------- */
 /**
  * Rodapé de lista com contagem ("1–10 de 42 itens") e botões de página (§10).
@@ -327,6 +337,7 @@ export function Paginacao({ pagina, total, porPagina, onChange, rotuloItem = 'it
   );
 }
 
+// [PV-11] A barra de progresso com texto para leitor de tela. Os tons seguem o significado das cores (primária, sucesso, aviso, erro).
 /* ---------------- Progresso ---------------- */
 /**
  * Barra de progresso (role="progressbar") de 0 a 100%.
@@ -351,6 +362,7 @@ export function Progresso({ valor, tom = 'primaria', rotulo, fino }: { valor: nu
   );
 }
 
+// [PV-12] O bloco cinza animado do estado "carregando" (nunca tela em branco); a animação é a classe .esqueleto de app/globals.css. O formato é dado por quem usa, pela classe.
 /* ---------------- Esqueleto (estado carregando) ---------------- */
 /**
  * Bloco cinza animado que ocupa o lugar do conteúdo enquanto ele carrega (estado "carregando", §13).
@@ -377,6 +389,7 @@ export function EsqueletoLista({ linhas = 5 }: { linhas?: number }) {
   );
 }
 
+// [PV-13] O estado vazio padrão: ícone, o que significa estar vazio e a próxima ação. Toda lista e todo bloco vazio usa este componente.
 /* ---------------- Estado vazio ---------------- */
 /**
  * Estado vazio (§13): explica por que não há nada e oferece o próximo passo.
@@ -398,6 +411,7 @@ export function EstadoVazio({ icone, titulo, descricao, acao }: { icone: ReactNo
   );
 }
 
+// [PV-14] O estado de erro padrão: diz o que houve, em português, e oferece como tentar de novo. É o que o layout mostra quando os dados não carregam.
 /* ---------------- Estado de erro ---------------- */
 /**
  * Estado de erro (§13): diz o que houve, em português, e como tentar de novo.

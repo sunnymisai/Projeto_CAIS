@@ -23,6 +23,7 @@ import PainelProfissional from '@/components/paineis/PainelProfissional';
 export default function Painel() {
   const { sessao } = useAuth();
   if (!sessao) return null;
+  // [PV-1] QUAL PAINEL CADA PERFIL VÊ: admin, empresa ou profissional (components/paineis/). Os painéis leem o período da URL, por isso o Suspense é obrigatório.
   // Cada perfil tem o seu painel (admin, empresa ou profissional: os três valores de Perfil).
   // ⚠️ ATENÇÃO: os painéis leem o período da URL (?de=&ate=, usePeriodo em FiltroPeriodo) com
   // useSearchParams; sem este <Suspense> o `npm run build` falha (notas-next16 §2).

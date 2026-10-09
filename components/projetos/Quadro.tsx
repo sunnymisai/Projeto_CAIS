@@ -26,6 +26,7 @@ import CartaoTarefa from './CartaoTarefa';
 import { corQuadro } from './cores';
 import { cx, hojeISO, novoId, somaDias } from '@/lib/utils';
 
+// [PV-1] O QUADRO KANBAN: listas lado a lado no desktop e abas no celular, arrastar e soltar nativo (HTML5), criar cartão e gerenciar listas.
 /**
  * Quadro kanban inspirado no Trello (slide 20).
  * - Arrastar e soltar: repouso, arrastando e soltando. A lista de destino
@@ -57,6 +58,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
   const d = useDados();
   const { sessao } = useAuth();
   const avisar = useToast();
+  // [PV-2] AS PERMISSÕES DO QUADRO: tudo passa por podeFazer (lib/permissoes.ts). Os botões de criar cartão e de editar lista só aparecem para quem tem a permissão; o detalhe da tarefa precisa concordar com esta regra.
   /**
    * Pergunta a lib/permissoes se a sessão pode a ação. Sem sessão, nada é permitido.
    * @param acao - ação de projeto.
@@ -74,6 +76,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
   // TEMPO REAL (G02): cartão que outra pessoa acabou de mexer (destaque) e a frase do aviso.
   const [destaque, setDestaque] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
+  // [PV-3] O TEMPO REAL: quando OUTRA aba mexe numa tarefa deste projeto, o cartão fica destacado por 2,5 s e o aviso "Fulano moveu... para ..." aparece ao lado de "Ao vivo". SIMULADO entre abas.
   // Roda quando chega um evento de outra aba (d.eventoExterno muda). Só reage aos deste projeto.
   // Limpeza: cancela o timer que apaga o destaque, se outro evento chegar antes dos 2,5 s.
   useEffect(() => {
@@ -99,6 +102,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
   const [novaLista, setNovaLista] = useState<string | null>(null);
   // Id da lista com o nome em edição (duplo clique no título).
   const [renomeando, setRenomeando] = useState<string | null>(null);
+  // [PV-4] A ÚLTIMA LISTA É "PRONTO" (tarefa concluída). Isso vale também para o selo do cartão, o prazo do detalhe e a data de conclusão gravada ao mover (lib/store.tsx).
   // ⚠️ ATENÇÃO: a ÚLTIMA lista é tratada como "Pronto" (tarefa concluída).
   // Mudar isso afeta CartaoTarefa (selo verde), DetalheTarefa (prazo vencido)
   // e moverTarefa na store (preenche concluidaEm).
@@ -112,6 +116,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
    */
   const daColuna = (id: string) => tarefas.filter((t) => t.colunaId === id).sort((a, b) => a.ordem - b.ordem);
 
+  // [PV-5] O CÁLCULO DA POSIÇÃO ao arrastar: o cartão cai antes do primeiro cartão cujo meio está abaixo do mouse; se nenhum, vai para o fim da lista.
   /**
    * Evento dragover: dispara sem parar enquanto um cartão passa por cima
    * da área de cartões de uma lista. Decide ONDE o cartão cairia.
@@ -151,6 +156,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
     if (alvo?.colunaId !== colunaId || alvo.indice !== indice) setAlvo({ colunaId, indice });
   };
 
+  // [PV-6] A SOLTURA: confere de novo a permissão mover_tarefa e grava com moverTarefa (renumera a lista). Só avisa quando troca de lista. TODO(API).
   /**
    * Evento drop: o usuário soltou o cartão sobre uma lista.
    * @param e evento de arraste do React.
@@ -248,6 +254,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
                     <ItemMenu onClick={() => { setRenomeando(col.id); fechar(); }}>Renomear lista</ItemMenu>
                     <ItemMenu perigo onClick={() => {
                       fechar();
+                      // [PV-7] AS REGRAS DE EXCLUIR LISTA: só lista vazia e o quadro precisa ficar com pelo menos duas listas (uma de trabalho e a última, "Pronto").
                       // Não deixa excluir lista com cartões: as tarefas sumiriam junto.
                       if (lista.length) { avisar('Mova ou exclua os cartões antes de excluir a lista.', 'erro'); return; }
                       // Mínimo de duas listas: uma de trabalho e a última ("Pronto").
@@ -323,6 +330,7 @@ export default function Quadro({ projeto, tarefas, onAbrir }: { projeto: Projeto
               e.preventDefault();
               // Nome vazio não cria lista.
               if (!novaLista.trim()) return;
+              // [PV-8] ONDE ENTRA UMA LISTA NOVA: antes da última, para "Pronto" continuar sendo a última.
               // Nova lista entra antes da última (que representa "Pronto"),
               // para "Pronto" continuar sendo a última e significar concluída.
               const cols = [...projeto.colunas];
@@ -361,6 +369,7 @@ function Espaco({ texto }: { texto?: string }) {
   );
 }
 
+// [PV-9] A CRIAÇÃO RÁPIDA DE CARTÃO: título, responsável e prazo são obrigatórios (§5); prazo sugerido = hoje + 7 dias; nasce com prioridade média; o responsável é escolhido entre os alocados no projeto.
 /**
  * Criação rápida de cartão. Responsável e prazo são obrigatórios (slide 21).
  * Fechado, é só um botão "Adicionar cartão"; aberto, vira um mini formulário.

@@ -11,6 +11,7 @@ import { Card, Etiqueta, Progresso } from "@/components/ui/basicos";
 import { BarraEmpilhada, Legenda, type Segmento } from "@/components/ui/Graficos";
 import CabecalhoSecao from "./CabecalhoSecao";
 
+// [PV-1] A LISTA do que a empresa vê no painel dela (§6), lida pelo leitor de tela no lugar da prévia ilustrada.
 // O que a empresa vê no painel dela (§6).
 const O_QUE_A_EMPRESA_VE = [
   "O andamento dos projetos próprios.",
@@ -19,12 +20,14 @@ const O_QUE_A_EMPRESA_VE = [
   "O progresso da trilha do time dela.",
 ];
 
+// [PV-2] OS NÚMEROS DA PRÉVIA do painel: dados FICTÍCIOS só para ilustrar (a legenda da imagem avisa isso).
 // SIMULADO: dados FICTÍCIOS só para ilustrar o painel. Não vêm de nenhuma empresa real.
 const ENTREGAS: Segmento[] = [
   { rotulo: "Aprovadas", valor: 8, cor: "var(--sucesso)" },
   { rotulo: "Pendentes", valor: 3, cor: "var(--aviso)" },
 ];
 
+// [PV-3] A seção "Para sua empresa" (id empresa): o texto à esquerda e a prévia decorativa do painel à direita.
 /**
  * Seção "Para sua empresa". Server Component.
  * A prévia do painel é decorativa: fica com aria-hidden e o leitor de tela

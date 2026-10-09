@@ -17,6 +17,7 @@ import { dataBR, diasEntre, hojeISO } from '@/lib/utils';
 /** "2026-10-14" → "14/10" (dia e mês, como nos textos do deck). */
 const diaMes = (iso: string) => dataBR(iso).slice(0, 5);
 
+// [PV-1] O TEXTO E A COR DO PRAZO DA TRILHA: Concluída, Prazo indeterminado (prazoDias 0), Venceu em dd/mm, Vence hoje, Falta 1 dia, Faltam N dias e Até dd/mm. Quando fica "perto" é definido em lib/metricas.ts (DIAS_PRAZO_PERTO).
 /**
  * Texto, tom e ícone do prazo, sem desenhar nada (separado para o painel do D05 reaproveitar).
  * @param t - a trilha vista pela pessoa (de trilhasDaPessoaDetalhadas).

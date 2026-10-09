@@ -13,6 +13,7 @@ import { Suspense } from 'react';
 import AcessoLayout from '@/components/AcessoLayout';
 import RecuperarSenhaForm from '@/components/RecuperarSenhaForm';
 
+// [PV-1] O TÍTULO DA ABA da recuperação de senha ("Recuperar senha · CAIS").
 /** Título da aba: "Recuperar senha · CAIS" (o template vem de app/layout.tsx). */
 export const metadata: Metadata = { title: 'Recuperar senha' };
 
@@ -24,6 +25,7 @@ export const metadata: Metadata = { title: 'Recuperar senha' };
 export default function RecuperarSenhaPage() {
   return (
     <AcessoLayout>
+      {/* [PV-2] A PÁGINA DE RECUPERAÇÃO DE SENHA (/recuperar-senha). O Suspense é obrigatório porque o formulário lê ?token= e ?email= com useSearchParams. */}
       {/* ⚠️ ATENÇÃO: o formulário lê ?token= e ?email= com useSearchParams. Sem este
         * <Suspense>, o `npm run build` falha (notas-next16 §2). */}
       <Suspense>

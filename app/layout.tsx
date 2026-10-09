@@ -16,6 +16,7 @@ import './globals.css'; // <-- ESTA LINHA É OBRIGATÓRIA E FAZ A MAGIA ACONTECE
 import type { Metadata, Viewport } from 'next';
 import Providers from './providers';
 
+// [PV-1] O TÍTULO E A DESCRIÇÃO PADRÃO da aba do navegador. O modelo "%s · CAIS" monta o título das outras páginas (ex.: "Projetos · CAIS").
 /**
  * Título e descrição da aba do navegador.
  * O `template` monta o título das outras páginas: se uma página exporta
@@ -27,6 +28,7 @@ export const metadata: Metadata = {
   description: 'Onboarding por trilhas, gestão de projetos e dashboards',
 };
 
+// [PV-2] A COR DA BARRA DO NAVEGADOR NO CELULAR (Névoa no tema claro, Tinta no escuro) e o viewportFit "cover", que libera a área segura do iPhone para as barras fixas.
 /**
  * Cor da barra do navegador no celular (a faixa de cima, onde fica o relógio).
  * Segue o tema do sistema: Névoa (#F6F7FB) no claro e Tinta (#14161F) no
@@ -44,6 +46,7 @@ export const viewport: Viewport = {
   ],
 };
 
+// [PV-3] O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar. A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts: mude os dois juntos. Não escreva comentários dentro do texto.
 /*
   Script de tema — roda ANTES da página aparecer, para evitar o "piscar"
   branco quando o usuário usa o modo escuro.

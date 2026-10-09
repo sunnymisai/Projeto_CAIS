@@ -20,6 +20,7 @@
  * letras usam a cor do texto atual e acompanham o dark mode sozinhos.
  */
 
+// [PV-1] OS DESENHOS DO LOGO (o arco do "C" e a barra) copiados do guia da marca. Não edite os números à mão: o logo se deforma em todas as telas.
 // Caminhos SVG copiados do guia da marca: ARCO = o "C" e BARRA = o traço do meio (§9).
 // ⚠️ ATENÇÃO: não edite estes números à mão; qualquer mudança deforma o logo em todas as telas.
 const ARCO = "M 111.91 255.31 C 98.37 264.78 79.79 261.54 70.2 248 C 60.73 234.45 64.09 215.75 77.63 206.29 C 87.94 199.09 101.61 199.09 111.91 206.29 L 105.44 215.52 C 97.05 209.64 85.42 211.68 79.55 220.07 C 73.68 228.58 75.71 240.21 84.11 246.08 C 90.46 250.52 99.09 250.52 105.44 246.08 Z M 111.91 255.31";
@@ -28,6 +29,7 @@ const BARRA = "M 83.5 230.86 C 83.5 227.62 86.02 225.1 89.14 225.1 L 113.35 225.
 /** "auto" segue o tema claro/escuro; "claro" força a versão negativa (para fundo escuro). */
 type Tom = "auto" | "claro";
 
+// [PV-2] AS CORES DO LOGO: "auto" segue o tema (arco na cor do texto, barra na variável --marca) e "claro" é a versão negativa (branco e lilás) para fundo escuro.
 /**
  * Cores por tom (versões Positiva e Negativa do guia da marca).
  * @param tone "auto" ou "claro".
@@ -49,6 +51,7 @@ interface CaisMarkProps {
   className?: string;
 }
 
+// [PV-3] O símbolo sozinho, sem o nome (usado, por exemplo, no selo do cartão de acesso).
 /**
  * Só o símbolo (versão compacta), sem o nome.
  * @param size altura em px (padrão 40).
@@ -88,6 +91,7 @@ interface CaisLogoProps {
   className?: string;
 }
 
+// [PV-4] O logo completo com o nome. As letras C, A, I e S são os quatro caminhos no fim do arquivo.
 /**
  * Símbolo + nome CAIS (versão principal do logo).
  * @param size altura em px (padrão 32).

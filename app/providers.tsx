@@ -18,6 +18,7 @@ import { AuthProvider } from '@/lib/auth';
 import { DadosProvider } from '@/lib/store';
 import { ToastProvider } from '@/lib/toast';
 
+// [PV-1] A ORDEM DOS PROVEDORES: sessão (lib/auth.tsx), dados (lib/store.tsx) e avisos (lib/toast.tsx), de fora para dentro. Provedor novo entra aqui, e quem usa precisa ficar dentro dele.
 /**
  * Envolve a aplicação com sessão, dados e avisos, nesta ordem.
  *

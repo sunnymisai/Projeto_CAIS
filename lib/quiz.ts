@@ -34,6 +34,7 @@ export interface CorrecaoQuiz {
   porPergunta: CorrecaoPergunta[];
 }
 
+// [PV-1] A CORREÇÃO do quiz: a nota é o percentual de respostas certas. Mudar aqui muda a nota de todos os quizzes.
 /**
  * Corrige um quiz.
  * As respostas usam o índice ORIGINAL da alternativa (o de `pergunta.alternativas`),
@@ -63,9 +64,11 @@ export function corrigirQuiz(perguntas: Pergunta[], respostas: Record<string, nu
 /** Os três desfechos possíveis de uma tentativa. */
 export type ResultadoQuiz = 'aprovado' | 'reprovado_pode_tentar' | 'reprovado_sem_tentativas';
 
+// [PV-2] O MÁXIMO de tentativas de um quiz (10, regra da PROGLOGIC). O editor da trilha e o aluno respeitam este número.
 /** Máximo de tentativas que um quiz pode permitir (regra da PROGLOGIC: de 1 a 10). */
 export const LIMITE_TENTATIVAS = 10;
 
+// [PV-3] Quantas tentativas o quiz permite de verdade (1 a 10): sem valor usa o padrão; o antigo "0 = sem limite" vira 10.
 /**
  * Quantas tentativas o quiz permite de verdade, sempre entre 1 e LIMITE_TENTATIVAS (10).
  * Sem valor (dados antigos) usa o padrão; o antigo "0 = sem limite" vira o máximo (10); acima de 10 cai para 10.
@@ -81,6 +84,7 @@ export function tentativasDoQuiz(tentativasMax: number | undefined, padrao: numb
   return Math.min(LIMITE_TENTATIVAS, Math.max(1, Math.floor(tentativasMax)));
 }
 
+// [PV-4] A REGRA DE APROVAÇÃO: a nota IGUAL à mínima aprova; reprovado ainda pode tentar se sobrar tentativa. Define o aprovado, o pode tentar e o sem tentativas.
 /**
  * Decide o resultado de uma tentativa.
  * @param nota - nota desta tentativa (0 a 100).
@@ -99,6 +103,7 @@ export function resultadoDoQuiz(nota: number, notaMinima: number, tentativasUsad
   return tentativasUsadas < tentativasMax ? 'reprovado_pode_tentar' : 'reprovado_sem_tentativas';
 }
 
+// [PV-5] Embaralha as alternativas ao "Tentar de novo" (determinístico, por semente) para a pessoa não decorar a posição da resposta.
 /**
  * Embaralha uma lista sem mudar a original (Fisher-Yates com uma semente).
  * A semente deixa o resultado REPETÍVEL: a mesma tentativa mostra a mesma ordem
@@ -144,6 +149,7 @@ export function tentativasUsadas(trilha: TrilhaComProgresso, pessoaId: string, e
   return trilha.progresso[pessoaId]?.quizzes?.[etapaId]?.tentativas ?? 0;
 }
 
+// [PV-6] AVANÇO NA TRILHA: só a etapa atual avança, em ordem. Ao terminar a última, grava concluidaEm (alimenta os filtros de período e a evolução da turma).
 /**
  * Conclui a etapa de índice `indice`, se ela for a ATUAL (as etapas são feitas em ordem).
  * Rever uma etapa já concluída, ou tentar concluir uma adiante, não muda nada.
@@ -166,6 +172,7 @@ export function concluirEtapa<T extends TrilhaComProgresso & { etapas?: unknown[
   return { ...trilha, progresso: { ...trilha.progresso, [pessoaId]: { ...atual, concluidas, ...(terminou ? { concluidaEm: hoje } : {}) } } };
 }
 
+// [PV-7] Guarda a tentativa e a nota POR QUIZ; se aprovou, já conclui a etapa. É onde a nota entra no progresso da pessoa.
 /**
  * Registra uma tentativa de quiz: soma 1 tentativa e guarda a nota daquele quiz.
  * Aprovado: também grava o resumo da trilha (nota e tentativas) e conclui a etapa.

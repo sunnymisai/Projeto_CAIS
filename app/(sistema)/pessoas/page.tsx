@@ -30,8 +30,10 @@ import type { Perfil } from '@/lib/tipos';
 import { linhaDoTempo, segundaDaSemana } from '@/lib/carga';
 import { LinhaDeSemanas } from '@/components/ui/Semaforo';
 
+// [PV-1] OS NOMES DOS PERFIS nesta tela. Uma única tela cadastra os três (§11).
 /** Nome de cada perfil na tela. Uma única tela cadastra os três (§11). */
 const PERFIS: Record<Perfil, string> = { profissional: 'Profissional', empresa: 'Empresa', admin: 'Administrador' };
+// [PV-2] OS STATUS DA PESSOA: Convidado, Ativo e Inativo. Inativo substitui a exclusão: a pessoa sai de uso e o histórico fica (§11).
 /**
  * Status de uma pessoa. "Convidado" = recebeu convite e ainda não fez o primeiro acesso.
  * "Inativo" substitui a exclusão: a pessoa some do uso, mas o histórico fica (§11).
@@ -39,10 +41,13 @@ const PERFIS: Record<Perfil, string> = { profissional: 'Profissional', empresa: 
 const STATUS = { convidado: 'Convidado', ativo: 'Ativo', inativo: 'Inativo' } as const;
 // Cor da etiqueta por status (cor tem significado, §9): convidado pede atenção, ativo é sucesso.
 const TOM = { convidado: 'aviso', ativo: 'sucesso', inativo: 'neutro' } as const;
+// [PV-3] AS OPÇÕES DE ÁREA do profissional. TODO(API): podem vir do servidor.
 // Opções fixas de área e nível do perfil Profissional.
 // TODO(API): quando a API da PROGLOGIC existir, estas listas podem vir do servidor.
 const AREAS = ['Front-end', 'Back-end', 'UX', 'QA', 'Dados', 'Gestão'];
+// [PV-4] AS OPÇÕES DE NÍVEL do profissional (Estágio, Júnior, Pleno, Sênior).
 const NIVEIS = ['Estágio', 'Júnior', 'Pleno', 'Sênior'];
+// [PV-5] QUANTAS PESSOAS POR PÁGINA na tabela: 8.
 // Quantas pessoas por página da tabela (paginação no rodapé, §10).
 const POR_PAGINA = 8;
 
@@ -69,6 +74,7 @@ function Pessoas() {
   const [perfil, setPerfil] = useState<Perfil | 'todos'>('todos');
   const [status, setStatus] = useState('');
   const [pagina, setPagina] = useState(1);
+  // [PV-6] A FICHA ABERTA POR LINK: ?abrir=<id> (busca do topo, aviso de carga acima do limite e outras telas) abre a ficha da pessoa; id que não existe não abre nada.
   // ?abrir=<id> vem do topo (busca global ou aviso de carga acima do limite).
   // Só procuramos a pessoa depois que o store carregou (d.pronto); id inexistente = nenhuma ficha.
   const abrirId = params.get('abrir');
@@ -77,6 +83,7 @@ function Pessoas() {
   const [editando, setEditando] = useState<Pessoa | 'nova' | null>(null);
 
 
+  // [PV-7] A BUSCA E OS FILTROS: nome, e-mail e área (sem acento), perfil e status; ordem alfabética por nome.
   // Lista filtrada e ordenada por nome. useMemo só refaz o cálculo quando os dados ou filtros mudam.
   const filtradas = useMemo(() => {
     const q = normalizar(busca.trim());
@@ -218,6 +225,7 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
   const avisar = useToast();
   const [salvando, setSalvando] = useState(false);
 
+  // [PV-8] AS REGRAS DA PESSOA (§11): nome e sobrenome, e-mail válido e único, profissional exige área e perfil Empresa exige empresa vinculada.
   /**
    * Regras de validação da ficha. Devolve { campo: mensagem } só com os campos com erro.
    * useCallback mantém a mesma função entre renders, pois o useFormulario depende dela.
@@ -242,6 +250,7 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
     return e;
   }, [d.pessoas, pessoa]);
 
+  // [PV-9] OS VALORES DE UMA PESSOA NOVA: profissional, status convidado, entrada hoje, carga máxima de 40 h por semana (padrão do §11) e convite ligado.
   const f = useFormulario<ValPessoa>(
     pessoa ? { ...pessoa, convite: false, novaHabilidade: '' }
       // Pessoa nova começa como Profissional, status "convidado", data de entrada hoje,
@@ -267,6 +276,7 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
     f.set('novaHabilidade', '');
   };
 
+  // [PV-10] O SALVAR DA PESSOA: guarda só o que cabe no perfil (admin sem empresa; quem não é profissional fica sem área, nível, habilidades e carga). O envio do convite é SIMULADO. TODO(API): POST ou PUT e e-mail do convite.
   /**
    * Valida tudo e grava a pessoa. Se houver erro, mostra um toast e para.
    * @returns Promise vazia; ao terminar fecha a ficha.
@@ -298,6 +308,7 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
     onFechar();
   };
 
+  // [PV-11] INATIVAR E REATIVAR (não existe excluir): troca só o status e mantém alocações, tarefas e trilhas (§11).
   /**
    * Inativa ou reativa a pessoa. Não existe excluir: inativar mantém o histórico
    * (alocações, tarefas, trilhas) e a pessoa pode voltar depois (§11).
@@ -312,6 +323,7 @@ function FormPessoa({ pessoa, onFechar }: { pessoa: Pessoa | null; onFechar: () 
     onFechar();
   };
 
+  // [PV-12] O LINK DE CONVITE (SIMULADO): copia o endereço de /primeiro-acesso para quem envia mandar por conta própria. TODO(API): a API envia o e-mail.
   /**
    * Copia o link de convite da pessoa convidada (ela abre /primeiro-acesso e define a senha).
    * Se o navegador não deixar copiar (contexto sem https ou permissão negada), mostra o link no aviso para copiar à mão.

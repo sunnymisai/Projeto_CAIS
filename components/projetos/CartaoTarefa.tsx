@@ -17,6 +17,7 @@ import { Avatar, EtiquetaTarefa } from '@/components/ui/basicos';
 import { useDados, Tarefa } from '@/lib/store';
 import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
 
+// [PV-1] O CARTÃO DO QUADRO: etiquetas, título e selos (prazo, checklist, aprovada, comentários, responsável). Não arrasta sozinho: repassa os eventos ao Quadro.
 /**
  * Cartão do quadro: etiquetas, título e selos (prazo, checklist, comentários, responsável).
  *
@@ -43,11 +44,13 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
   const feitos = tarefa.checklist.filter((c) => c.feito).length;
   // Dias que faltam até o prazo: negativo = já passou, 0 = vence hoje.
   const dias = diasEntre(hojeISO(), tarefa.prazo);
+  // [PV-2] QUANDO O PRAZO É "ATRASADO" E "PERTO": atrasada = prazo vencido e fora da última lista; perto = vence hoje ou nos próximos 2 dias.
   // Tarefa concluída nunca conta como atrasada nem "perto do prazo".
   const atrasada = !concluida && dias < 0;
   // "Perto" = vence hoje ou nos próximos 2 dias: selo amarelo de alerta.
   const perto = !concluida && dias >= 0 && dias <= 2;
 
+  // [PV-3] AS CORES DO SELO DE PRAZO, por prioridade: concluída (verde), atrasada (vermelho), perto (âmbar) e normal (cinza). O texto do selo segue a mesma ordem.
   /*
    * Cor do selo de prazo, por prioridade: concluída (verde) > atrasada
    * (vermelho) > perto (amarelo) > normal (cinza). No tema escuro o texto
@@ -112,6 +115,7 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
             <CheckSquare className="h-3 w-3" aria-hidden />{feitos}/{tarefa.checklist.length}
           </span>
         )}
+        {/* [PV-4] O SELO "Aprovada": aparece quando a empresa aprovou a entrega (aprovadaEm). Ícone e texto, nunca só cor. */}
         {/* Selo "Aprovada": a empresa aprovou a entrega (ícone + texto, nunca só a cor). */}
         {tarefa.aprovadaEm && (
           <span className="inline-flex items-center gap-1 rounded-md bg-sucesso/12 px-1.5 py-0.5 text-[11px] font-semibold text-sucesso" title={`Aprovada pela empresa em ${dataCurta(tarefa.aprovadaEm)}`}>

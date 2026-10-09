@@ -17,6 +17,7 @@ import { segundaDaSemana } from './carga';
  * TODO(API): apagar este arquivo quando os dados vierem da API da PROGLOGIC.
  */
 
+// [PV-1] As listas padrão de todo projeto novo: A fazer, Fazendo, Revisão, Pronto. A penúltima e a última são as que aceitam aprovação da empresa.
 /**
  * As quatro colunas com que todo projeto nasce (§5): A fazer, Fazendo, Revisão, Pronto.
  * ⚠️ ATENÇÃO: a ÚLTIMA coluna conta como "pronto" em lib/metricas.ts e lib/store.tsx;
@@ -29,6 +30,7 @@ export const COLUNAS_PADRAO: Coluna[] = [
   { id: 'col_pronto', titulo: 'Pronto' },
 ];
 
+// [PV-2] OS DADOS DE DEMONSTRAÇÃO inteiros (empresas, pessoas, trilhas, projetos, alocações, tarefas). Mudou o seed de forma incompatível? Suba a CHAVE em lib/store.tsx.
 /**
  * Monta os dados de demonstração com datas relativas ao dia de hoje.
  * Cada chamada gera um objeto novo (nada é compartilhado entre chamadas).
@@ -46,6 +48,7 @@ export function criarSeed(): Dados {
   const agoraMenos = (horas: number) => new Date(Date.now() - horas * 3600000).toISOString();
 
   return {
+    // [PV-3] As empresas de exemplo (ativa, em negociação, encerrada). CNPJs e domínios são fictícios.
     // Quatro empresas em situações diferentes (ativa, em negociação, encerrada) para testar filtros e etiquetas.
     empresas: [
       { id: 'emp_vertice', razaoSocial: 'Vértice Logística Integrada Ltda.', nomeFantasia: 'Vértice Logística', cnpj: '11.222.333/0001-81', segmento: 'Logística', porte: 'Médio', site: 'https://vertice.example', cep: '50030-230', logradouro: 'Av. Rio Branco', numero: '120', cidadeUf: 'Recife / PE', contatoNome: 'Marcos Vieira', contatoEmail: 'marcos@vertice.example', contatoTelefone: '(81) 99876-1122', contatoCargo: 'Gerente de TI', status: 'ativa', dataEntrada: d(-60) },
@@ -53,6 +56,7 @@ export function criarSeed(): Dados {
       { id: 'emp_mare', razaoSocial: 'Maré Alta Comércio Varejista Ltda.', nomeFantasia: 'Maré Alta Varejo', cnpj: '90.817.263/0001-80', segmento: 'Varejo', porte: 'Pequeno', site: '', cep: '', logradouro: '', numero: '', cidadeUf: 'Olinda / PE', contatoNome: 'Rafael Costa', contatoEmail: 'rafael@marealta.example', contatoTelefone: '(81) 99111-2233', contatoCargo: 'Sócio', status: 'negociacao', dataEntrada: d(-5) },
       { id: 'emp_agro', razaoSocial: 'Nordeste Agro Tecnologia Ltda.', nomeFantasia: 'Nordeste Agro', cnpj: '33.445.566/0001-86', segmento: 'Agronegócio', porte: 'Médio', site: 'https://nordesteagro.example', cep: '', logradouro: '', numero: '', cidadeUf: 'Petrolina / PE', contatoNome: 'Júlia Farias', contatoEmail: 'julia@nordesteagro.example', contatoTelefone: '(87) 99222-4455', contatoCargo: 'Coordenadora', status: 'encerrada', dataEntrada: d(-200) },
     ],
+    // [PV-4] As pessoas de exemplo e as CONTAS de login (admin, profissionais, empresas). O cargaMax de cada uma é o limite do semáforo. Conta nova: acrescente também em CONTAS_DEMO (lib/auth.tsx).
     // Pessoas dos três perfis. pes_admin, pes_ana e pes_marcos batem com as contas SIMULADAS de lib/auth.tsx.
     // ⚠️ ATENÇÃO: mudar esses ids ou e-mails desencontra o login de demonstração e o cadastro.
     pessoas: [
@@ -68,6 +72,7 @@ export function criarSeed(): Dados {
       { id: 'pes_marcos', nome: 'Marcos Vieira', email: 'marcos@vertice.example', telefone: '(81) 99876-1122', cargo: 'Gerente de TI', perfil: 'empresa', status: 'ativo', dataEntrada: d(-60), area: '', nivel: '', cargaMax: 0, habilidades: [], empresaId: 'emp_vertice' },
       { id: 'pes_patricia', nome: 'Patrícia Melo', email: 'patricia@aurora.example', telefone: '(81) 98765-3344', cargo: 'Diretora de Produto', perfil: 'empresa', status: 'ativo', dataEntrada: d(-30), area: '', nivel: '', cargaMax: 0, habilidades: [], empresaId: 'emp_aurora' },
     ],
+    // [PV-5] As trilhas de exemplo, com conteúdo, quizzes, prazos e datas de conclusão. As datas de publicação criam prazo vencido, perto e no prazo para a demonstração.
     // Uma trilha de cada alcance (geral, empresa, profissional) + um rascunho, para o painel ter todos os casos (§4).
     trilhas: [
       {
@@ -154,6 +159,7 @@ export function criarSeed(): Dados {
         progresso: {},
       },
     ],
+    // [PV-6] Os projetos de exemplo, um por situação (em andamento, curto, planejado), cada um de uma empresa.
     // Dois projetos em andamento e um planejado (que só começa daqui a 7 dias).
     projetos: [
       { id: 'prj_portal', nome: 'Portal de pedidos', tipo: 'Aplicação web', empresaId: 'emp_vertice', contatoNome: 'Marcos Vieira', descricao: 'Portal para os clientes da Vértice acompanharem pedidos, entregas e notas fiscais em tempo real.', inicio: d(-42), entrega: d(45), prioridade: 'alta', liderId: 'pes_ana', status: 'andamento', cor: 'roxo', colunas: COLUNAS_PADRAO },
@@ -162,6 +168,7 @@ export function criarSeed(): Dados {
       { id: 'prj_sprint', nome: 'Sprint de acessibilidade', tipo: 'Melhoria', empresaId: 'emp_vertice', contatoNome: 'Marcos Vieira', descricao: 'Revisão de acessibilidade do portal antes da próxima entrega: contraste, teclado e leitores de tela.', inicio: d(0), entrega: d(7), prioridade: 'alta', liderId: 'pes_diego', status: 'andamento', cor: 'azul', colunas: COLUNAS_PADRAO },
       { id: 'prj_agenda', nome: 'App de agendamento', tipo: 'Aplicativo móvel', empresaId: 'emp_aurora', contatoNome: 'Patrícia Melo', descricao: 'Agendamento de consultas pelo celular, com lembretes e confirmação.', inicio: d(7), entrega: d(80), prioridade: 'media', liderId: 'pes_carla', status: 'planejado', cor: 'ambar', colunas: COLUNAS_PADRAO },
     ],
+    // [PV-7] AS ALOCAÇÕES que criam os cenários do semáforo: Bruno acima do limite, Diego (o exemplo do time) nunca vermelho, Elisa vermelha em 2 semanas, Gabriela livre.
     // Cenários do semáforo de carga (F02, lib/carga.ts):
     // - Bruno soma 30 h + 15 h = 45 h nos mesmos dias (112,5%): VERMELHO de propósito (§5: "é aviso, não bloqueio");
     // - Diego (o exemplo do time, §16): 10 h/sem no Sprint de hoje a d(7) e 30 h/sem no Portal a partir de d(8).
@@ -180,6 +187,7 @@ export function criarSeed(): Dados {
       { id: 'alo_7', projetoId: 'prj_agenda', pessoaId: 'pes_carla', papel: 'Líder', inicio: d(7), fim: d(80), carga: 15, obs: '' },
       { id: 'alo_9', projetoId: 'prj_agenda', pessoaId: 'pes_elisa', papel: 'Front-end', inicio: s2, fim: somaDias(s2, 11), carga: 15, obs: 'Reforço de 2 semanas: soma com o Estoque passa do limite dela.' },
     ],
+    // [PV-8] As tarefas do quadro, com checklist, comentários, anexos de exemplo e as aprovações da empresa (aprovadaEm).
     // Tarefas nas 4 colunas; algumas com prazo já vencido (d(-2), d(-1)) para mostrar atraso.
     tarefas: [
       // Anexos de exemplo (G03, SIMULADO): só metadados; nenhum arquivo é guardado.

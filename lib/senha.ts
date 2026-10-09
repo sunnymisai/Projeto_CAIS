@@ -20,6 +20,7 @@ export interface RegraSenha {
   cumprida: boolean;
 }
 
+// [PV-1] AS REGRAS DE SENHA do sistema (8 caracteres, uma maiúscula, um número). Mudar aqui muda a lista de regras na tela e quem pode criar senha. TODO(API): vir da política da API.
 /**
  * Confere a senha contra cada regra e devolve a lista (sempre as mesmas regras, na mesma ordem).
  * @param senha - a senha digitada (pode estar vazia: nesse caso nenhuma regra está cumprida).

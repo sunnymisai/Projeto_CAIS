@@ -15,6 +15,7 @@ import type { Pessoa } from './tipos';
 /** Densidade das tabelas: espaçamento das linhas. */
 export type Densidade = NonNullable<Pessoa['densidadeTabela']>;
 
+// [PV-1] Densidade das tabelas (confortável ou compacta): vem do cadastro da pessoa. Para mudar o padrão de quem nunca escolheu, troque o "confortavel" no fim.
 /**
  * Densidade das tabelas da pessoa logada.
  * @returns 'compacta' ou 'confortavel' (padrão para quem nunca escolheu, para quem não está logado e enquanto os dados carregam).

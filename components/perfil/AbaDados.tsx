@@ -52,6 +52,7 @@ export default function AbaDados({ pessoa }: { pessoa: Pessoa }) {
   const avisar = useToast();
   const [salvando, setSalvando] = useState(false);
 
+  // [PV-1] AS REGRAS DOS DADOS: o nome precisa de nome e sobrenome (mesma regra de /pessoas); telefone e cargo são livres.
   /**
    * Regras: o nome precisa de nome e sobrenome (mesma regra de /pessoas); telefone e cargo são livres.
    * useCallback mantém a mesma função entre renders, pois o useFormulario depende dela.
@@ -66,6 +67,7 @@ export default function AbaDados({ pessoa }: { pessoa: Pessoa }) {
   }, []);
   const f = useFormulario<Valores>({ nome: pessoa.nome, telefone: pessoa.telefone, cargo: pessoa.cargo }, validar);
 
+  // [PV-2] O SALVAR DOS DADOS: grava só nome, telefone e cargo e atualiza o nome na sessão (para o topo mudar na hora). TODO(API): PATCH no perfil do usuário.
   /**
    * Salva os três campos no cadastro e atualiza o nome na sessão (para o topo mudar na hora).
    * @param ev - evento de envio do <form>.
@@ -107,6 +109,7 @@ export default function AbaDados({ pessoa }: { pessoa: Pessoa }) {
           </div>
           {/* dl: lista de "termo e descrição", a marcação certa para pares rótulo e valor. */}
           <dl className="grid gap-4 border-t border-borda pt-5 sm:grid-cols-2">
+            {/* [PV-3] O QUE A PESSOA NÃO EDITA aqui: e-mail (é o login) e perfil de acesso; só o administrador muda. Campo novo somente leitura entra neste bloco. */}
             <SomenteLeitura rotulo="E-mail" explicacao="O e-mail é o seu login. Só o administrador pode mudá-lo.">
               <span className="break-all">{pessoa.email}</span>
             </SomenteLeitura>

@@ -10,6 +10,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 
+// [PV-1] Regra de validação dos formulários: o erro aparece ao SAIR do campo (blur), não a cada tecla (§11 do deck). Mudar o comportamento aqui afeta todos os formulários.
 /**
  * Estado de formulário com a regra de UX do CAIS:
  * o erro aparece ao SAIR do campo (blur), não a cada tecla. Depois que o

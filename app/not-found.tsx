@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { Compass } from 'lucide-react';
 import CaisLogo from '@/components/CaisLogo';
 
+// [PV-1] A PÁGINA 404: o texto e os dois botões (Ir para o painel e Ir para a página inicial). Fica fora da casca do sistema, então serve a quem nem tem conta.
 /**
  * Página "não encontrada" (erro 404).
  * Não tem "use client": é Server Component, só mostra texto e um link.

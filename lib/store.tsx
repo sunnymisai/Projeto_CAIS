@@ -26,6 +26,7 @@ import { useAuth } from './auth';
  * basta reescrever as ações abaixo com fetch — as telas não mudam.
  */
 
+// [PV-1] A CHAVE DOS DADOS no navegador. Mude o número (v6 → v7) quando o formato dos dados ou o seed mudar de jeito incompatível: todo mundo volta para a demonstração. Atualize também os testes.
 // ⚠️ ATENÇÃO: mudar esta chave faz o navegador "esquecer" os dados já salvos
 // (todo mundo volta para a demonstração). Troque o "v1" só se o formato de
 // `Dados` mudar de um jeito incompatível com o que já está gravado.
@@ -45,9 +46,11 @@ import { useAuth } from './auth';
 // (`Tarefa.aprovadaEm`) e uma trilha sem prazo (`prazoDias` 0). Os dados antigos do navegador (chave v5) são DESCARTADOS.
 const CHAVE = 'cais-dados-v6';
 
+// [PV-2] As coleções que todo conjunto de dados precisa ter. Coleção nova entra aqui, no tipo Dados (lib/tipos.ts) e no seed.
 /** As seis coleções que todo `Dados` precisa ter (usadas para conferir o que veio do navegador). */
 const COLECOES = ['empresas', 'pessoas', 'trilhas', 'projetos', 'alocacoes', 'tarefas'] as const;
 
+// [PV-3] Confere o formato do que foi lido do navegador; dado fora do formato vira a tela de erro "Não foi possível carregar os dados".
 /**
  * Confere se o que foi lido do navegador tem o formato mínimo de `Dados`:
  * um objeto com as seis coleções, cada uma sendo uma lista.
@@ -64,6 +67,7 @@ function formatoValido(valor: unknown): valor is Dados {
 /** Mensagem do estado de erro: diz o que houve, sem termo técnico. */
 const ERRO_LEITURA = 'Os dados salvos neste navegador estão danificados e não puderam ser lidos.';
 
+// [PV-4] Lê as pessoas direto do navegador SEM o provider (o login usa isto para saber quem existe e em que status).
 /**
  * Lê as pessoas cadastradas direto do navegador, SEM precisar do DadosProvider.
  * Existe porque o AuthProvider fica FORA do DadosProvider (app/providers.tsx) e
@@ -186,6 +190,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     pendentes.current.push({ ...e, autorId: sessaoRef.current?.pessoaId, autorNome: sessaoRef.current?.nome });
   }, []);
 
+  // [PV-5] TEMPO REAL: ao receber evento de OUTRA aba, relê os dados do navegador. A aba que publicou ignora o próprio evento (evita laço).
   // Assina o canal: quando OUTRA aba muda uma tarefa, relê os dados do navegador e guarda o evento.
   // Roda uma vez ([]); a limpeza cancela a assinatura quando o provider sai da tela.
   // POR QUE NÃO ENTRA EM LAÇO: (1) o canal não entrega à aba o próprio evento (origem); (2) recarregar
@@ -227,6 +232,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
         setErro(ERRO_LEITURA);
       }
       setPronto(true);
+    // [PV-6] Latência simulada da API (450 ms) que faz aparecer o esqueleto de carregamento. TODO(API): trocar a leitura do localStorage por um fetch GET.
     }, 450);
     return () => clearTimeout(t);
   }, [tentativa]);
@@ -252,6 +258,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     for (const e of fila) canalTempoReal().publicar(e);
   }, [dados]);
 
+  // [PV-7] GRAVAR (criar ou editar) qualquer coisa: upsert por id. Salvar tarefa também publica o evento de tempo real. TODO(API): virar POST ou PATCH.
   /**
    * Cria ou atualiza um item de qualquer coleção (o "upsert").
    * @param colecao - nome da coleção, ex.: 'empresas'.
@@ -277,6 +284,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     });
   }, [enfileirar]);
 
+  // [PV-8] APAGAR qualquer coisa. Só projeto tem cascata: apagar um projeto apaga suas tarefas e alocações. TODO(API): virar DELETE.
   /**
    * Apaga um item de qualquer coleção pelo id.
    * @param colecao - nome da coleção, ex.: 'projetos'.
@@ -307,6 +315,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     });
   }, [enfileirar]);
 
+  // [PV-9] MOVER TAREFA no quadro: renumera a ordem, grava concluidaEm ao entrar na última lista e APAGA a aprovação da empresa ao sair de Revisão ou Pronto.
   /** Move uma tarefa para outra coluna/posição e renumera a ordem. */
   // GRAVA: altera colunaId, ordem, concluidaEm e (ao sair de Revisão/Pronto) a aprovação das tarefas afetadas.
   // TODO(API): virar fetch PATCH; com WebSocket (§5) os colegas veem o cartão mudar.
@@ -348,6 +357,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     });
   }, [enfileirar]);
 
+  // [PV-10] O botão "Restaurar dados de demonstração": volta ao seed e também é a saída da tela de erro de dados danificados. APAGA o que foi editado.
   // GRAVA: substitui tudo pela demonstração (o efeito de persistir grava no localStorage).
   // APAGA: tudo o que foi criado ou editado no navegador se perde.
   // Também é a saída do estado de erro: libera a gravação (carregou) e limpa o erro,
@@ -373,6 +383,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     empresa: (id) => dados.empresas.find((e) => e.id === id),
     pessoa: (id) => dados.pessoas.find((p) => p.id === id),
     projeto: (id) => dados.projetos.find((p) => p.id === id),
+    // [PV-11] As horas ATIVAS HOJE de uma pessoa (usadas em /pessoas e no aviso do topo). Em fim de semana dá 0, porque não é dia útil. Para semanas e períodos use lib/carga.ts.
     // Horas semanais ATIVAS HOJE (lib/carga.ts → ocupacaoNoDia).
     // MUDANÇA DE COMPORTAMENTO (F02): antes somava TODAS as alocações que terminavam a partir
     // de hoje, mesmo as que nunca se cruzam no tempo (uma que acaba em 7 dias e outra que só

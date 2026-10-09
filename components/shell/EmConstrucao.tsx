@@ -9,6 +9,7 @@ import { Construction } from 'lucide-react';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import { Card, EstadoVazio } from '@/components/ui/basicos';
 
+// [PV-1] O bloco "Em construção" (ícone, título e descrição) para tela ainda não entregue. Hoje nenhuma rota usa; fica pronto para o próximo bloco novo.
 /**
  * Só o bloco "Em construção" (sem cabeçalho), para encaixar em outra tela.
  * @param descricao - o que vai existir aqui e que bloco entrega.
@@ -22,6 +23,7 @@ export function EstadoConstrucao({ descricao }: { descricao: string }) {
   );
 }
 
+// [PV-2] A página completa "Em construção": cabeçalho padrão mais o bloco. Para uma tela nova provisória, use este componente na page.tsx.
 /**
  * Página completa "Em construção": título, descrição e o estado vazio.
  * @param titulo - título da página (vira o <h1>).

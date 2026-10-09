@@ -20,6 +20,7 @@
    sistema operacional), permitindo o botão de alternar tema. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* [PV-1] AS CORES DO TEMA CLARO (marca, estados, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. */
 :root {
   /* Marca (iguais nos dois temas, exceto a primária, que clareia no escuro) */
   --marca: #7C5CFF;             /* Roxo Maré — só no símbolo e em ilustrações */
@@ -42,6 +43,7 @@
   --borda: #E1E3EC;
   --sombra-card: 0 1px 2px rgba(20, 22, 31, 0.04), 0 12px 40px -12px rgba(60, 40, 160, 0.18);
 
+  /* [PV-2] AS CORES DOS GRÁFICOS no tema claro (concluída, andamento, revisão, a fazer, não iniciada, extras). Lidas por COR_GRAFICO em components/ui/Graficos.tsx. */
   /* Gráficos (status de trilha e colunas do quadro). Tons de DADO, não de texto:
    * podem ser mais vivos que --sucesso/--aviso, que precisam de contraste p/ texto.
    * Usados via COR_GRAFICO (components/ui/Graficos.tsx). */
@@ -56,6 +58,7 @@
   color-scheme: light;
 }
 
+/* [PV-3] AS CORES DO TEMA ESCURO: os mesmos nomes do :root com valores para fundo escuro (a classe "dark" no <html> liga). Mudou um nome lá, mude aqui. */
 .dark {
   --marca: #8F74FF;
   --primaria: #8F74FF;
@@ -89,6 +92,7 @@
   color-scheme: dark;
 }
 
+/* [PV-4] A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam as cores fixas do painel de marca (noite e pilares) e as fontes (Space Grotesk nos títulos, Archivo no resto). */
 @theme inline {
   --color-marca: var(--marca);
   --color-primaria: var(--primaria);
@@ -122,6 +126,7 @@
   --font-archivo: "Archivo", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* [PV-5] O FUNDO, A COR DO TEXTO E A FONTE PADRÃO de todas as telas (pelos tokens), com a troca suave de tema (desligada para quem pede menos movimento). */
 body {
   background-color: var(--fundo);
   color: var(--tinta);
@@ -130,6 +135,7 @@ body {
   transition: background-color 250ms ease, color 250ms ease;
 }
 
+/* [PV-6] AS ANIMAÇÕES DA MARCA (cartão de acesso, linhas e pontos dos três pilares, balanço do erro). Todas se desligam em prefers-reduced-motion. */
 /* ---------------------------------------------------------------------------
    Momento de animação único: ao abrir a tela, as linhas que conectam os três
    pilares (Onboarding → Projetos → Dashboards) são "desenhadas" em sequência
@@ -173,6 +179,7 @@ body {
   body { transition: none; }
 }
 
+/* [PV-7] A BARRA DE ROLAGEM FINA (classe .rolagem) das áreas que rolam: conteúdo das telas e colunas do quadro. */
 /* ---------------------------------------------------------------------------
    Utilitários do sistema
    --------------------------------------------------------------------------- */
@@ -181,6 +188,7 @@ body {
 .rolagem::-webkit-scrollbar { width: 10px; height: 10px; }
 .rolagem::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--tinta-fraca) 40%, transparent); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
 
+/* [PV-8] O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). */
 @keyframes esqueleto { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 .esqueleto {
   background: linear-gradient(90deg, var(--superficie-alt) 25%, color-mix(in srgb, var(--superficie-alt) 40%, var(--superficie)) 50%, var(--superficie-alt) 75%);
@@ -188,6 +196,7 @@ body {
   animation: esqueleto 1.4s ease-in-out infinite;
 }
 
+/* [PV-9] AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. */
 @keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: none; } }
 .animate-modal-in { animation: modal-in 180ms ease-out both; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -202,5 +211,6 @@ body {
    para não afetar o sistema interno, e só para quem não pediu menos movimento.
    --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: no-preference) {
+  /* [PV-10] A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. */
   html:has(.home-raiz) { scroll-behavior: smooth; }
 }

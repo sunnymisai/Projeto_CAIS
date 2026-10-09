@@ -35,6 +35,7 @@ import Button, { classesBotao } from '@/components/button';
 import { Card, Progresso, Esqueleto, Etiqueta } from '@/components/ui/basicos';
 import { cx } from '@/lib/utils';
 
+// [PV-1] O PLAYER DE UMA ETAPA: mostra o conteúdo (ou o quiz), conclui a etapa e libera a próxima. Terminar a última mostra a tela de parabéns.
 /**
  * Player de uma etapa.
  * Acesso: trilha fora do público → /sem-permissao; etapa inexistente → detalhe da trilha;
@@ -58,6 +59,7 @@ export default function PlayerEtapa() {
   );
   const indice = t ? t.trilha.etapas.findIndex((e) => e.id === etapaId) : -1;
 
+  // [PV-2] O PORTEIRO DA ETAPA: fora do público vai para /sem-permissao; etapa inexistente volta ao detalhe da trilha; etapa adiante da atual vai ao detalhe com ?bloqueada= (que explica o motivo).
   // Porteiro da etapa. Roda quando os dados carregam ou mudam; não há o que limpar.
   // NAVEGA (replace: o "voltar" não cai de novo numa página que redireciona):
   // - fora do público → /sem-permissao;
@@ -112,6 +114,7 @@ export default function PlayerEtapa() {
     );
   }
 
+  // [PV-3] A CONCLUSÃO DE ETAPA SEM QUIZ: grava o progresso (concluirEtapa só avança se for a etapa atual). Na última etapa abre os parabéns.
   /**
    * Conclui a etapa atual (só texto/vídeo/etc.; o quiz conclui ao ser aprovado).
    * GRAVA: o progresso da trilha na store (concluirEtapa só avança se for a etapa atual).
@@ -122,6 +125,7 @@ export default function PlayerEtapa() {
     else avisar('Etapa concluída. A próxima foi liberada.');
   };
 
+  // [PV-4] O ENVIO DO QUIZ: grava as tentativas e a nota (registrarTentativa, lib/quiz.ts); se aprovado, conclui a etapa e libera a próxima.
   /**
    * Recebe o envio do quiz e grava a tentativa.
    * GRAVA: tentativas e nota deste quiz; se aprovado, também o resumo da trilha e a conclusão da etapa.

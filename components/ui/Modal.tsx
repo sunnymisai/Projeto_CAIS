@@ -16,6 +16,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cx } from '@/lib/utils';
 
+// [PV-1] O MODAL padrão: prende o foco, fecha com Esc ou clique fora, devolve o foco a quem abriu e trava a rolagem. "lateral" vira painel pela direita. Todo diálogo do sistema usa este componente.
 /**
  * Modal acessível do Design System CAIS.
  * - Fecha com Esc, com o botão × e clicando no fundo escurecido.
@@ -78,6 +79,7 @@ export default function Modal({ aberto, onFechar, titulo, descricao, children, r
     const anterior = document.activeElement as HTMLElement | null;
     // Guarda o overflow original do <body> e trava a rolagem da página de trás.
     const overflow = document.body.style.overflow;
+    // [PV-2] Trava a rolagem da página enquanto o modal está aberto (e destrava ao fechar).
     document.body.style.overflow = 'hidden';
 
     // Foca o primeiro campo, ou o próprio modal. O requestAnimationFrame espera
@@ -124,6 +126,7 @@ export default function Modal({ aberto, onFechar, titulo, descricao, children, r
   // Fechado, ou ainda no servidor: não desenha nada.
   if (!aberto || !montado) return null;
 
+  // [PV-3] As larguras do modal: sm, md (padrão), lg e xl. Para um tamanho novo, acrescente aqui e no tipo da prop tamanho.
   // Tamanho do modal → largura máxima em Tailwind.
   const largura = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-5xl' }[tamanho];
 
@@ -134,6 +137,7 @@ export default function Modal({ aberto, onFechar, titulo, descricao, children, r
   return createPortal(
     // Lateral: encosta na direita (justify-end) e ocupa a altura toda; central: como descrito acima.
     <div className={cx('fixed inset-0 z-[70] flex', lateral ? 'justify-end' : 'items-end justify-center sm:items-center sm:p-6')}>
+      {/* [PV-4] O fundo escurecido do modal (veil). Clicar nele fecha o modal. Cor em hex fixo: item cosmético pendente da revisão H01 (virar token). */}
       {/* Fundo escurecido: clicar fora da caixa fecha o modal. */}
       <div className="animate-fade-in absolute inset-0 bg-[#0B0C12]/55 backdrop-blur-[2px]" onClick={onFechar} aria-hidden />
       {/* tabIndex={-1} deixa a própria caixa receber foco (quando não há campo para focar). */}

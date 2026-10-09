@@ -26,13 +26,17 @@ import PessoasDaEmpresa from '@/components/acessos/PessoasDaEmpresa';
 import { cnpjValido, EMAIL_REGEX, hojeISO, mascaraCEP, mascaraCNPJ, mascaraTelefone, normalizar, novoId, soDigitos, dataBR } from '@/lib/utils';
 import { ROTULO_STATUS_EMPRESA, TOM_STATUS_EMPRESA } from '@/lib/metricas';
 
+// [PV-1] OS STATUS DA EMPRESA (Em negociação, Ativa, Encerrada), nomes e cores, vêm de lib/metricas.ts e são os mesmos do painel da empresa.
 // Rótulos e cores do status de empresa (§11) vêm de lib/metricas.ts, compartilhados com o painel da empresa.
 const STATUS = ROTULO_STATUS_EMPRESA;
 const TOM = TOM_STATUS_EMPRESA;
+// [PV-2] AS OPÇÕES DE SEGMENTO do filtro e da ficha. TODO(API): podem vir do servidor.
 // Opções fixas dos selects de segmento e porte.
 // TODO(API): quando a API da PROGLOGIC existir, estas listas podem vir do servidor.
 const SEGMENTOS = ['Agronegócio', 'Educação', 'Financeiro', 'Indústria', 'Logística', 'Saúde', 'Serviços', 'Tecnologia', 'Varejo'];
+// [PV-3] AS OPÇÕES DE PORTE da ficha (Pequeno, Médio, Grande).
 const PORTES = ['Pequeno', 'Médio', 'Grande'];
+// [PV-4] QUANTAS EMPRESAS POR PÁGINA na tabela: 8.
 // Quantas empresas cabem em uma página da tabela (paginação no rodapé, §10).
 const POR_PAGINA = 8;
 
@@ -59,6 +63,7 @@ function Empresas() {
   const [status, setStatus] = useState('');
   const [segmento, setSegmento] = useState('');
   const [pagina, setPagina] = useState(1);
+  // [PV-5] A FICHA ABERTA POR LINK: ?abrir=<id> (vem da busca do topo e de outras telas) abre a ficha da empresa; id que não existe não abre nada.
   // ?abrir=<id> vem da busca global do topo (Topbar). Só procuramos a empresa
   // depois que o store carregou (d.pronto); antes disso a lista ainda está vazia.
   // Se o id não existir, daUrl vira null e nenhuma ficha abre.
@@ -68,6 +73,7 @@ function Empresas() {
   const [editando, setEditando] = useState<Empresa | 'nova' | null>(null);
 
 
+  // [PV-6] A BUSCA E OS FILTROS: nome fantasia ou razão social (sem acento) ou CNPJ só com dígitos, mais status e segmento; ordem alfabética.
   // Lista filtrada e ordenada. useMemo evita refazer o filtro a cada render;
   // só recalcula quando os dados ou algum filtro mudam.
   const filtradas = useMemo(() => {
@@ -174,6 +180,7 @@ function Empresas() {
 
 /** Valores editáveis do formulário: a Empresa inteira, menos o id (que é gerado ao salvar). */
 type ValEmpresa = Omit<Empresa, 'id'>;
+// [PV-7] OS VALORES DE UMA EMPRESA NOVA: status "em negociação" e data de entrada hoje.
 // Formulário em branco para "Nova empresa": status começa em negociação e a data de entrada é hoje.
 const VAZIA: ValEmpresa = { razaoSocial: '', nomeFantasia: '', cnpj: '', segmento: '', porte: '', site: '', cep: '', logradouro: '', numero: '', cidadeUf: '', contatoNome: '', contatoEmail: '', contatoTelefone: '', contatoCargo: '', status: 'negociacao', dataEntrada: hojeISO() };
 
@@ -196,6 +203,7 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
   // Aba da ficha: 'dados' (formulário) ou 'pessoas' (vínculo pessoa-empresa, §11). Só existe para empresa já cadastrada.
   const [aba, setAba] = useState<'dados' | 'pessoas'>('dados');
 
+  // [PV-8] AS REGRAS DA EMPRESA (§11): CNPJ válido e único, CEP com 8 dígitos, site começando com https://, e-mail do contato único no sistema todo (ele vira o login do perfil Empresa).
   /**
    * Regras de validação da ficha. Devolve um objeto { campo: mensagem } só com os campos com erro.
    * useCallback mantém a mesma função entre renders, pois o useFormulario depende dela.
@@ -235,6 +243,7 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
   // Ao editar, começa com uma cópia da empresa; ao criar, com o formulário em branco.
   const f = useFormulario<ValEmpresa>(empresa ? { ...empresa } : VAZIA, validar);
 
+  // [PV-9] A BUSCA DE CEP: ao sair do campo consulta o ViaCEP (serviço público externo) e preenche logradouro e cidade/UF, que continuam editáveis. Falha nunca bloqueia o cadastro.
   /**
    * Busca o endereço no ViaCEP quando o usuário sai do campo CEP (onBlur).
    * O CEP preenche o endereço, mas os campos continuam editáveis (§11).
@@ -272,6 +281,7 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
     setBuscandoCep(false);
   };
 
+  // [PV-10] O SALVAR DA EMPRESA: valida tudo, grava com id novo "emp" se for cadastro. SIMULADO: espera 350 ms. TODO(API): POST ou PUT na API da PROGLOGIC.
   /**
    * Valida tudo e salva a empresa no store.
    * Se houver erro, mostra um toast e para; os campos com erro ficam destacados.
@@ -299,6 +309,7 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
       // O cálculo do plural evita "1 projetos".
       descricao={empresa ? `${nProjetos} projeto${nProjetos === 1 ? '' : 's'} · entrou em ${dataBR(empresa.dataEntrada)}` : 'Campos com * são obrigatórios.'}
       rodape={<>
+        {/* [PV-11] A EXCLUSÃO DA EMPRESA: o botão só aparece para empresa sem projetos e não apaga em cascata (pessoas vinculadas ficam apontando para uma empresa que não existe mais). */}
         {/*
           * Excluir só aparece para empresa sem projetos: projetos e trilhas dependem dela
           * e o store não apaga empresas em cascata.

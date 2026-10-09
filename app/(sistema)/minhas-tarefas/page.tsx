@@ -34,6 +34,7 @@ import DetalheTarefa from '@/components/projetos/DetalheTarefa';
 import { corQuadro } from '@/components/projetos/cores';
 import { cx, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
 
+// [PV-1] OS GRUPOS ABERTOS DA TELA, na ordem: Atrasadas, Hoje, Esta semana e Depois. A regra de qual tarefa cai em qual grupo está em agruparMinhasTarefas (lib/metricas.ts).
 /** Os grupos abertos, na ordem da tela (o de concluídas fica à parte, recolhido). */
 const GRUPOS = [
   { chave: 'atrasadas', titulo: 'Atrasadas' },
@@ -69,6 +70,7 @@ function MinhasTarefas() {
   // A seção "Concluídas recentemente" começa recolhida (o foco é o que falta fazer).
   const [verConcluidas, setVerConcluidas] = useState(false);
 
+  // [PV-2] QUAIS TAREFAS SÃO "MINHAS": as que têm a pessoa como responsável, dentro do que o perfil enxerga (lib/escopo.ts).
   // Tarefas da pessoa: responsável = ela, dentro do que o perfil enxerga (lib/escopo.ts).
   const minhas = useMemo(
     () => (sessao && d.pronto ? tarefasVisiveis(sessao, d).filter((t) => t.responsavelId === sessao.pessoaId) : []),
@@ -89,7 +91,9 @@ function MinhasTarefas() {
 
   // Detalhe aberto: só se a tarefa do ?tarefa= for mesmo da pessoa (URL digitada não abre tarefa alheia).
   const idAberta = params.get('tarefa');
+  // [PV-3] O DETALHE só abre se a tarefa do ?tarefa= for da própria pessoa: uma URL digitada não abre tarefa alheia.
   const tarefaAberta = idAberta && minhas.some((t) => t.id === idAberta) ? idAberta : null;
+  // [PV-4] ABRIR E FECHAR O DETALHE mexe só no ?tarefa= da URL, com replace (não enche o histórico do "voltar") e sem rolar a lista.
   /**
    * Abre (id) ou fecha (null) o detalhe mexendo só no ?tarefa= da URL.
    * NAVEGA: replace, para abrir/fechar o detalhe não encher o histórico do "voltar".
@@ -203,6 +207,7 @@ function MinhasTarefas() {
   );
 }
 
+// [PV-5] O TEXTO E A COR DO PRAZO de cada tarefa: Concluída em dd/mm (verde), Atrasada há N dias (vermelho), Vence hoje (âmbar), Amanhã ou a data (neutro).
 /**
  * Texto, tom e ícone do prazo de uma tarefa (cor sempre com ícone e texto).
  * @param t - a tarefa.
@@ -218,6 +223,7 @@ function prazoDaTarefa(t: Tarefa, concluida: boolean) {
   return { texto: dataCurta(t.prazo), classe: 'text-tinta-suave', Icone: CalendarDays };
 }
 
+// [PV-6] O ITEM DA LISTA: um botão com título, projeto (faixa lateral e bolinha na cor do quadro), prazo, prioridade e checklist. Alvo de toque de pelo menos 44 px.
 /**
  * Um item da lista: um <button> (Enter/Espaço abrem o detalhe) com título, projeto,
  * prazo, prioridade e checklist.

@@ -34,6 +34,7 @@ import { EstadoErro } from '@/components/ui/basicos';
 import Button from '@/components/button';
 import { RotateCw } from 'lucide-react';
 
+// [PV-1] A CASCA PROTEGIDA de todas as telas internas (menu, topo e conteúdo). A proteção roda só no navegador: não é segurança real, é experiência de uso. TODO(API): a segurança vem do back-end.
 /**
  * Casca de todas as telas internas.
  * - Protege as rotas: sem sessão volta para o login (com ?voltar=); sessão
@@ -64,6 +65,7 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
   // para mandar ao login COM a mensagem, em vez do redirecionamento comum.
   const encerradaPorInativa = useRef(false);
 
+  // [PV-2] A SESSÃO ABERTA ACOMPANHA O CADASTRO: conta inativada encerra a sessão na hora; perfil, nome ou e-mail alterados são copiados para a sessão.
   // Conta de quem está logado mudou no cadastro (feito em /acessos ou /pessoas)? Roda quando os dados
   // carregam ou mudam; não tem limpeza.
   // - Inativa: encerra a sessão (a pessoa que já estava com o sistema aberto é barrada na hora).
@@ -90,6 +92,7 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     }
   }, [pronto, sessao, dados, sair, atualizarSessao]);
 
+  // [PV-3] O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao.
   // Porteiro das rotas. Roda depois de cada render em que mudar `pronto`,
   // `sessao` ou o `caminho` (trocar de página, sair, entrar). Não tem nada
   // para limpar: só decide se manda a pessoa para outro lugar.
@@ -108,6 +111,7 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     else if (!podeAcessar(sessao.perfil, caminho)) router.replace('/sem-permissao');
   }, [pronto, sessao, router, caminho]);
 
+  // [PV-4] A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima.
   // Enquanto verifica (ou enquanto o redirecionamento acima não acontece),
   // nunca mostra a casca: só o símbolo pulsando no meio da tela.
   // ⚠️ ATENÇÃO: esta condição precisa bater com a do useEffect (mesma regra
@@ -122,8 +126,9 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
     );
   }
 
+  // [PV-5] A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts).
   // Guarda da trilha obrigatória (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas*.
-  // Só vale com EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO ligada (hoje false: o bloco D liga) e depois que a store
+  // Só vale com EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO ligada (hoje true, em lib/permissoes.ts) e depois que a store
   // carregou (dados.pronto), senão a tela piscaria o bloqueio antes de saber se há pendência.
   const trilhaBloqueia = EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO
     && dados.pronto
@@ -151,6 +156,7 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
           * tabIndex={-1} permite receber foco pelo link "pular para o
           * conteúdo" sem entrar na ordem normal do Tab. */}
         <main id="conteudo" tabIndex={-1} className="rolagem flex-1 overflow-y-auto focus:outline-none">
+          {/* [PV-6] O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. */}
           {/* Estado de erro (§13) de TODAS as telas internas: se a store não conseguiu ler os dados,
             * mostra o EstadoErro no lugar da página (que estaria com dados errados).
             * Bloqueio da trilha pendente: também no lugar da página.

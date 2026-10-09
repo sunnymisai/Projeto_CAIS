@@ -48,15 +48,18 @@ export default function PainelEmpresa() {
   const tarefas = useMemo(() => (pronto ? tarefasVisiveis(sessao!, d) : []), [pronto, sessao, d]);
   const alocacoes = useMemo(() => (pronto ? alocacoesVisiveis(sessao!, d) : []), [pronto, sessao, d]);
 
+  // [PV-1] O QUE É ENTREGUE E APROVADA (decisão da PROGLOGIC, 09/10/2026): entregue = tarefa em Revisão ou Pronto; aprovada = a empresa registrou a aprovação no detalhe da tarefa.
   // Entregas: a EMPRESA aprova (decisão da PROGLOGIC, 09/10/2026). "Entregue" = tarefa em Revisão ou Pronto
   // (colunaAceitaAprovacao); "aprovada" = a empresa registrou aprovadaEm no detalhe da tarefa.
   const entregues = tarefas.filter((t) => colunaAceitaAprovacao(d.projeto(t.projetoId), t.colunaId));
   // Aguardando a aprovação DESTA empresa: a bola está com ela, então vem em destaque no bloco.
   const aguardando = entregues.filter((t) => !t.aprovadaEm).sort((a, b) => a.prazo.localeCompare(b.prazo));
+  // [PV-2] AS ÚLTIMAS ENTREGAS do período: aprovadas com data dentro do filtro, as mais recentes primeiro.
   // Últimas entregas DO PERÍODO (G01): aprovadas com aprovadaEm dentro do período, as mais recentes primeiro.
   const feitas = entregues.filter((t) => !!t.aprovadaEm && dentroDoPeriodo(t.aprovadaEm, periodo))
     .sort((a, b) => b.aprovadaEm!.localeCompare(a.aprovadaEm!));
 
+  // [PV-3] QUAIS TRILHAS aparecem em "Trilha do time": só as publicadas, com alcance "empresa" e da empresa desta pessoa.
   // Trilhas da empresa (alcance "empresa", publicadas): o progresso do time dela (§6).
   const trilhasDaEmpresa = pronto && pessoa?.empresaId
     ? d.trilhas.filter((t) => t.status === 'publicada' && t.alcance === 'empresa' && t.empresaId === pessoa.empresaId)
@@ -78,6 +81,7 @@ export default function PainelEmpresa() {
       <div className="mb-4"><FiltroPeriodo periodo={periodo} onChange={definir} /></div>
 
       <div className="grid gap-4 lg:grid-cols-2">
+        {/* [PV-4] O ANDAMENTO dos projetos da empresa: percentual pronto, tarefas prontas e atrasadas (progressoProjeto, lib/metricas.ts). Cada linha leva à ficha do projeto. */}
         {/* 1) Andamento dos projetos próprios */}
         <Bloco titulo="Andamento dos projetos" estado={estado} acao={<VerTodas href="/projetos" rotulo="Ver projetos" />}>
           {projetos.length === 0 ? (
@@ -110,6 +114,7 @@ export default function PainelEmpresa() {
           )}
         </Bloco>
 
+        {/* [PV-5] AS HORAS DO TIME: a empresa vê as horas semanais de cada pessoa NO PROJETO DELA (decisão da PROGLOGIC, 09/10/2026), nunca a soma nem os outros projetos da pessoa. O recorte vem de alocacoesVisiveis (lib/escopo.ts). */}
         {/* 2) Quem está alocado e em quê: pessoa, papel, projeto, período e as horas por semana.
           * DECISÃO DA PROGLOGIC (09/10/2026): a empresa aloca o time nos projetos dela, então vê as horas
           * semanais de cada pessoa NO PROJETO DELA (a.carga). PRIVACIDADE que continua: ela não vê os
@@ -142,6 +147,7 @@ export default function PainelEmpresa() {
           )}
         </Bloco>
 
+        {/* [PV-6] AS ENTREGAS por projeto: aprovadas × aguardando a aprovação da empresa × em produção (entregasDoProjeto), a lista "Aguardando a sua aprovação" (até 4) e as últimas entregas do período (até 4). */}
         {/* 3) Entregas por projeto: aprovadas pela empresa × aguardando a aprovação dela × em produção, §6.
           * A conta fica em entregasDoProjeto (lib/metricas.ts); a empresa aprova no detalhe da tarefa.
           * Vazio quando nenhum projeto tem tarefa (ex.: a Aurora, com o projeto ainda planejado). */}
@@ -218,6 +224,7 @@ export default function PainelEmpresa() {
           )}
         </Bloco>
 
+        {/* [PV-7] O PROGRESSO DA TRILHA do time: concluíram, em andamento e não iniciaram, por trilha da empresa (resumoTrilha). */}
         {/* 4) Progresso da trilha do time */}
         <Bloco titulo="Trilha do time" estado={estado} acao={<VerTodas href="/minhas-trilhas" rotulo="Minha trilha" />}>
           {trilhasDaEmpresa.length === 0 ? (

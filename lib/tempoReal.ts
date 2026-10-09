@@ -25,6 +25,7 @@
    recebe o evento busca a tarefa na API (em vez de reler o localStorage).
    ============================================================================ */
 
+// [PV-1] Os eventos de tempo real do quadro (tarefa movida, salva, removida, comentário novo). Evento novo: acrescente aqui e trate em components/projetos/Quadro.tsx.
 /** Tipos de evento que o quadro entende. */
 export type TipoEvento = 'tarefa_movida' | 'tarefa_salva' | 'tarefa_removida' | 'comentario_novo';
 
@@ -54,9 +55,11 @@ export interface CanalTempoReal {
   assinar: (callback: (evento: EventoTempoReal) => void) => () => void;
 }
 
+// [PV-2] Nome do canal entre abas (BroadcastChannel). Todas as abas do CAIS no mesmo navegador escutam este nome.
 /** Nome do canal entre abas (todas as abas do CAIS no mesmo navegador escutam este nome). */
 const NOME_CANAL = 'cais-tempo-real';
 
+// [PV-3] O CANAL SIMULADO entre abas do mesmo navegador. TODO(API): trocar por um canal com WebSocket (modelo no cabeçalho do arquivo); o resto do sistema não muda.
 /**
  * Canal SIMULADO entre abas do mesmo navegador, com BroadcastChannel.
  * Cada aba ganha uma `origem` aleatória; o BroadcastChannel já não entrega a mensagem para
@@ -84,6 +87,7 @@ export function criarCanalSimulado(): CanalTempoReal {
 /** O canal da aba, criado na primeira vez que alguém pede (um por aba). */
 let unico: CanalTempoReal | null = null;
 
+// [PV-4] Qual canal o app usa (um por aba). Para ligar ao WebSocket da PROGLOGIC, é esta função que passa a devolver o canal novo.
 /**
  * O canal de tempo real em uso no app (o simulado, por enquanto).
  * @returns o canal único da aba.

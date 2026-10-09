@@ -20,6 +20,7 @@ import AbaSeguranca from '@/components/perfil/AbaSeguranca';
 
 /** As abas da tela. O id liga a aba ao painel (id="painel-<id>"), como o componente Abas espera. */
 type IdAba = 'dados' | 'preferencias' | 'seguranca';
+// [PV-1] AS ABAS DA TELA "Meu perfil" (Dados, Preferências, Segurança). Aba nova entra aqui, no tipo IdAba e no bloco que escolhe o painel mais abaixo.
 const ABAS: { id: IdAba; rotulo: string }[] = [
   { id: 'dados', rotulo: 'Dados' },
   { id: 'preferencias', rotulo: 'Preferências' },

@@ -12,6 +12,7 @@ import { Lock } from 'lucide-react';
 import Button from '@/components/button';
 import { Card, EstadoVazio } from '@/components/ui/basicos';
 
+// [PV-1] O texto do bloqueio gentil quando a trava da trilha obrigatória impede abrir uma tela (título e explicação). Quem decide bloquear é lib/permissoes.ts.
 /**
  * Bloqueio gentil: explica por que a tela não abriu e leva à trilha.
  * @returns o card com a mensagem e o botão "Ir para minhas trilhas".
@@ -23,6 +24,7 @@ export default function TrilhaPendente() {
       <Card>
         <EstadoVazio icone={<Lock className="h-6 w-6" aria-hidden />} titulo="Conclua sua trilha de boas-vindas para liberar o sistema"
           descricao="Antes de usar as outras telas, termine as etapas obrigatórias da sua trilha. Leva poucos minutos e o resto do sistema abre em seguida."
+          // [PV-2] Para onde o bloqueio leva: /minhas-trilhas. Troque o endereço se a tela das trilhas mudar de lugar.
           // NAVEGA: leva às trilhas do profissional.
           acao={<Button onClick={() => router.push('/minhas-trilhas')}>Ir para minhas trilhas</Button>} />
       </Card>

@@ -33,6 +33,7 @@ import PrazoTrilha from '@/components/trilhas/PrazoTrilha';
 import { cx } from '@/lib/utils';
 import type { Etapa } from '@/lib/tipos';
 
+// [PV-1] O DETALHE DA TRILHA para quem a cumpre. Trilha fora do público, em rascunho ou inexistente leva a /sem-permissao (a mesma resposta nos três casos, para não revelar quais trilhas existem).
 /**
  * Detalhe de uma trilha para quem a cumpre.
  * Trilha fora do público da pessoa, em rascunho ou inexistente → /sem-permissao
@@ -72,6 +73,7 @@ export default function DetalheMinhaTrilha() {
   const { trilha } = t;
   const concluida = t.situacao === 'concluida';
   const etapaAtual = t.proximaEtapa !== null ? trilha.etapas[t.proximaEtapa] : undefined;
+  // [PV-2] O BOTÃO PRINCIPAL: "Começar" se nada foi feito, "Continuar" se já começou; some quando a trilha termina. No celular ele vai para a barra fixa do rodapé.
   // Botão principal: "Começar" se nada foi feito; "Continuar" se já começou; nada se concluiu.
   const rotuloBotao = t.concluidas === 0 ? 'Começar' : 'Continuar';
 
@@ -121,8 +123,10 @@ export default function DetalheMinhaTrilha() {
       <ol className="space-y-2">
         {trilha.etapas.map((e, i) => {
           const { icone: Icone, rotulo } = TIPOS_ETAPA[e.tipo];
+          // [PV-3] AS ETAPAS SÃO FEITAS EM ORDEM: antes da atual = concluída, a atual e as seguintes = bloqueadas (com o motivo escrito).
           // As etapas são feitas EM ORDEM: antes da atual = concluída; a atual; depois = bloqueada.
           const estado = i < t.concluidas ? 'concluida' : i === t.concluidas ? 'atual' : 'bloqueada';
+          // [PV-4] AS TENTATIVAS MOSTRADAS NA ETAPA DE QUIZ: o limite da etapa ou, se não houver, TENTATIVAS_PADRAO (lib/trilhas.ts).
           const tentativas = tentativasDoQuiz(e.tentativasMax, TENTATIVAS_PADRAO);
           const detalheQuiz = e.tipo === 'quiz' ? ` · Nota mínima ${e.notaMinima}% · ${tentativas} tentativa${tentativas > 1 ? 's' : ''}` : '';
           const conteudo = (

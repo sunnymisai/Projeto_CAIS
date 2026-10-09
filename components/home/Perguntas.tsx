@@ -41,6 +41,7 @@ function Pergunta({ pergunta, children }: PerguntaProps) {
   );
 }
 
+// [PV-1] AS PERGUNTAS FREQUENTES (id perguntas): cada <Pergunta> é uma pergunta e a resposta dela. As respostas com TODO(PROGLOGIC) são provisórias até a confirmação.
 /**
  * Seção de perguntas frequentes. Server Component.
  * Fundo bg-superficie (alterna com a seção anterior, que usa bg-fundo).

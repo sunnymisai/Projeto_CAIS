@@ -37,6 +37,7 @@ import { Avatar, Aviso, EstadoVazio } from '@/components/ui/basicos';
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import { cx, dataBR, novoId } from '@/lib/utils';
 
+// [PV-1] OS PAPÉIS possíveis de uma pessoa no projeto (Líder, Front-end, Back-end, UX, QA, Dados). Papel novo entra nesta lista.
 // Papéis possíveis de uma pessoa dentro do projeto.
 const PAPEIS = ['Líder', 'Front-end', 'Back-end', 'UX', 'QA', 'Dados'];
 
@@ -58,11 +59,13 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
   const d = useDados();
   const { sessao } = useAuth();
   const avisar = useToast();
+  // [PV-2] QUEM ALOCA (decisão da PROGLOGIC, 09/10/2026): o administrador em qualquer projeto e a empresa nos projetos dela, por podeFazer "alocar". Para os outros, os botões nem aparecem.
   // Só quem pode alocar vê os botões de alocar, editar e remover: o Administrador (qualquer projeto) e a
   // EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). São ESCONDIDOS, não desabilitados:
   // para o profissional a tabela é só leitura e um botão sem uso geraria dúvida (e seria anunciado
   // como "indisponível" por leitores de tela). podeVerProjeto garante que a empresa só aloca no que é dela.
   const podeAlocar = !!sessao && podeFazer(sessao.perfil, 'alocar', { enxergaProjeto: podeVerProjeto(sessao, projeto.id, d) });
+  // [PV-3] PRIVACIDADE: a empresa vê as horas de cada pessoa neste projeto, mas não o semáforo nem as trilhas (somariam projetos e trilhas de outros clientes). Só o administrador vê os dois.
   // PRIVACIDADE: o perfil Empresa vê as HORAS de cada pessoa neste projeto (ela aloca o time), mas NÃO o
   // semáforo (o pico soma os outros projetos da pessoa, que são de outros clientes) nem as trilhas (a
   // contagem inclui trilhas de outras empresas). Só o administrador vê esses dois.
@@ -150,6 +153,7 @@ export default function Equipe({ projeto, alocando, setAlocando }: { projeto: Pr
 /** Valores do formulário: a alocação sem id e projetoId (esses vêm de fora). */
 type Val = Omit<Alocacao, 'id' | 'projetoId'>;
 
+// [PV-4] O FORMULÁRIO DE ALOCAÇÃO: escolher pessoa, papel, período e carga semanal, com a prévia do semáforo antes de gravar.
 /**
  * Modal para alocar uma pessoa no projeto ou editar uma alocação.
  * @param projeto projeto que recebe a pessoa (período padrão = do projeto).
@@ -161,6 +165,7 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
   const d = useDados();
   const avisar = useToast();
 
+  // [PV-5] AS REGRAS DA ALOCAÇÃO: pessoa, papel, início e carga (mínimo 1 h) obrigatórios; fim opcional (vazio vale a entrega do projeto). Não há carga máxima: é aviso, não bloqueio (§5).
   /*
    * Regras de validação (o erro aparece ao sair do campo, via useFormulario).
    * useCallback com [] mantém a mesma função entre renders, para o hook
@@ -178,11 +183,13 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
     return e;
   }, []);
 
+  // [PV-6] OS VALORES INICIAIS de uma alocação nova: o período do projeto e 20 h por semana.
   // Editando: parte da alocação existente. Nova: período do projeto e 20 h/sem.
   const f = useFormulario<Val>(alocacao ? { ...alocacao } : { pessoaId: '', papel: '', inicio: projeto.inicio, fim: projeto.entrega, carga: 20, obs: '' }, validar);
   const v = f.valores;
   // Quem já está no projeto não aparece de novo na lista (exceto a própria alocação em edição).
   const jaNaEquipe = new Set(d.alocacoes.filter((a) => a.projetoId === projeto.id && a.id !== alocacao?.id).map((a) => a.pessoaId));
+  // [PV-7] QUEM PODE SER ALOCADO: profissionais não inativos que ainda não estão na equipe deste projeto.
   // Só profissionais ativos (ou convidados) que ainda não estão na equipe.
   const disponiveis = d.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo' && !jaNaEquipe.has(p.id));
   const pessoa = d.pessoa(v.pessoaId);
@@ -200,6 +207,7 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
   // Duração em dias úteis (mantida ao usar a data sugerida) e a primeira data em que a alocação cabe.
   const duracao = periodoValido ? diasUteisEntre(v.inicio, fimEfetivo).length : 0;
   const sugestao = vermelhas.length && pessoa ? proximaJanelaLivre(pessoa, carga, duracao, v.inicio, d, alocacao?.id) : null;
+  // [PV-8] A TRAVA DE SOBRECARGA: com BLOQUEAR_SOBRECARGA (lib/carga.ts) ligada, o botão Alocar recusa semana vermelha. Hoje está desligada (§5: aviso, não bloqueio).
   // BLOQUEAR_SOBRECARGA = false (§5: é aviso, não bloqueio). Se o time ligar, "Alocar" recusa.
   const bloqueado = BLOQUEAR_SOBRECARGA && vermelhas.length > 0;
   /**
@@ -212,6 +220,7 @@ function FormAlocacao({ projeto, alocacao, onFechar }: { projeto: Projeto; aloca
     f.set('fim', fimAposDiasUteis(sugestao, duracao));
   };
 
+  // [PV-9] O SALVAR DA ALOCAÇÃO: cria ou atualiza. A notificação à pessoa é SIMULADA. TODO(API): POST ou PUT de alocação.
   /** Valida tudo e grava a alocação (nova ou editada). */
   const salvar = () => {
     if (!f.validarTudo() || bloqueado) return;

@@ -41,6 +41,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
+// [PV-1] AS CORES DO BOTÃO por variante (primário, secundário, fantasma, perigo). Variante nova entra aqui e no tipo de variante da ButtonProps.
 // Classes de cada variante. A sombra do primário imita um leve relevo
 // (brilho interno em cima + sombra roxa embaixo).
 const VARIANTES = {
@@ -54,6 +55,7 @@ const VARIANTES = {
     "bg-erro text-white hover:brightness-110 dark:text-[#14161F]",
 };
 
+// [PV-2] AS ALTURAS DO BOTÃO: sm 32 px, md 40 px e lg 48 px, com o espaçamento e a fonte de cada uma.
 // Altura, espaçamento e fonte de cada tamanho.
 const TAMANHOS = {
   sm: "h-8 gap-1.5 rounded-lg px-3 text-[13px]",
@@ -61,6 +63,7 @@ const TAMANHOS = {
   lg: "h-12 gap-2 rounded-xl px-5 text-[15px]",
 };
 
+// [PV-3] As classes do botão, também usadas em links que parecem botão. Mudar aqui muda o Button e esses links juntos.
 /**
  * Classes do botão, para usar também num <Link> que deve PARECER botão.
  * Regra de semântica: se a ação navega para outra página, é <Link> (com estas classes);
@@ -90,6 +93,7 @@ export function classesBotao({ variante = "primario", tamanho = "md", larguraTot
   );
 }
 
+// [PV-4] O BOTÃO: com isLoading mostra o spinner, troca o texto por loadingText (padrão "Salvando…") e desabilita. Para mudar o texto padrão, é aqui.
 /**
  * Botão do Design System CAIS. Repassa qualquer prop de <button> (onClick, aria-*...).
  * Usa forwardRef para que outros componentes consigam focar o botão.

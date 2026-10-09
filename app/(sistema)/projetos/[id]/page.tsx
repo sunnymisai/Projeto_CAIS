@@ -48,8 +48,10 @@ import FormProjeto from '@/components/projetos/FormProjeto';
 import { cx, dataBR, dataCurta, diasEntre, hojeISO, novoId, somaDias } from '@/lib/utils';
 import Link from 'next/link';
 
+// [PV-1] AS ABAS DA FICHA (Visão geral, Equipe, Tarefas, Arquivos): o valor vai na URL como ?aba=. Aba nova entra aqui, nas abas do cabeçalho e no bloco que a mostra.
 /** As três abas da ficha; o valor vai na URL como ?aba=. */
 type Aba = 'geral' | 'equipe' | 'tarefas' | 'arquivos';
+// [PV-2] AS VISTAS DAS TAREFAS: quadro, lista e cronograma. Ficam só no estado: recarregar a página volta ao quadro.
 /** As três formas de ver as tarefas (§5): quadro (kanban), lista e cronograma. */
 type Vista = 'quadro' | 'lista' | 'cronograma';
 
@@ -97,6 +99,7 @@ function FichaProjeto() {
   const d = useDados();
   const { sessao } = useAuth();
 
+  // [PV-3] A ABA PADRÃO: sem ?aba= na URL a ficha abre em Tarefas, a mais usada no dia a dia.
   // Sem ?aba= na URL, abre na aba Tarefas (a mais usada no dia a dia).
   const aba = (params.get('aba') as Aba) || 'tarefas';
   // null quando não há ?tarefa= (nenhum detalhe aberto).
@@ -113,6 +116,7 @@ function FichaProjeto() {
   const [fPrior, setFPrior] = useState('');
   const [fEtiq, setFEtiq] = useState('');
 
+  // [PV-4] A URL COMO ESTADO: aba e tarefa aberta vão em ?aba= e ?tarefa= (replace, sem encher o histórico). Outras telas abrem a ficha já numa aba ou tarefa por esses parâmetros.
   /**
    * Troca a aba e/ou abre/fecha o detalhe de uma tarefa mexendo na URL.
    * - `aba`: troca o ?aba=.
@@ -139,6 +143,7 @@ function FichaProjeto() {
 
   // undefined se o id da URL não existe (projeto excluído ou link errado).
   const projeto = d.projeto(id);
+  // [PV-5] O ESCOPO DA FICHA: projeto que a pessoa não pode ver leva a /sem-permissao. Conveniência de tela; a segurança real é do back-end.
   // ESCOPO: o projeto existe, mas a sessão não pode vê-lo (ex.: Marcos digitou o id de um projeto da Aurora).
   // Só decide depois que os dados carregaram; antes disso não dá para saber.
   // Conveniência de interface: a segurança real é do back-end (§7, TODO(API)).
@@ -148,6 +153,7 @@ function FichaProjeto() {
   useEffect(() => {
     if (foraDoEscopo) router.replace('/sem-permissao');
   }, [foraDoEscopo, router]);
+  // [PV-6] AS PERMISSÕES DOS BOTÕES DA FICHA: criar tarefa, alocar (administrador, ou a empresa nos projetos dela) e editar projeto. Cada um fica escondido, não desabilitado, para quem não pode.
   // Permissões de botões da ficha. Esconder (e não desabilitar) é melhor aqui: o botão nunca
   // terá uso para esse perfil, então desabilitado só geraria dúvida e seria anunciado como
   // "indisponível" pelo leitor de tela.
@@ -158,6 +164,7 @@ function FichaProjeto() {
   const podeEditarProjeto = !!sessao && podeFazer(sessao.perfil, 'editar_projeto');
   // Todas as tarefas deste projeto; useMemo evita refiltrar a cada render.
   const tarefas = useMemo(() => d.tarefas.filter((t) => t.projetoId === id), [d.tarefas, id]);
+  // [PV-7] OS FILTROS DAS TAREFAS: responsável, prioridade e etiqueta, aplicados juntos.
   // Tarefas que passam nos três filtros ao mesmo tempo (filtro vazio = passa).
   const filtradas = tarefas.filter((t) => (!fResp || t.responsavelId === fResp) && (!fPrior || t.prioridade === fPrior) && (!fEtiq || t.etiquetas.includes(fEtiq)));
 
@@ -189,6 +196,7 @@ function FichaProjeto() {
   // Algum filtro preenchido? Mostra o botão "Limpar".
   const temFiltro = fResp || fPrior || fEtiq;
 
+  // [PV-8] O BOTÃO PRINCIPAL DO CABEÇALHO muda com a aba: Equipe mostra "Alocar pessoa", Tarefas mostra "Nova tarefa" e a Visão geral mostra "Editar projeto". Cada um só existe para quem pode usar.
   // O botão principal do cabeçalho muda conforme a aba (§10: título e ação
   // principal): Equipe → "Alocar pessoa"; Tarefas → "Nova tarefa";
   // Visão geral → "Editar projeto".
@@ -280,6 +288,7 @@ function FichaProjeto() {
   );
 }
 
+// [PV-9] A VISÃO GERAL DO PROJETO: escopo, andamento, próximas entregas, tarefas por lista, status, dados e exclusão.
 /**
  * Aba "Visão geral": escopo, andamento (tarefas × tempo), dados do projeto,
  * troca de status e exclusão.
@@ -304,6 +313,7 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
   const hoje = hojeISO();
   // Tarefas que vencem nos próximos 14 dias e ainda não estão prontas (lib/metricas.ts).
   const proximas = proximasEntregas(projeto.id, d, DIAS_PROXIMAS_ENTREGAS, hoje);
+  // [PV-10] O TEMPO DECORRIDO do projeto: dias desde o início sobre a duração total, preso entre 0% e 100%.
   // Tempo decorrido em %: dias desde o início ÷ duração total × 100.
   // Math.max(1, ...) evita divisão por zero (início = entrega) e o
   // Math.max(0, Math.min(100, ...)) prende o resultado entre 0% e 100%
@@ -347,6 +357,7 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
                 <div className="mb-1.5 flex justify-between text-[13px]"><span className="text-tinta-suave">Tempo decorrido</span><span className="font-semibold tabular-nums text-tinta">{Math.round(decorrido)}%</span></div>
                 <Progresso valor={decorrido} tom="sucesso" rotulo="Tempo decorrido" />
               </div>
+              {/* [PV-11] O ALERTA "tempo andando mais rápido que as entregas": aparece quando o tempo passou mais de 10 pontos à frente do que está pronto e o projeto tem tarefas. */}
               {/* Alerta quando o tempo andou mais de 10 pontos à frente das
                 * entregas (ex.: 60% do prazo passou e só 40% está pronto).
                 * Só aparece se o projeto já tem tarefas. */}
@@ -393,6 +404,7 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
 
       <aside className="space-y-6">
         <Card className="p-5">
+          {/* [PV-12] O STATUS DO PROJETO: só quem edita projeto troca; grava na hora, sem botão Salvar. Os outros perfis veem como texto. */}
           {/* GRAVA: trocar o status salva o projeto na hora (sem botão
             * "Salvar") e mostra um aviso confirmando. */}
           {podeEditar ? (
@@ -419,6 +431,7 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
         </Card>}
       </aside>
 
+      {/* [PV-13] A EXCLUSÃO DO PROJETO: apaga também tarefas e alocações, sem desfazer. A tela sugere mudar o status para Concluído. */}
       {/* Confirmação de exclusão. APAGA: d.remover('projetos') remove o
         * projeto e, em cascata (lib/store.tsx), as tarefas e as alocações
         * dele. NAVEGA: depois volta para /projetos.
@@ -433,6 +446,7 @@ function VisaoGeral({ projeto, onEditar }: { projeto: Projeto; onEditar: () => v
   );
 }
 
+// [PV-14] A TAREFA NOVA: título, responsável (só quem está alocado), prazo e lista são obrigatórios (§5); prazo sugerido de hoje + 7 dias; entra no fim da lista e o detalhe abre logo depois. TODO(API): POST.
 /**
  * Modal "Nova tarefa": título, responsável, prazo e coluna são obrigatórios
  * (§5: tarefa carrega responsável e prazo desde a criação).

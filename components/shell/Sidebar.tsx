@@ -19,6 +19,7 @@ import { NAVEGACAO } from './navegacao';
 import { useAuth } from '@/lib/auth';
 import { cx } from '@/lib/utils';
 
+// [PV-1] O nome de cada perfil mostrado no menu lateral (a mesma lista existe no Topbar e em lib/metricas.ts: ROTULO_PERFIL).
 /** Nome de cada perfil, em português, para o rodapé do menu. */
 const NOME_PERFIL = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' } as const;
 
@@ -35,17 +36,20 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
   // Endereço atual (ex.: "/projetos/p1"), usado para destacar o item ativo.
   const caminho = usePathname();
   const { sessao } = useAuth();
+  // [PV-2] O filtro do menu por perfil: tira os itens que o perfil não vê e os grupos que ficaram vazios. É o que faz cada perfil ter o seu menu.
   // Filtra o menu pelo perfil: tira os itens que o perfil não enxerga e os grupos que ficaram vazios.
   // Sem sessão (só por um instante, antes do layout redirecionar) o menu fica vazio.
   const grupos = NAVEGACAO
     .map((g) => ({ ...g, itens: g.itens.filter((i) => !!sessao && i.perfis.includes(sessao.perfil)) }))
     .filter((g) => g.itens.length > 0);
 
+  // [PV-3] O conteúdo do menu é montado uma vez e usado nas duas versões: fixa no desktop (a partir de 1024 px) e gaveta no celular.
   // O conteúdo do menu é montado uma vez nesta variável e reaproveitado nas duas
   // versões (desktop e gaveta do celular), para não duplicar código.
   const conteudo = (
     <nav aria-label="Menu principal" className="flex h-full flex-col bg-noite text-white dark:bg-noite-alt">
       <div className="flex h-16 items-center justify-between px-5">
+        {/* [PV-4] O logo do topo do menu leva ao painel (a tela inicial do sistema). Se a tela inicial mudar, troque este endereço. */}
         {/* NAVEGA: o logo leva ao painel (home do sistema).
           * aria-label: o logo é só desenho (SVG); sem ele, o leitor de tela anunciaria apenas "link". */}
         <Link href="/painel" aria-label="CAIS, ir para o painel" className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" onClick={onFechar}>
@@ -65,6 +69,7 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
             <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[0.14em] text-white/40">{g.grupo}</p>
             <ul className="space-y-0.5">
               {g.itens.map(({ href, rotulo, icone: Icone }) => {
+                // [PV-5] Como o item ativo do menu é marcado: o endereço atual é o do item ou uma subpágina dele (/projetos/x mantém "Projetos" destacado).
                 // Ativo se o endereço é o do item ou uma subpágina dele
                 // (ex.: "/projetos/p1" mantém "Projetos" destacado).
                 const ativo = caminho === href || caminho.startsWith(href + '/');

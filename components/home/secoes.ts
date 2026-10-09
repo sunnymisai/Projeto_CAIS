@@ -12,6 +12,7 @@ export interface SecaoAncora {
   rotulo: string;
 }
 
+// [PV-1] OS LINKS DE SEÇÃO do topo e do rodapé da homepage (id e rótulo). Cada id precisa existir como id de uma seção em components/home/, senão o link não leva a lugar nenhum.
 /**
  * Âncoras exibidas no topo e no rodapé, na ordem em que as seções aparecem.
  * ⚠️ ATENÇÃO: cada `id` precisa existir como id de uma seção em components/home/

@@ -33,7 +33,9 @@ import Button from '@/components/button';
 export default function ArquivosDoProjeto({ projetoId }: { projetoId: string }) {
   const d = useDados();
   const [filtro, setFiltro] = useState<'todos' | CategoriaAnexo>('todos');
+  // [PV-1] OS ARQUIVOS DO PROJETO: todos os anexos das tarefas (anexosDoProjeto, lib/anexos.ts), só das tarefas que a pessoa já enxerga.
   const todos = useMemo(() => anexosDoProjeto(projetoId, d), [projetoId, d]);
+  // [PV-2] O FILTRO POR TIPO: só oferece as categorias que existem neste projeto, mais "Todos".
   // Só oferece filtro das categorias que existem neste projeto (e "Todos").
   const categorias = [...new Set(todos.map((x) => categoriaDoAnexo(x.anexo.nome, x.anexo.tipo)))];
   const visiveis = filtro === 'todos' ? todos : todos.filter((x) => categoriaDoAnexo(x.anexo.nome, x.anexo.tipo) === filtro);

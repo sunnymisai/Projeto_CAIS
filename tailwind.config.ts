@@ -8,6 +8,7 @@
 
 import type { Config } from "tailwindcss";
 
+// [PV-1] ARQUIVO SEM EFEITO HOJE (Tailwind v4 só o lê com @config no CSS, e o projeto não tem). As cores e fontes reais ficam no @theme de app/globals.css: edite lá.
 const config: Config = {
   content: [
     // Isto diz ao Tailwind para procurar classes nestas pastas específicas

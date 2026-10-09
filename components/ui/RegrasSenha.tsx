@@ -10,6 +10,7 @@ import { Check, Circle } from 'lucide-react';
 import { regrasDaSenha } from '@/lib/senha';
 import { cx } from '@/lib/utils';
 
+// [PV-1] A lista de regras da senha com ícone e texto (cumprida ou pendente). As regras em si vêm de lib/senha.ts (regrasDaSenha); aqui só o visual.
 /**
  * Lista de regras da senha, atualizada a cada tecla.
  * Cada regra mostra um ícone (check verde ou círculo vazio) e um texto de estado

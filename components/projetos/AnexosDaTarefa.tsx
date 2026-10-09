@@ -22,6 +22,7 @@ import Button from '@/components/button';
 import { Aviso } from '@/components/ui/basicos';
 import type { Anexo } from '@/lib/tipos';
 
+// [PV-1] O ÍCONE DE CADA TIPO de arquivo (imagem, PDF, planilha, documento, compactado, outro). A categoria vem de lib/anexos.ts.
 /** Ícone de cada categoria de arquivo (a forma ajuda quem não distingue cores). */
 export const ICONE_CATEGORIA: Record<CategoriaAnexo, typeof IconeArquivo> = {
   imagem: FileImage, pdf: FileText, planilha: FileSpreadsheet, documento: FileText, compactado: FileArchive, outro: IconeArquivo,
@@ -49,6 +50,7 @@ export default function AnexosDaTarefa({ tarefa, podeAnexar }: { tarefa: Tarefa;
   const [removendoId, setRemovendoId] = useState<string | null>(null);
   const anexos = tarefa.anexos ?? [];
 
+  // [PV-2] O ANEXAR: valida cada arquivo (validarArquivo, lib/anexos.ts), grava só os metadados na tarefa e mostra o primeiro erro. SIMULADO: o conteúdo do arquivo é descartado. TODO(API): upload real.
   /**
    * Valida e anexa os arquivos escolhidos (pelo botão ou soltos na área).
    * SIMULADO: guarda só os metadados; o conteúdo do arquivo é descartado.
@@ -79,6 +81,7 @@ export default function AnexosDaTarefa({ tarefa, podeAnexar }: { tarefa: Tarefa;
   /** Soltou arquivos na área: anexa. preventDefault impede o navegador de abrir o arquivo. */
   const aoSoltar = (e: DragEvent) => { e.preventDefault(); setSobre(false); anexar(e.dataTransfer.files); };
 
+  // [PV-3] A REMOÇÃO do anexo, com confirmação na própria linha (um segundo modal faria o Esc fechar os dois). Apaga só o metadado.
   /**
    * Remove o anexo confirmado.
    * APAGA: tira o anexo da tarefa (só o metadado; não há arquivo guardado).

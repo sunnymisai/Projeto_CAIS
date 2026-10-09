@@ -64,6 +64,7 @@ export default function PrimeiroAcessoForm() {
   // true depois de ativar a conta: evita mostrar "convite já utilizado" no instante em que o status vira 'ativo', antes da troca de página.
   const [ativada, setAtivada] = useState(false);
 
+  // [PV-1] AS REGRAS DO PRIMEIRO ACESSO: senha dentro das regras (lib/senha.ts), confirmação igual e aceite dos termos marcado.
   /**
    * Regras do formulário: senha dentro das regras, confirmação igual e aceite marcado.
    * useCallback mantém a mesma função entre renders, pois o useFormulario depende dela.
@@ -104,6 +105,7 @@ export default function PrimeiroAcessoForm() {
 
   // Estados de erro: sem ?convite=, id que não existe, pessoa que já usou o convite ou foi inativada.
   const pessoa = conviteId ? d.pessoa(conviteId) : undefined;
+  // [PV-2] OS ESTADOS DE ERRO DO CONVITE: sem ?convite=, id que não existe, conta já ativa e conta inativa. Cada um tem o seu título e a sua explicação.
   if (!conviteId || !pessoa) {
     return <ConviteIndisponivel titulo="Convite não encontrado" texto="Este link de convite não é válido. Peça ao administrador do programa para reenviar o convite." />;
   }
@@ -114,6 +116,7 @@ export default function PrimeiroAcessoForm() {
     return <ConviteIndisponivel titulo="Convite indisponível" texto="Esta conta está inativa. Fale com o administrador do programa para reativá-la." />;
   }
 
+  // [PV-3] A ATIVAÇÃO DA CONTA: grava a senha, passa a pessoa para ativa, abre a sessão e vai para o painel. TODO(API): vira um POST com o token do convite.
   /**
    * Salva a senha, ativa a pessoa, abre a sessão e vai para o painel.
    * @param ev - evento de envio do <form>.
@@ -137,6 +140,7 @@ export default function PrimeiroAcessoForm() {
     d.salvar('pessoas', { ...pessoa, status: 'ativo' });
     // GRAVA: abre a sessão (sessionStorage: some ao fechar o navegador).
     iniciarSessao({ id: pessoa.id, nome: pessoa.nome, email: pessoa.email, perfil: pessoa.perfil }, false);
+    // [PV-4] PARA ONDE O PRIMEIRO ACESSO LEVA: profissional com trilha obrigatória pendente vai para Minhas trilhas (se a trava estiver ligada); os demais, para o painel.
     // NAVEGA: replace, para o "voltar" do navegador não reabrir o convite já usado.
     // §12 fluxo 1: o profissional "define senha → cai na trilha obrigatória". Com trilha
     // obrigatória pendente (e a trava ligada), vai direto para Minhas trilhas; senão, painel.
@@ -159,6 +163,7 @@ export default function PrimeiroAcessoForm() {
         <Input id="confirmar-senha" type="password" label="Confirmar senha" placeholder="Repita a senha" required autoComplete="new-password"
           disabled={salvando} {...f.campo('confirmacao')} />
         <div>
+          {/* [PV-5] O ACEITE dos termos de uso e da política de privacidade (LGPD), obrigatório. TODO(PROGLOGIC): os textos e os endereços oficiais ainda não existem. */}
           {/* Aceite obrigatório (§12). Os textos oficiais ainda não existem; o rótulo não leva a nenhuma página.
             * TODO(PROGLOGIC): confirmar os textos e os endereços dos termos de uso e da política de privacidade (LGPD). */}
           <Checkbox id="aceite" label="Li e aceito os termos de uso e a política de privacidade (LGPD)" disabled={salvando}

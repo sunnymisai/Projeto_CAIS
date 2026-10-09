@@ -9,6 +9,7 @@
    Contexto: §1 (os três pilares e suas cores) e §9 (marca).
    ============================================================================ */
 
+// [PV-1] OS TRÊS PONTOS do diagrama (§1): nome, cor, posição (x, y) e atraso da animação de cada pilar. Usado no painel de marca do login e na abertura da homepage.
 // Os três pilares (§1): nome, cor do pilar, posição (x, y) no desenho e
 // atraso da animação de entrada em milissegundos (um aparece depois do outro).
 const PILARES = [

@@ -20,6 +20,7 @@ interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "typ
   label: string;
 }
 
+// [PV-1] A CAIXA DE MARCAR: usa um input de verdade (teclado e leitor de tela) com o desenho por cima. Clicar no texto também marca. Cores e tamanho estão nas classes do input.
 /**
  * Checkbox do Design System CAIS. Repassa as props de <input> (checked, onChange, disabled...).
  * @param label texto ao lado da caixa.

@@ -18,6 +18,7 @@ export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(' ');
 }
 
+// [PV-1] Geração de ids: formato prefixo_aleatório (ex.: tar_k3j9). Com a API, o servidor passa a gerar o id (TODO(API)); troque o corpo desta função.
 /**
  * Gera um id único o bastante para o protótipo.
  * @param prefixo - indica o tipo do item (ex.: 'emp', 'pes', 'tar').
@@ -30,6 +31,7 @@ export function novoId(prefixo = 'id') {
   return `${prefixo}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 }
 
+// [PV-2] O "hoje" do sistema: prazos, atrasos, semáforo de carga e filtros de período usam esta função. Para simular outra data numa demonstração, mude aqui.
 /**
  * Data de hoje no fuso de quem está usando, no formato AAAA-MM-DD.
  * @returns ex.: '2026-10-07'.
@@ -40,6 +42,7 @@ export function hojeISO() {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
+// [PV-3] Conta de datas AAAA-MM-DD (usa meio-dia para fugir do erro de fuso): base de prazos e do semáforo. Mudar quebra a carga e os prazos.
 /**
  * Soma (ou subtrai) dias de uma data.
  * @param iso - data AAAA-MM-DD.
@@ -66,6 +69,7 @@ export function diasEntre(a: string, b: string) {
   return Math.round((new Date(b + 'T12:00:00').getTime() - new Date(a + 'T12:00:00').getTime()) / 86400000);
 }
 
+// [PV-4] Nomes curtos dos meses (jan, fev...) que aparecem nas datas curtas das telas ("27 ago"). Para outro idioma ou abreviação, mude aqui.
 // Abreviações dos meses, na ordem (índice 0 = janeiro).
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
@@ -85,6 +89,7 @@ export function dataBR(iso?: string) {
   return `${d}/${m}/${a}`;
 }
 
+// [PV-5] Texto de "há N minutos/horas/dias" dos comentários e anexos; ajuste as faixas e as palavras aqui.
 /**
  * Tempo passado em linguagem natural (usado nos comentários das tarefas).
  * @param iso - data-hora ISO completa.
@@ -118,6 +123,7 @@ export function iniciais(nome: string) {
  */
 export const soDigitos = (v: string) => v.replace(/\D/g, '');
 
+// [PV-6] Máscaras de digitação (CNPJ, CEP e telefone): para mudar o formato mostrado ao digitar, edite estas três funções.
 /**
  * Máscara de CNPJ enquanto a pessoa digita (§11).
  * @param v - texto digitado.
@@ -153,6 +159,7 @@ export function mascaraTelefone(v: string) {
   return d.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
 }
 
+// [PV-7] Regra oficial do dígito verificador do CNPJ, usada no cadastro de empresas e no formulário de interesse da homepage.
 /**
  * Valida os dígitos verificadores do CNPJ.
  * @param v - CNPJ com ou sem máscara.
@@ -181,6 +188,7 @@ export function cnpjValido(v: string) {
   return d1 === Number(c[12]) && d2 === Number(c[13]);
 }
 
+// [PV-8] Regra do formato de e-mail de TODOS os formulários (login, recuperação, cadastros): mude aqui para aceitar ou recusar mais formatos.
 /**
  * Formato de e-mail: nome@dominio.xx. Recusa o que a versão antiga deixava passar:
  * - nome só com letras sem acento, números e . _ % + - (sem vírgula, espaço ou acento);
@@ -195,6 +203,7 @@ export function cnpjValido(v: string) {
 export const EMAIL_REGEX =
   /^[A-Za-z0-9_%+-]+(\.[A-Za-z0-9_%+-]+)*@[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*\.[A-Za-z]{2,}$/;
 
+// [PV-9] Máscara do campo de e-mail enquanto se digita (tira espaços e passa para minúsculas); a validação do formato é a EMAIL_REGEX acima.
 /**
  * Máscara de e-mail para o onChange: tira espaços (no meio ou nas pontas) e
  * deixa tudo em minúsculas enquanto a pessoa digita. Não valida: isso é com EMAIL_REGEX.

@@ -18,6 +18,7 @@ import { Avatar, Aviso, Etiqueta, EstadoVazio } from '@/components/ui/basicos';
 import { Select } from '@/components/ui/form';
 import Button from '@/components/button';
 
+// [PV-1] Os nomes e as cores do status da pessoa (Convidado, Ativo, Inativo) mostrados na lista.
 const STATUS = { convidado: 'Convidado', ativo: 'Ativo', inativo: 'Inativo' } as const;
 const TOM = { convidado: 'aviso', ativo: 'sucesso', inativo: 'neutro' } as const;
 
@@ -51,16 +52,19 @@ export default function PessoasDaEmpresa({ empresa }: { empresa: Empresa }) {
   const daEmpresa = d.pessoas.filter((p) => p.perfil === 'empresa' && p.empresaId === empresa.id);
   // Profissionais alocados em projetos desta empresa, com os projetos em que atuam (derivado das alocações).
   const projetosIds = new Set(d.projetos.filter((p) => p.empresaId === empresa.id).map((p) => p.id));
+  // [PV-2] OS PROFISSIONAIS ALOCADOS: calculados das alocações dos projetos da empresa (nada é guardado); lista só de leitura.
   const alocados = d.pessoas
     .filter((p) => p.perfil === 'profissional')
     .map((p) => ({ p, projetos: d.alocacoes.filter((a) => a.pessoaId === p.id && projetosIds.has(a.projetoId)).map((a) => d.projeto(a.projetoId)?.nome).filter(Boolean) as string[] }))
     .filter((x) => x.projetos.length > 0);
 
+  // [PV-3] QUEM PODE SER VINCULADA à empresa: nem administrador (perderia o acesso total), nem pessoa inativa, nem quem já está nela.
   // Quem pode ser vinculada: nem administrador (perderia o acesso total), nem inativa, nem quem já está aqui.
   const candidatas = d.pessoas.filter((p) => p.perfil !== 'admin' && p.status !== 'inativo' && !(p.perfil === 'empresa' && p.empresaId === empresa.id));
   const pessoa = candidatas.find((p) => p.id === escolhida);
   const m = pessoa ? mudancaDeAcesso(pessoa.perfil, 'empresa') : null;
 
+  // [PV-4] O VÍNCULO: a pessoa passa a ter perfil Empresa e esta empresa (§11); os dados de profissional ficam guardados. TODO(API): PATCH no usuário.
   /** Confirma o vínculo: a pessoa passa a ter perfil Empresa e esta empresa (§11). */
   // GRAVA: perfil 'empresa' + empresaId desta empresa na store. Dados de profissional ficam guardados (reversível).
   // TODO(API): PATCH no usuário na API da PROGLOGIC.

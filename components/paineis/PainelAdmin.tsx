@@ -33,6 +33,7 @@ import FiltroPeriodo, { usePeriodo } from '@/components/ui/FiltroPeriodo';
 import { cx, dataBR, dataCurta, diasEntre, hojeISO } from '@/lib/utils';
 import { ocupacaoNaSemana, segundaDaSemana, ROTULO_NIVEL, TOM_NIVEL } from '@/lib/carga';
 
+// [PV-1] AS CORES dos gráficos de trilha (verde = concluída, roxo = em andamento, cinza = não iniciada), vindas de COR_GRAFICO. A tela /trilhas usa as mesmas.
 /*
  * Cores dos gráficos de trilha (verde = concluída, roxo = em andamento,
  * cinza = nunca iniciada), seguindo "cor tem significado" (§9).
@@ -41,6 +42,7 @@ import { ocupacaoNaSemana, segundaDaSemana, ROTULO_NIVEL, TOM_NIVEL } from '@/li
  */
 const COR = { concluida: COR_GRAFICO.concluida, andamento: COR_GRAFICO.andamento, nao: COR_GRAFICO.naoIniciada };
 
+// [PV-2] O PAINEL DO ADMINISTRADOR (/painel): 4 cartões de número, o bloco "No período" e cinco cartões de detalhe. Tudo é recalculado dos dados; nada é guardado.
 /**
  * Painel do Administrador (mostrado em /painel só para o perfil admin).
  * Mostra 4 cartões de número (KPIs) e 5 cartões de detalhe: trilhas,
@@ -69,6 +71,7 @@ export default function PainelAdmin() {
     // Projetos com status "Em andamento" (planejado, pausado e concluído
     // ficam de fora).
     const ativos = d.projetos.filter((p) => p.status === 'andamento');
+    // [PV-3] O QUE É TAREFA ATRASADA no painel: prazo vencido e fora da última coluna. É a mesma regra de progressoProjeto (lib/metricas.ts): mude nos dois.
     // Tarefa atrasada = prazo já passou E ainda não está na ÚLTIMA coluna do
     // quadro do projeto dela (a última coluna é sempre "Pronto").
     // ⚠️ ATENÇÃO: mesma regra de progressoProjeto() em lib/metricas.ts; se
@@ -86,6 +89,7 @@ export default function PainelAdmin() {
     // Uma mesma pessoa conta uma vez em cada trilha que recebeu.
     const totalTrilhas = trilhas.reduce((s, x) => ({ c: s.c + x.r.concluida, a: s.a + x.r.andamento, n: s.n + x.r.nao_iniciada }), { c: 0, a: 0, n: 0 });
 
+    // [PV-4] TAREFAS POR ETAPA: conta pela POSIÇÃO da coluna (1ª a 4ª) e não pelo id; os rótulos são os padrão do §5 (A fazer, Fazendo, Revisão, Pronto).
     // Tarefas por etapa, somando todos os quadros. Usa a POSIÇÃO da coluna
     // (1ª, 2ª, 3ª, 4ª) e não o id, porque cada projeto tem colunas com ids
     // próprios. As cores seguem: cinza, roxo, âmbar (revisão), verde (pronto).
@@ -96,6 +100,7 @@ export default function PainelAdmin() {
       valor: d.tarefas.filter((t) => d.projeto(t.projetoId)?.colunas[i]?.id === t.colunaId).length,
     }));
 
+    // [PV-5] PRÓXIMOS PRAZOS: tarefas abertas com prazo de hoje em diante, da mais urgente para a menos, e só as 5 primeiras (slice(0, 5)).
     // Próximos prazos: tarefas ainda abertas (fora da última coluna) com
     // prazo de hoje em diante, da mais urgente para a menos urgente.
     // localeCompare ordena as datas "AAAA-MM-DD" como texto. Mostra só 5.
@@ -114,6 +119,7 @@ export default function PainelAdmin() {
   // Semáforo da semana atual por profissional (card "Alocação e carga"), da maior ocupação para a menor.
   // Horas = pico diário em horas (pct × limite ÷ 100), arredondado para caber no "45 / 40 h".
   const segunda = segundaDaSemana(hojeISO());
+  // [PV-6] A CARGA DA SEMANA ATUAL por profissional, da maior para a menor ocupação: horas do dia mais cheio, limite (cargaMax) e nível do semáforo (lib/carga.ts).
   const cargas = m.profissionais
     .map((p) => ({ p, o: ocupacaoNaSemana(p, segunda, d) }))
     .sort((a, b) => b.o.pct - a.o.pct)
@@ -127,6 +133,7 @@ export default function PainelAdmin() {
   const tarefasNoPeriodo = porEmpresa.reduce((s, e) => s + e.total, 0);
   const faixa = `de ${dataBR(periodo.de)} a ${dataBR(periodo.ate)}`;
 
+  // [PV-7] OS 4 CARTÕES DE NÚMERO do topo (empresas ativas, profissionais, projetos em andamento, tarefas atrasadas): rótulo, valor, apoio, ícone, para onde o clique leva e a cor.
   // Os 4 cartões de número (KPIs) do topo. Cada um tem: rótulo, número
   // grande (valor), linha de apoio (sub), ícone, para onde o clique leva
   // (href) e as classes de cor do ícone.
@@ -189,6 +196,7 @@ export default function PainelAdmin() {
         ))}
       </div>
 
+      {/* [PV-8] O BLOCO "No período": o filtro de período e os dois gráficos que ele muda (evolução da turma e tarefas concluídas por empresa). */}
       {/* NO PERÍODO (G01, §6 e §8 Onda 4): o filtro fica acima dos blocos que ele muda (§10).
         * Cada gráfico tem um resumo em texto que muda junto com o período. */}
       <section aria-labelledby="no-periodo" className="mb-6">
@@ -285,6 +293,7 @@ export default function PainelAdmin() {
                   {/* NAVEGA: abre o projeto já com o detalhe da tarefa por cima
                     * do quadro (?tarefa=, lido em projetos/[id]/page.tsx). */}
                   <Link href={`/projetos/${t.projetoId}?tarefa=${t.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-superficie-alt">
+                    {/* [PV-9] O SELO DE DIAS dos próximos prazos: âmbar quando faltam 3 dias ou menos, neutro no resto; mostra "hoje" ou "Nd". */}
                     {/* Selo de dias: âmbar (atenção) quando faltam 3 dias ou
                       * menos; neutro no resto. Mostra "hoje" ou "Nd". */}
                     <span className={cx('flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl text-[11px] font-bold leading-none', dias <= 3 ? 'bg-aviso/12 text-aviso' : 'bg-superficie-alt text-tinta-suave')}>
@@ -351,6 +360,7 @@ export default function PainelAdmin() {
           <div className="p-5"><Colunas itens={m.porColuna} /></div>
         </Card>
 
+        {/* [PV-10] O CARTÃO "Alocação e carga": divide a lista ao meio em duas colunas e a barra cheia vale 50 h (maximoEscala). Passar do limite é aviso, não bloqueio (§5). */}
         {/* Carga (§6: pessoas — alocação e carga; §16: semáforo de carga por período, F02).
           * Para cada profissional, a SEMANA ATUAL (ocupacaoNaSemana, lib/carga.ts): valor = horas
           * do dia mais cheio da semana (pico), limite = p.cargaMax, e o nível do semáforo em texto.

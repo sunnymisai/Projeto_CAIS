@@ -35,6 +35,7 @@ import Input from '@/components/input';
 import Checkbox from '@/components/checkbox';
 import type { Pessoa } from '@/lib/tipos';
 
+// [PV-1] AS QUANTIDADES DE SEMANAS que a matriz oferece (4, 8 ou 12). Opção nova entra aqui e no seletor "Quantas semanas mostrar".
 /** Quantas semanas a matriz mostra (seletor do topo). */
 type Quantidade = '4' | '8' | '12';
 /** Nomes curtos dos dias úteis, na ordem de porDia (segunda a sexta). */
@@ -66,6 +67,7 @@ export default function PaginaCarga() {
   const semanas = useMemo(() => Array.from({ length: Number(qtd) }, (_, i) => somaDias(inicio, i * 7)), [inicio, qtd]);
   const fimDoPeriodo = somaDias(semanas[semanas.length - 1], 4);
 
+  // [PV-2] QUEM APARECE NA MATRIZ: só profissionais ativos (convidado ainda não trabalha; inativo saiu da operação, §11).
   // Profissionais ativos (convidado ainda não trabalha; inativo saiu da operação, §11).
   const profissionais = useMemo(() => d.pessoas.filter((p) => p.perfil === 'profissional' && p.status === 'ativo'), [d.pessoas]);
   // Ocupação de cada pessoa em cada semana (recalcula quando os dados ou as semanas mudam).
@@ -75,6 +77,7 @@ export default function PaginaCarga() {
   const areas = [...new Set(profissionais.map((p) => p.area).filter(Boolean))].sort();
   const projetos = d.projetos.filter((p) => p.status !== 'concluido');
 
+  // [PV-3] OS FILTROS DA CARGA: nome, área, projeto (alocação que cruza o período mostrado) e "Só acima do limite" (alguma semana vermelha).
   // Aplica os filtros. Projeto: a pessoa tem alocação nele que cruza o período mostrado.
   const filtradas = linhas.filter(({ p, semanas: ss }) =>
     (!busca.trim() || normalizar(p.nome).includes(normalizar(busca)))
@@ -109,6 +112,7 @@ export default function PaginaCarga() {
           acao={<Link href="/pessoas" className="inline-flex h-10 items-center rounded-xl border border-borda bg-superficie px-4 text-sm font-semibold text-tinta hover:bg-superficie-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">Ir para Pessoas</Link>} /></Card>
       ) : (
         <>
+          {/* [PV-4] O CONTROLE DE PERÍODO: semana anterior, Hoje, próxima semana e quantas semanas mostrar. A primeira semana é sempre uma segunda-feira. */}
           {/* Período: semana anterior / Hoje / próxima e quantas semanas. */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <Button variante="secundario" tamanho="sm" onClick={() => setInicio(somaDias(inicio, -7))} aria-label="Semana anterior"><ChevronLeft className="h-4 w-4" aria-hidden /></Button>
@@ -135,6 +139,7 @@ export default function PaginaCarga() {
               acao={temFiltro ? <Button variante="secundario" onClick={limpar}>Limpar filtros</Button> : undefined} /></Card>
           ) : (
             <>
+              {/* [PV-5] A MATRIZ DE CARGA (a partir de 768 px): cabeçalho e nomes presos na rolagem; cada célula é um botão que abre o painel da semana. No celular vira um card por pessoa com as 4 primeiras semanas. */}
               {/* DESKTOP E TABLET (md+): a matriz. max-h + overflow-auto: só esta caixa rola (nos dois sentidos),
                 * e por isso o cabeçalho (sticky top) e a coluna dos nomes (sticky left) ficam presos. */}
               <Card className="hidden overflow-hidden md:block">
@@ -195,6 +200,7 @@ export default function PaginaCarga() {
   );
 }
 
+// [PV-6] A LINHA DE UMA PESSOA: nome, área e limite semanal, as células por semana e a quebra por projeto (uma sub-linha por alocação).
 /**
  * Uma linha da matriz (a pessoa) e, quando aberta, as sub-linhas por projeto.
  * @param props.pessoa - o profissional.
@@ -261,6 +267,7 @@ function LinhaPessoa({ pessoa, semanas, aberta, onAlternar, alocacoes, nomeDoPro
   );
 }
 
+// [PV-7] O PAINEL LATERAL DE UMA SEMANA: pico e nível do semáforo, a ocupação de cada dia útil e as alocações ativas, com o link para a equipe do projeto.
 /**
  * Painel lateral de uma célula: a ocupação de cada dia útil da semana e as alocações ativas.
  * @param props.pessoaId - quem.

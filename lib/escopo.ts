@@ -24,6 +24,7 @@ export interface SessaoEscopo {
   perfil: Perfil;
 }
 
+// [PV-1] REGRA CENTRAL de visibilidade de projetos: admin vê todos; empresa os da própria empresa; profissional os em que está alocado. Mudar aqui muda todas as telas.
 /**
  * Projetos que a sessão enxerga: admin todos; empresa os da sua empresa;
  * profissional os em que tem alocação.
@@ -41,12 +42,14 @@ export function projetosVisiveis(sessao: SessaoEscopo, dados: Dados): Projeto[] 
     if (!empresaId) return [];
     return dados.projetos.filter((p) => p.empresaId === empresaId);
   }
+  // [PV-2] Pergunta aberta: o profissional continua vendo o projeto depois que a alocação dele terminou? Hoje continua.
   // Profissional: Set dos projetos em que ele tem alocação (busca rápida).
   // TODO(PROGLOGIC): confirmar se alocação encerrada (fim no passado) ainda dá acesso.
   const meus = new Set(dados.alocacoes.filter((a) => a.pessoaId === sessao.pessoaId).map((a) => a.projetoId));
   return dados.projetos.filter((p) => meus.has(p.id));
 }
 
+// [PV-3] Porteiro de /projetos/[id] digitado na URL: quem não vê o projeto vai para /sem-permissao.
 /**
  * Diz se a sessão pode ver o projeto (usado no /projetos/[id] digitado na URL).
  * @param sessao - quem está logado.
@@ -59,6 +62,7 @@ export function podeVerProjeto(sessao: SessaoEscopo, projetoId: string, dados: D
   return projetosVisiveis(sessao, dados).some((p) => p.id === projetoId);
 }
 
+// [PV-4] Quais tarefas cada perfil vê (as dos projetos visíveis). TODO(PROGLOGIC): confirmar se o profissional vê as tarefas dos colegas.
 /**
  * Tarefas dos projetos visíveis. Empresa vê todas as do projeto dela (§5);
  * profissional também vê todas as do projeto onde está (só MOVE as próprias).
@@ -83,6 +87,7 @@ export function alocacoesVisiveis(sessao: SessaoEscopo, dados: Dados): Alocacao[
   return dados.alocacoes.filter((a) => ids.has(a.projetoId));
 }
 
+// [PV-5] Quais empresas cada perfil vê (a empresa vê a própria; o profissional, as dos projetos dele). TODO(PROGLOGIC): confirmar.
 /**
  * Empresas visíveis: admin todas; os outros só as empresas dos projetos que
  * enxergam (a empresa vê a própria, mesmo sem projeto ainda).
@@ -101,6 +106,7 @@ export function empresasVisiveis(sessao: SessaoEscopo, dados: Dados): Empresa[] 
   return dados.empresas.filter((e) => ids.has(e.id));
 }
 
+// [PV-6] Quais pessoas cada perfil vê (busca do topo e listas). TODO(PROGLOGIC): confirmar se a empresa vê nome e contato dos profissionais alocados.
 /**
  * Pessoas visíveis: admin todas; os outros veem a si mesmos e quem está
  * alocado nos projetos que enxergam (a equipe). Empresa NÃO vê outras empresas.

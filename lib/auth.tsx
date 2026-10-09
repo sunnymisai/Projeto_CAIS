@@ -54,9 +54,11 @@ export interface Sessao {
 type MotivoRecusa = 'credenciais' | 'inativo' | 'convidado';
 type ResultadoLogin = { ok: true } | { ok: false; motivo: MotivoRecusa };
 
+// [PV-1] Senha inicial de TODA conta ativa do seed ("Cais@2026"). Mudar aqui muda a senha de demonstração e o texto da tela de login.
 // SIMULADO: senha inicial de TODA pessoa ativa do seed, até ela trocar a própria senha.
 export const SENHA_DEMO = 'Cais@2026';
 
+// [PV-2] Contas de demonstração do login (botões "Entrar como" e a lista na tela). Conta nova no botão: acrescente aqui e a pessoa em seed.ts.
 /** Contas de demonstração, uma por perfil (a Empresa tem duas: Vértice e Aurora). */
 // SIMULADO: e-mails e senha fixos no código, listados no seletor "Entrar como…" do LoginForm.
 // ⚠️ ATENÇÃO: components/LoginForm.tsx importa CONTAS_DEMO; apagar isto quebra o seletor.
@@ -72,9 +74,11 @@ export const CONTAS_DEMO = [
   { rotulo: 'Empresa Aurora · Patrícia Melo', email: 'patricia@aurora.example', senha: SENHA_DEMO, pessoaId: 'pes_patricia', nome: 'Patrícia Melo', perfil: 'empresa' as Perfil },
 ];
 
+// [PV-3] Chave onde a sessão fica no navegador. Trocar o nome desloga todo mundo e exige ajustar os testes e o script de tema.
 // Nome da chave no localStorage/sessionStorage onde a sessão fica guardada.
 const CHAVE = 'cais-sessao';
 
+// [PV-4] Chave das senhas trocadas (texto puro, SÓ para o protótipo). TODO(API): apagar; a senha passa a existir só no back-end, com hash.
 // SIMULADO, NUNCA PARA PRODUÇÃO: chave do localStorage com as senhas trocadas, em texto puro,
 // no formato { "email@minusculo": "senha" }. Só as funções de senha logo abaixo mexem nela.
 // ⚠️ ATENÇÃO: nenhuma tela lê ou grava esta chave direto; sempre por definirSenha/conferirSenha.
@@ -115,6 +119,7 @@ export function definirSenha(email: string, senha: string): boolean {
   }
 }
 
+// [PV-5] Conferência da senha do login: vale a senha trocada ou, se nunca trocou, SENHA_DEMO. TODO(API): quem confere é a API.
 /**
  * Confere se a senha bate com a da pessoa.
  * Quem nunca trocou a senha usa a senha inicial de demonstração (SENHA_DEMO).
@@ -162,6 +167,7 @@ export function lerUltimosAcessos(): Record<string, string> {
   }
 }
 
+// [PV-6] Regras do login, nesta ordem: senha certa, pessoa existe, conta inativa, convite pendente. Latência simulada de 700 ms. Aqui entra o fetch da API.
 /**
  * Confere e-mail e senha e devolve a sessão (ou o motivo da recusa).
  * @param email - e-mail digitado (espaços e maiúsculas são ignorados).
@@ -229,6 +235,7 @@ function lerSessao(): Sessao | null {
   }
 }
 
+// [PV-7] Onde a sessão é gravada: localStorage com "Lembrar-me", senão sessionStorage. TODO(API): guardar o token que a API devolver.
 /**
  * Grava a sessão no navegador.
  * @param s - a sessão a guardar.
@@ -260,6 +267,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPronto(true);
   }, []);
 
+  // [PV-8] Fluxo do login: autentica, registra o último acesso e grava a sessão. Os três perfis entram; o que cada um vê é decidido em lib/permissoes.ts.
   /**
    * Faz o login.
    * @param email - e-mail digitado.
@@ -280,6 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { ok: true };
   }, []);
 
+  // [PV-9] Abre a sessão SEM pedir senha: só pode ser usada depois de uma prova de identidade (hoje, o fim do primeiro acesso por convite).
   /**
    * Abre a sessão de uma pessoa SEM pedir senha: usada logo depois de ela definir a senha
    * no primeiro acesso (a senha acabou de ser conferida pela própria tela).
@@ -321,6 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // [PV-10] Logout: apaga a sessão dos dois armazenamentos. TODO(API): avisar a API para invalidar o token.
   /** Desloga: limpa a sessão da memória e dos dois armazenamentos. */
   const sair = useCallback(() => {
     // APAGA: remove a sessão dos dois lugares, porque não sabemos onde ela foi salva.

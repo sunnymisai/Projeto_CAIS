@@ -41,6 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     // Date.now() + Math.random(): evita id repetido se dois avisos saírem no mesmo milissegundo.
     const id = Date.now() + Math.random();
     setLista((l) => [...l, { id, tipo, texto }]);
+    // [PV-1] Quanto tempo o aviso (toast) fica na tela: 3800 ms. Mude este número para deixar mais curto ou mais longo.
     // Agenda a saída automática deste aviso (só ele, pelo id) depois de 3,8 s.
     setTimeout(() => setLista((l) => l.filter((t) => t.id !== id)), 3800);
   }, []);

@@ -12,6 +12,7 @@
 import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { cx } from '@/lib/utils';
 
+// [PV-1] O menu suspenso (menu do perfil, ações de linha): abre pelo botão, fecha com Esc ou clique fora. alinhar, largura e flutuante controlam posição e tamanho.
 /**
  * Menu suspenso (dropdown). Fecha com Esc e ao clicar fora.
  * Usa "render props": em vez de receber o botão pronto, recebe uma FUNÇÃO
@@ -90,6 +91,7 @@ export default function Menu({ gatilho, children, alinhar = 'direita', largura =
   );
 }
 
+// [PV-2] Um item do menu suspenso (com ícone e o modo "perigo" em vermelho). Todo item de menu do sistema é este componente.
 /**
  * Item clicável dentro do Menu (role="menuitem").
  * @param onClick ação do item.

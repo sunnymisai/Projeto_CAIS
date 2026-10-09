@@ -20,14 +20,17 @@ import { Etiqueta } from '@/components/ui/basicos';
 import { cx, novoId } from '@/lib/utils';
 import type { Etapa, Pergunta } from '@/lib/tipos';
 
+// [PV-1] A REGRA DO ENDEREÇO do conteúdo da etapa: precisa começar com http:// ou https:// e ter um ponto no domínio.
 /** Endereço aceito no conteúdo: começa com http:// ou https:// e tem um ponto no domínio. */
 const URL_REGEX = /^https?:\/\/[^\s/]+\.[^\s]+$/;
 
 /** Letras das alternativas (A, B, C...), só para mostrar; o dado guarda o índice. */
 const LETRAS = 'ABCDEFGH';
+// [PV-2] O MÁXIMO DE ALTERNATIVAS por pergunta: 6 (o deck não fixa; cabe na tela do celular). As letras A a H são só para mostrar.
 /** Máximo de alternativas por pergunta (o deck não fixa; 6 cabe na tela do celular). */
 const MAX_ALTERNATIVAS = 6;
 
+// [PV-3] A PERGUNTA NOVA do quiz: nasce com duas alternativas em branco e nenhuma marcada como correta.
 /**
  * Pergunta nova, já com duas alternativas em branco e nenhuma correta (-1).
  * @returns a pergunta.
@@ -70,6 +73,7 @@ export default function EditorConteudoEtapa({ etapa, numero, onChange, id }: {
     [lista[i], lista[i + dir]] = [lista[i + dir], lista[i]];
     setPerguntas(lista);
   };
+  // [PV-4] APAGAR UMA ALTERNATIVA: o índice da correta é ajustado (some se era a removida; sobe uma posição se estava depois dela), senão a resposta certa muda sem ninguém ver.
   /**
    * Remove a alternativa `a` da pergunta `i` e corrige o índice da correta:
    * se a removida era a correta, fica sem correta (-1); se estava antes dela, a correta sobe uma posição.

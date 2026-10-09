@@ -50,6 +50,7 @@ function AbrirEmNovaAba({ url, rotulo = 'Abrir em nova aba' }: { url: string; ro
   );
 }
 
+// [PV-1] O CONTEÚDO DE CADA TIPO DE ETAPA: texto e quiz mostram só os parágrafos; vídeo e áudio usam o player do navegador (com aviso se o arquivo não carregar); PDF, apresentação e link externo viram um cartão com "Abrir em nova aba".
 /**
  * Conteúdo de uma etapa (o quiz em si fica em QuizEtapa; aqui só a instrução dele).
  * @param props.etapa a etapa.
@@ -65,6 +66,7 @@ export default function ConteudoEtapa({ etapa }: { etapa: Etapa }) {
 
   // Texto e quiz: só os parágrafos (no quiz, é a instrução).
   if (etapa.tipo === 'texto' || etapa.tipo === 'quiz') {
+    // [PV-2] O AVISO DE ETAPA DE TEXTO SEM TEXTO ("Conteúdo de demonstração"): no protótipo a pessoa pode concluir a etapa mesmo assim.
     // Etapa de texto sem texto: estado vazio explicado.
     if (etapa.tipo === 'texto' && !texto?.trim()) return <Aviso tipo="info" titulo="Conteúdo de demonstração">Esta etapa ainda não tem texto. No protótipo, você pode marcá-la como concluída para seguir.</Aviso>;
     return <Paragrafos texto={texto} />;

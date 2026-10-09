@@ -31,6 +31,7 @@ import Perguntas from '@/components/home/Perguntas';
 import FormularioInteresse from '@/components/home/FormularioInteresse';
 import RodapeHome from '@/components/home/RodapeHome';
 
+// [PV-1] O TÍTULO E A DESCRIÇÃO da homepage; o título é absoluto (ignora o modelo "· CAIS" do layout raiz).
 /**
  * Título e descrição da aba. `absolute` ignora o template "%s · CAIS" do
  * layout raiz: na home o título é a própria apresentação do produto.
@@ -52,6 +53,7 @@ export default function Home() {
     // .home-raiz liga a rolagem suave só nesta página (veja app/globals.css).
     <div className="home-raiz">
       <TopoHome />
+      {/* [PV-2] A ORDEM DAS SEÇÕES DA HOMEPAGE: Hero, Problema (O programa), Pilares, Como funciona, Para sua empresa, Perfis, Perguntas e o formulário de interesse. Reordenar ou tirar uma seção exige conferir components/home/secoes.ts. */}
       {/* id="conteudo": destino do link "Pular para o conteúdo" do topo. */}
       <main id="conteudo">
         <Hero />

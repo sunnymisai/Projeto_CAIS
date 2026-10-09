@@ -41,6 +41,7 @@ import Modal from '@/components/ui/Modal';
 import { cx, hojeISO, novoId } from '@/lib/utils';
 import type { TipoEtapa } from '@/lib/tipos';
 
+// [PV-1] O EDITOR DE TRILHA: toda mudança é salva na hora, sem botão Salvar. Publicar só é liberado sem pendências. Abas: Etapas, Público e regras, Progresso.
 /**
  * Editor de trilha (rota /trilhas/[id]).
  * Toda mudança é salva na hora, sem botão "Salvar". Publicar só é liberado
@@ -81,6 +82,7 @@ export default function EditorTrilha() {
       acao={<Button onClick={() => router.push('/trilhas')}>Voltar às trilhas</Button>} /></div>
   );
 
+  // [PV-2] O SALVAR AUTOMÁTICO: toda mudança grava na hora (cada tecla do título, inclusive). TODO(API): vira PATCH e talvez precise esperar a pessoa parar de digitar.
   // Toda edição salva na hora (sem botão "Salvar")
   /**
    * Junta as mudanças com a trilha atual e salva.
@@ -117,6 +119,7 @@ export default function EditorTrilha() {
     [e[i], e[i + dir]] = [e[i + dir], e[i]];
     atualizar({ etapas: e });
   };
+  // [PV-3] A REORDENAÇÃO DAS ETAPAS por arrastar: leva a etapa para a posição de soltura e não grava se ficou no mesmo lugar. Os botões de subir e descer fazem a mesma troca de uma posição.
   /**
    * Leva a etapa da posição `origem` para a posição de inserção `destino` (usado ao soltar).
    * `destino` conta as posições ENTRE as etapas da lista original: 0 = antes da primeira,
@@ -139,6 +142,7 @@ export default function EditorTrilha() {
   /** Limpa o estado do arrastar (no fim de qualquer arrasto, solto ou cancelado com Esc). */
   const fimDoArrasto = () => { setArrastando(null); setAlvo(null); setPegaPelaAlca(null); };
 
+  // [PV-4] AS PENDÊNCIAS QUE IMPEDEM PUBLICAR: título, ao menos uma etapa, todas com título, empresa (alcance Empresa), pessoas (alcance Profissional) e as regras de cada quiz (lib/trilhas.ts).
   // Pendências que impedem publicar. Cada linha vira o texto do problema
   // quando a condição é verdadeira, ou `false` quando está tudo certo; o
   // .filter(Boolean) final deixa só os textos.
@@ -159,6 +163,7 @@ export default function EditorTrilha() {
   // Profissionais ativos: opções da escolha "a dedo" (alcance profissional).
   const profissionais = d.pessoas.filter((p) => p.perfil === 'profissional' && p.status !== 'inativo');
 
+  // [PV-5] A PUBLICAÇÃO: com pendência leva à aba do problema (procura "empresa" ou "pessoa" nas mensagens: reescrever sem essas palavras abre a aba errada); sem pendência grava a data da PRIMEIRA publicação, que não muda ao despublicar e republicar. O aviso às pessoas é SIMULADO. TODO(API).
   /**
    * Tenta publicar a trilha.
    * Com pendências: leva para a aba onde está o problema (Público e regras
@@ -379,6 +384,7 @@ export default function EditorTrilha() {
             <Card className="space-y-5 p-5">
               <div>
                 <p className="mb-2 text-[13px] font-medium text-tinta">Quem recebe</p>
+                {/* [PV-6] O ALCANCE DA TRILHA (Geral, Empresa ou Profissional): as cores e descrições vêm de ALCANCE (lib/trilhas.ts) e quem recebe vem de publicoDaTrilha (lib/metricas.ts). */}
                 <Segmentado rotulo="Alcance da trilha" valor={t.alcance} onChange={(a) => atualizar({ alcance: a })}
                   opcoes={[{ valor: 'geral', rotulo: 'Geral' }, { valor: 'empresa', rotulo: 'Empresa' }, { valor: 'profissional', rotulo: 'Profissional' }]} />
                 <p className="mt-2 flex items-center gap-2 text-[13px] text-tinta-suave"><span className="h-2.5 w-2.5 rounded-full" style={{ background: ALCANCE[t.alcance].cor }} aria-hidden />{ALCANCE[t.alcance].descricao}</p>
@@ -390,6 +396,7 @@ export default function EditorTrilha() {
                   hint="Recebem a trilha todas as pessoas alocadas em projetos desta empresa."
                   opcoes={d.empresas.filter((e) => e.status !== 'encerrada').map((e) => ({ valor: e.id, rotulo: e.nomeFantasia }))} />
               )}
+              {/* [PV-7] O PRAZO DA TRILHA (decisão da PROGLOGIC, 09/10/2026): indeterminado (prazoDias 0) ou os dias que o administrador definir; ao desligar o interruptor começa em 14 dias. O campo "Quando abre" é SIMULADO. TODO(API). */}
               {/* Prazo (decisão da PROGLOGIC, 09/10/2026): indeterminado ou com os dias definidos pelo administrador,
                 * em geral a pedido da empresa. prazoDias 0 = indeterminado (a trilha não vence para ninguém).
                 * SIMULADO: "Quando abre" tem uma opção só e não faz nada (onChange vazio).
@@ -453,6 +460,7 @@ export default function EditorTrilha() {
                     // % de etapas concluídas. Math.max(1, ...) evita dividir
                     // por zero numa trilha sem etapas.
                     const pct = ((pr?.concluidas ?? 0) / Math.max(1, t.etapas.length)) * 100;
+                    // [PV-8] A NOTA EM VERMELHO na aba Progresso: nota abaixo da maior nota mínima entre os quizzes da trilha.
                     // Nota mínima mais alta entre os quizzes da trilha (0 se
                     // não houver quiz). Nota abaixo dela aparece em vermelho.
                     const minimo = Math.max(0, ...t.etapas.filter((e) => e.tipo === 'quiz').map((e) => e.notaMinima));
@@ -472,6 +480,7 @@ export default function EditorTrilha() {
         )}
       </div>
 
+      {/* [PV-9] A EXCLUSÃO DA TRILHA: apaga junto o progresso de todas as pessoas, sem desfazer. */}
       {/* Confirmação de exclusão. APAGA: d.remover('trilhas') remove a trilha
         * e, junto, o progresso das pessoas (que fica dentro dela).
         * NAVEGA: depois volta para /trilhas. Não tem desfazer. */}

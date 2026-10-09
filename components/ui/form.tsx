@@ -18,9 +18,11 @@ import { cx } from '@/lib/utils';
 /* Select, Área de texto, Controle segmentado e Interruptor.
    Seguem as mesmas regras de estado do Campo (components/input.tsx). */
 
+// [PV-1] O visual base de todos os campos de formulário (borda, foco, desabilitado). Mude aqui para mudar Select e Área de texto juntos; o Input fica em components/input.tsx.
 // Classes comuns a todos os controles. focus:ring-4 desenha o anel de foco
 // grosso (acessibilidade: foco sempre visível, §13).
 const base = 'w-full border bg-superficie text-sm text-tinta transition-[border-color,box-shadow] duration-150 focus:outline-none focus:ring-4 disabled:cursor-not-allowed disabled:bg-superficie-alt disabled:text-tinta-fraca';
+// [PV-2] As cores do estado do campo: normal e erro (borda vermelha). O sucesso é só do Input.
 /**
  * Escolhe as classes de borda/anel conforme haja erro ou não.
  * @param erro mensagem de erro do campo (vazia = estado normal).
@@ -75,6 +77,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
 }
 
+// [PV-3] O select nativo estilizado (acessível e bom no celular), com rótulo, erro e dica. Todo "Escolha..." do sistema é este componente.
 /**
  * Caixa de seleção (select nativo) com rótulo, erro e dica.
  * Usa forwardRef para que hooks de formulário possam focar o campo.
@@ -119,6 +122,7 @@ interface AreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   hint?: string;
 }
 
+// [PV-4] A caixa de texto de várias linhas, com rótulo, erro e dica (rows define a altura inicial).
 /**
  * Área de texto de várias linhas com rótulo, erro e dica.
  * @param props ver AreaProps; `rows` define a altura inicial (padrão 3).
@@ -141,6 +145,7 @@ export const AreaTexto = forwardRef<HTMLTextAreaElement, AreaProps>(function Are
   );
 });
 
+// [PV-5] O controle de escolha única entre poucas opções (perfil, período, vista), acessível como grupo de rádios.
 /**
  * Controle segmentado: escolha única entre poucas opções (ex.: perfil de acesso).
  * Acessível como grupo de rádios (role="radiogroup" + role="radio").
@@ -172,6 +177,7 @@ export function Segmentado<T extends string>({ opcoes, valor, onChange, rotulo }
   );
 }
 
+// [PV-6] O liga/desliga acessível (role="switch"), com rótulo e descrição. Usado em prazo indeterminado, preferências e interruptores de formulário.
 /**
  * Interruptor liga/desliga, acessível como switch (role="switch" + aria-checked).
  * @param ligado estado atual.
@@ -200,6 +206,7 @@ export function Interruptor({ ligado, onChange, rotulo, descricao }: { ligado: b
   );
 }
 
+// [PV-7] O bloco com título que agrupa campos dentro de um formulário longo (cadastros de pessoa e empresa).
 /**
  * Título de seção dentro de formulários (como no deck: "DADOS DA EMPRESA").
  * Usa <fieldset> + <legend> para o leitor de tela agrupar os campos.

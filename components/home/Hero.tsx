@@ -31,6 +31,7 @@ export default function Hero() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:gap-8">
         <div>
           <p className="text-sm font-semibold uppercase tracking-widest text-white/70">Uma plataforma para</p>
+          {/* [PV-1] A CHAMADA PRINCIPAL da homepage (o único h1) e o texto de apoio logo abaixo. Mude aqui para trocar a mensagem de abertura. */}
           <h1 className="mt-3 font-space text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl xl:text-6xl">
             formar, alocar e acompanhar.
           </h1>
@@ -40,6 +41,7 @@ export default function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            {/* [PV-2] OS DOIS BOTÕES da abertura: "Quero trazer minha empresa" rola até #participar (FormularioInteresse) e "Já tenho acesso" vai para /login. */}
             {/* NAVEGA: rola até o formulário de interesse (#participar). */}
             <Link
               href="#participar"

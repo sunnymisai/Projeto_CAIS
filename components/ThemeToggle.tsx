@@ -21,11 +21,13 @@ import { useTema } from "@/lib/tema";
 export default function ThemeToggle({ className = "" }: { className?: string }) {
   const { escuro, definir } = useTema();
 
+  // [PV-1] O CLIQUE do botão de tema: escolhe o tema oposto ao atual e grava a escolha (a regra fica em lib/tema.ts).
   // Clique: escolhe o tema oposto ao que está valendo. Quem estava em "seguir o sistema"
   // passa a ter uma escolha explícita (claro ou escuro).
   // GRAVA: lib/tema.ts guarda a escolha em localStorage["cais-tema"].
   const alternar = () => definir(escuro ? "claro" : "escuro");
 
+  // [PV-2] O texto do botão (leitor de tela e dica) descreve a ação do clique: "Usar tema claro" ou "Usar tema escuro".
   // O rótulo descreve a AÇÃO do clique ("Usar tema claro"), não o tema atual.
   const rotulo = escuro ? "Usar tema claro" : "Usar tema escuro";
 
@@ -37,6 +39,7 @@ export default function ThemeToggle({ className = "" }: { className?: string }) 
       title={rotulo}
       className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-borda bg-superficie text-tinta-suave transition-colors hover:text-tinta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50 ${className}`}
     >
+      {/* [PV-3] Os ícones do botão (sol e lua): um gira e some enquanto o outro aparece. Para outro ícone, troque Sun e Moon. */}
       {/* Sol e lua ficam empilhados (absolute): um gira e some enquanto o outro aparece. */}
       <Sun
         className={`absolute h-[18px] w-[18px] transition-all duration-300 ${

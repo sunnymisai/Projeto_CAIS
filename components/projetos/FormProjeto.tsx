@@ -29,6 +29,7 @@ import { CORES_QUADRO } from './cores';
 
 /** Valores do formulário: o projeto sem id, colunas e status (definidos ao salvar). */
 type Val = Omit<Projeto, 'id' | 'colunas' | 'status'>;
+// [PV-1] AS OPÇÕES DO CAMPO "Tipo" do projeto (opcional). Tipo novo entra nesta lista.
 // Opções do campo "Tipo" (opcional).
 const TIPOS = ['Aplicação web', 'Aplicativo móvel', 'Dashboard', 'Integração', 'Site institucional', 'Outro'];
 
@@ -52,6 +53,7 @@ export default function FormProjeto({ projeto, onFechar }: { projeto?: Projeto; 
   // de salvar(), sem esperar um novo render.
   const modoRascunho = useRef(false);
 
+  // [PV-2] AS REGRAS DO PROJETO (§5 e §11): nome e empresa sempre; contato, descrição, datas e líder só fora do rascunho; a entrega não pode vir antes do início.
   /*
    * Regras de validação (§5 e §11). O erro aparece ao sair do campo.
    * Nome e empresa são sempre obrigatórios; o resto só fora do rascunho.
@@ -72,6 +74,7 @@ export default function FormProjeto({ projeto, onFechar }: { projeto?: Projeto; 
     return e;
   }, []);
 
+  // [PV-3] OS VALORES INICIAIS de um projeto novo: começa hoje, entrega em 60 dias, prioridade média e fundo roxo.
   // Editando: parte do projeto existente. Novo: começa hoje, entrega em 60 dias, fundo roxo.
   const f = useFormulario<Val>(projeto ? { ...projeto } : {
     nome: '', tipo: '', empresaId: '', contatoNome: '', descricao: '', inicio: hojeISO(), entrega: somaDias(hojeISO(), 60), prioridade: 'media', liderId: '', cor: 'roxo',
@@ -79,12 +82,14 @@ export default function FormProjeto({ projeto, onFechar }: { projeto?: Projeto; 
   const v = f.valores;
 
   const empresa = d.empresa(v.empresaId);
+  // [PV-4] QUEM PODE SER O CONTATO: o contato principal da empresa mais as pessoas de perfil Empresa ligadas a ela. Só aparece depois de escolher a empresa.
   /*
    * Contatos possíveis = contato principal da empresa + usuários de perfil
    * "empresa" ligados a ela. Set tira nomes repetidos; filter(Boolean) tira
    * vazios. Sem empresa escolhida, a lista fica vazia (contato só depois da empresa, §5).
    */
   const contatos = empresa ? [...new Set([empresa.contatoNome, ...d.pessoas.filter((p) => p.perfil === 'empresa' && p.empresaId === empresa.id).map((p) => p.nome)])].filter(Boolean) : [];
+  // [PV-5] QUEM PODE SER LÍDER: profissionais com status ativo.
   // Líder: escolhido entre profissionais ativos já cadastrados.
   const lideres = d.pessoas.filter((p) => p.perfil === 'profissional' && p.status === 'ativo');
 
@@ -107,6 +112,7 @@ export default function FormProjeto({ projeto, onFechar }: { projeto?: Projeto; 
         onFechar();
         return;
       }
+      // [PV-6] A CRIAÇÃO DO PROJETO: nasce como Planejado com as 4 listas padrão (COLUNAS_PADRAO, lib/seed.ts) e abre direto na aba Equipe. TODO(API): POST do projeto.
       /*
        * Criação (§5): o projeto nasce como Planejado e ganha o quadro com as
        * 4 colunas padrão. O map copia cada coluna para os projetos não

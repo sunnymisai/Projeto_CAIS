@@ -28,6 +28,7 @@ import { podeAcessar } from '@/lib/permissoes';
 import type { Perfil } from '@/lib/tipos';
 import { cx, hojeISO, normalizar, dataCurta } from '@/lib/utils';
 
+// [PV-1] O nome do perfil mostrado na etiqueta do topo (Administrador, Empresa, Profissional).
 /** Nome de cada perfil, em português, para a Etiqueta ao lado do nome. */
 const NOME_PERFIL: Record<Perfil, string> = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' };
 
@@ -41,6 +42,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
   const { sessao, sair } = useAuth();
   // Dados do protótipo (lib/store): projetos, empresas, pessoas, trilhas e tarefas.
   const dados = useDados();
+  // [PV-2] No perfil Empresa, o nome fantasia da empresa aparece ao lado do avatar, para o cliente ver em nome de quem está no sistema.
   // Nome fantasia da empresa da sessão (só no perfil Empresa), mostrado ao lado do avatar.
   const nomeDaEmpresa = sessao?.perfil === 'empresa'
     ? dados.empresa(dados.pessoa(sessao.pessoaId)?.empresaId ?? '')?.nomeFantasia
@@ -62,6 +64,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
   // Atalho de teclado da busca. Roda uma vez, quando o Topbar aparece ([]);
   // a limpeza remove o ouvinte quando ele sai da tela.
   useEffect(() => {
+    // [PV-3] Os atalhos da busca: Ctrl+K (Cmd+K no Mac) sempre, e a barra "/" fora de campos de texto. Para mudar o atalho, é aqui.
     const onKey = (e: KeyboardEvent) => {
       const alvo = e.target as HTMLElement;
       // Está digitando num campo? Então "/" é só uma barra, não um atalho.
@@ -77,6 +80,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  // [PV-4] A BUSCA GLOBAL: só a partir de 2 letras, no máximo 8 resultados, em projetos, empresas, pessoas e trilhas, respeitando o que o perfil pode ver. TODO(API): vira chamada ao servidor.
   // Resultados da busca: recalcula só quando o texto ou os dados mudam (useMemo).
   // ESCOPO: cada tipo só entra se o perfil PODE abrir a tela dele (podeAcessar) e,
   // dentro do tipo, só o que lib/escopo.ts deixa a sessão ver. Assim a busca nunca
@@ -104,9 +108,11 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
     ].slice(0, 8);
   }, [busca, dados, sessao]);
 
+  // [PV-5] Ao escolher um resultado ou aviso: limpa a busca e navega para o endereço. Empresas e pessoas abrem a ficha com ?abrir=<id>.
   // NAVEGA: limpa a busca, tira o foco do campo (fecha a lista) e vai para o resultado.
   const ir = useCallback((href: string) => { setBusca(''); (document.activeElement as HTMLElement | null)?.blur(); router.push(href); }, [router]);
 
+  // [PV-6] OS AVISOS DO SINO: tarefa atrasada (para todos os perfis, só nos projetos que a pessoa vê) e profissional acima do limite de horas (só para o admin). Aviso novo entra aqui.
   /* ---------- Avisos calculados a partir dos dados ---------- */
   // Avisos calculados na hora a partir dos dados (recalcula quando os dados mudam).
   // TODO(API): no sistema real virão do servidor como notificações, em tempo real.
@@ -263,6 +269,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
                   <UserRound aria-hidden />
                   Meu perfil
                 </Link>
+                {/* [PV-7] O item "Restaurar dados de demonstração" do menu do perfil: volta ao seed e APAGA o que foi editado. Só existe no protótipo. */}
                 {/* APAGA: descarta tudo o que foi criado ou alterado no protótipo.
                  * GRAVA: recoloca os dados de demonstração originais (seed) na store, que os
                  * salva no localStorage. Depois fecha o menu e confirma com um aviso (toast).
@@ -270,6 +277,7 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
                 <ItemMenu icone={<RotateCcw />} onClick={() => { dados.restaurarDemonstracao(); fechar(); avisar('Dados de demonstração restaurados.'); }}>
                   Restaurar dados de demonstração
                 </ItemMenu>
+                {/* [PV-8] O item "Sair": apaga a sessão e vai para /login (replace, para o Voltar não reabrir a tela de dentro). */}
                 {/* APAGA: sair() remove a sessão salva (localStorage e sessionStorage).
                  * NAVEGA: replace('/login') vai para o login (a raiz "/" agora é a homepage)
                  * sem deixar a tela atual no histórico do "voltar". */}

@@ -19,6 +19,7 @@ interface CabecalhoSecaoProps {
   idTitulo: string;
 }
 
+// [PV-1] O CABEÇALHO PADRÃO das seções da homepage (rótulo, h2 e descrição). Mude aqui para mudar todas.
 /**
  * Cabeçalho de uma seção da homepage. Server Component.
  * Mantém o mesmo visual e a hierarquia (h2) em todas as seções.

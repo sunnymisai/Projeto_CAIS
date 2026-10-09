@@ -19,6 +19,7 @@ interface Pilar {
   itens: string[];
 }
 
+// [PV-1] OS TRÊS PILARES (§1, §4, §5 e §6): título, itens e a cor de acento de cada um. A cor é só barra lateral e ícone; o texto usa tokens de tinta (contraste AA).
 // Conteúdo de cada pilar, tirado do §1, §4, §5 e §6.
 // A cor do pilar (roxo, verde, âmbar) é só acento: barra lateral e ícone.
 // O texto fica sempre em tokens de tinta, para manter o contraste AA nos dois temas.

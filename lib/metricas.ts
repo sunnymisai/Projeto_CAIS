@@ -15,6 +15,7 @@ import { diasEntre, hojeISO, somaDias } from './utils.ts';
 /* Cálculos derivados usados no painel e nas fichas. Nada aqui é salvo:
    tudo é recalculado a partir dos dados, como faria a API. */
 
+// [PV-1] QUEM RECEBE CADA TRILHA: geral = todos os profissionais e empresas ativos; da empresa = alocados nos projetos dela e as contas da própria empresa; do profissional = os escolhidos. Muda os números do admin.
 /**
  * Quem deve cumprir a trilha, conforme o alcance (slide 5 e §4).
  * - geral: todos os profissionais E todas as pessoas de perfil Empresa ("todas as
@@ -44,6 +45,7 @@ export function publicoDaTrilha(t: Trilha, d: Dados): string[] {
   return [...new Set([...alocados, ...daEmpresa])];
 }
 
+// [PV-2] Quando a pessoa está não iniciada, em andamento ou concluída numa trilha (pelo número de etapas concluídas).
 /**
  * Em que pé uma pessoa está numa trilha.
  * @param t - a trilha.
@@ -87,6 +89,7 @@ export function trilhasDaPessoa(pessoaId: string, d: Dados) {
   return { total: minhas.length, concluidas: minhas.filter((t) => situacaoNaTrilha(t, pessoaId) === 'concluida').length };
 }
 
+// [PV-3] O PRAZO DA TRILHA por pessoa: a data mais recente entre a publicação e a entrada da pessoa, mais os dias. prazoDias 0 = prazo indeterminado (sem data). TODO(PROGLOGIC): confirmar de onde conta.
 /**
  * Até quando a pessoa tem para concluir a trilha.
  * Conta a partir da data MAIS RECENTE entre a publicação da trilha e a entrada da pessoa:
@@ -110,9 +113,11 @@ export function prazoDaPessoaNaTrilha(trilha: Pick<Trilha, 'publicadaEm' | 'praz
 /** Situação de um prazo: dentro, perto de vencer (3 dias ou menos) ou já vencido. */
 export type SituacaoPrazo = 'no_prazo' | 'perto' | 'vencido';
 
+// [PV-4] Quantos dias antes do fim o prazo vira "perto" (aviso âmbar): 3.
 /** Quantos dias antes do fim o prazo passa a contar como "perto" (§4: aviso quando está perto). */
 export const DIAS_PRAZO_PERTO = 3;
 
+// [PV-5] Classifica o prazo em no prazo, perto (3 dias ou menos) ou vencido. É o que pinta o selo de prazo das trilhas.
 /**
  * Classifica um prazo em relação a hoje.
  * @param prazo - data limite (AAAA-MM-DD).
@@ -146,6 +151,7 @@ export interface TrilhaDaPessoa {
   tentativas: number;
 }
 
+// [PV-6] O que as telas do profissional mostram de cada trilha (progresso, próxima etapa, prazo). A ordem: abertas por prazo mais curto, concluídas por último.
 /**
  * Trilhas publicadas que a pessoa recebe, com progresso, próxima etapa e prazo.
  * Usada pelas telas do profissional (Minhas trilhas, player, painel).
@@ -187,6 +193,7 @@ export function trilhasDaPessoaDetalhadas(pessoaId: string, d: Dados): TrilhaDaP
   });
 }
 
+// [PV-7] Andamento do projeto: tarefa "pronta" = está na ÚLTIMA lista do quadro; "atrasada" = não pronta e com prazo vencido. Mesma regra do quadro e dos painéis.
 /**
  * Andamento de um projeto pelas tarefas.
  * @param projetoId - id do projeto.
@@ -206,6 +213,7 @@ export function progressoProjeto(projetoId: string, d: Dados) {
   return { total: tarefas.length, prontas, atrasadas, pct: tarefas.length ? (prontas / tarefas.length) * 100 : 0 };
 }
 
+// [PV-8] Em quais listas a empresa pode aprovar uma entrega: as DUAS últimas (Revisão e Pronto no quadro padrão); em quadro curto, só a última.
 /**
  * A empresa pode aprovar uma tarefa que está nesta lista do quadro? Só nas duas últimas: Revisão e Pronto
  * (no quadro padrão); em quadro com menos de 3 listas, só na última. Tarefa que ainda está em A fazer ou
@@ -222,6 +230,7 @@ export function colunaAceitaAprovacao(projeto: { colunas: { id: string }[] } | u
   return c.length >= 3 && colunaId === c[c.length - 2].id;
 }
 
+// [PV-9] ENTREGAS DO PAINEL DA EMPRESA: aprovadas (a empresa aprovou) × aguardando a aprovação dela × em produção. Mudar aqui muda o gráfico e os números.
 /**
  * Entregas de um projeto para o painel da empresa (§6): aprovadas × aguardando aprovação.
  * - aprovadas: tarefas que a EMPRESA aprovou (`aprovadaEm`) e que ainda estão em Revisão ou Pronto;
@@ -242,6 +251,7 @@ export function entregasDoProjeto(projetoId: string, d: Pick<Dados, 'projetos' |
   return { total: tarefas.length, aprovadas, aguardando, emProducao: tarefas.length - entregues.length };
 }
 
+// [PV-10] Janela de "Próximas entregas" da Visão geral do projeto: 14 dias.
 /** Janela padrão de "Próximas entregas" na Visão geral do projeto, em dias (E02). */
 export const DIAS_PROXIMAS_ENTREGAS = 14;
 
@@ -265,9 +275,11 @@ export function proximasEntregas(projetoId: string, d: Pick<Dados, 'projetos' | 
     .sort((a, b) => a.prazo.localeCompare(b.prazo));
 }
 
+// [PV-11] Nome de cada perfil em português (Administrador, Empresa, Profissional) usado em menus, tabelas e etiquetas.
 /** Nome de cada perfil de acesso, em português (Meu perfil, Acessos). */
 export const ROTULO_PERFIL: Record<Perfil, string> = { admin: 'Administrador', empresa: 'Empresa', profissional: 'Profissional' };
 
+// [PV-12] Nomes e cores dos status de empresa (Em negociação, Ativa, Encerrada), usados em /empresas e no cabeçalho do painel da empresa.
 /**
  * Rótulos dos três status de empresa definidos no §11.
  * A chave (negociacao, ativa, encerrada) é o valor gravado; o texto é o que aparece na tela.
@@ -280,10 +292,12 @@ export const ROTULO_STATUS_EMPRESA = { negociacao: 'Em negociação', ativa: 'At
  */
 export const TOM_STATUS_EMPRESA = { negociacao: 'aviso', ativa: 'sucesso', encerrada: 'neutro' } as const;
 
+// [PV-13] Nomes e cores dos status de projeto (Planejado, Em andamento, Pausado, Concluído).
 /** Texto exibido para cada status de projeto. */
 export const ROTULO_STATUS_PROJETO = { planejado: 'Planejado', andamento: 'Em andamento', pausado: 'Pausado', concluido: 'Concluído' } as const;
 /** Tom (cor semântica da etiqueta) de cada status de projeto. */
 export const TOM_STATUS_PROJETO = { planejado: 'neutro', andamento: 'primaria', pausado: 'aviso', concluido: 'sucesso' } as const;
+// [PV-14] Nomes e cores das prioridades de tarefa (Baixa, Média, Alta).
 /** Texto exibido para cada prioridade. */
 export const ROTULO_PRIORIDADE = { baixa: 'Baixa', media: 'Média', alta: 'Alta' } as const;
 /** Tom de cada prioridade: alta usa a cor de erro para chamar atenção. */
@@ -294,6 +308,7 @@ export const TOM_PRIORIDADE = { baixa: 'neutro', media: 'aviso', alta: 'erro' } 
 /** Ordem de urgência da prioridade (menor = mais urgente), para ordenar dentro de um grupo. */
 const PESO_PRIORIDADE: Record<Prioridade, number> = { alta: 0, media: 1, baixa: 2 };
 
+// [PV-15] Por quantos dias uma tarefa concluída ainda aparece em "Concluídas recentemente" de Minhas tarefas: 7.
 /** Quantos dias para trás uma tarefa concluída ainda aparece em "Concluídas recentemente". */
 export const DIAS_CONCLUIDA_RECENTE = 7;
 
@@ -321,6 +336,7 @@ export function fimDaSemana(iso: string): string {
   return somaDias(iso, (7 - diaDaSemana) % 7);
 }
 
+// [PV-16] Os grupos de Minhas tarefas: Atrasadas, Hoje, Esta semana (até domingo), Depois e Concluídas recentemente. É aqui que se muda o agrupamento.
 /**
  * Separa as tarefas de uma pessoa em Atrasadas, Hoje, Esta semana, Depois e Concluídas recentemente.
  * "Concluída" = está na ÚLTIMA coluna do projeto (mesma regra de progressoProjeto e do quadro).
@@ -409,6 +425,7 @@ export interface EntregasDaSemana {
   valor: number;
 }
 
+// [PV-17] O histórico de entregas do profissional: tarefas concluídas por semana, nas últimas N semanas ou nas semanas do período do filtro.
 /**
  * Tarefas que a pessoa concluiu por semana, nas últimas `semanas` semanas (a atual é a última).
  * "Concluída" = está na última coluna do projeto e tem `concluidaEm` (sem a data, não dá para saber a semana).
@@ -487,6 +504,7 @@ export function semanasDoPeriodo(p: Periodo): string[] {
 /** Uma conclusão de trilha: quem concluiu qual trilha e quando. */
 export interface ConclusaoDeTrilha { trilhaId: string; pessoaId: string; data: string }
 
+// [PV-18] Trilhas concluídas no período (cada pessoa que terminou uma trilha conta uma vez, pela data concluidaEm). Alimenta o painel do admin.
 /**
  * Trilhas concluídas no período (cada pessoa que terminou uma trilha conta uma vez).
  * Só entram conclusões com data (`progresso.concluidaEm`); dados antigos sem a data ficam de fora.
@@ -508,6 +526,7 @@ export function trilhasConcluidasNoPeriodo(d: Pick<Dados, 'trilhas'>, periodo?: 
   return lista.sort((a, b) => b.data.localeCompare(a.data));
 }
 
+// [PV-19] "Turma: evolução ao longo do tempo" do painel do admin: trilhas concluídas por semana do período.
 /**
  * Turma: evolução ao longo do tempo (§6) = trilhas concluídas por semana do período.
  * @param d - todos os dados.
@@ -524,6 +543,7 @@ export function evolucaoDaTurma(d: Pick<Dados, 'trilhas'>, periodo: Periodo): En
   });
 }
 
+// [PV-20] Tarefas concluídas no período somadas por empresa (painel do admin).
 /**
  * Tarefas concluídas (na última coluna, com `concluidaEm`) no período, somadas por empresa.
  * @param d - todos os dados.
@@ -545,6 +565,7 @@ export function tarefasConcluidasPorEmpresa(d: Pick<Dados, 'tarefas' | 'projetos
     .sort((a, b) => b.total - a.total);
 }
 
+// [PV-21] Entregas aprovadas pela empresa num projeto dentro do período (painel da empresa).
 /**
  * Entregas aprovadas pela empresa num projeto, dentro do período (painel da empresa, G01).
  * "Aprovada" = tarefa com `aprovadaEm` dentro do período, ainda numa lista que aceita aprovação.
@@ -562,6 +583,7 @@ export function aprovadasNoPeriodo(projetoId: string, d: Pick<Dados, 'projetos' 
 /** Atalhos do filtro de período (FiltroPeriodo). */
 export type AtalhoPeriodo = '7' | '30' | '90' | 'mes' | 'personalizado';
 
+// [PV-22] Os atalhos do filtro de período (7, 30 e 90 dias, este mês): é aqui que se muda o que cada atalho significa.
 /**
  * Os últimos N dias, contando hoje.
  * @param n - quantos dias.
@@ -583,6 +605,7 @@ export function esteMes(hoje: string = hojeISO()): Periodo {
   return { de: `${hoje.slice(0, 8)}01`, ate: hoje };
 }
 
+// [PV-23] Descobre qual atalho do filtro um período da URL representa (para marcar a opção certa ao abrir um link compartilhado).
 /**
  * Qual atalho gera exatamente este período (para o filtro marcar a opção certa ao abrir pela URL).
  * @param p - o período.

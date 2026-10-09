@@ -22,6 +22,7 @@ export default function BrandPanel() {
   // "hidden ... lg:flex": o painel só aparece em telas grandes; no celular o
   // login mostra só o formulário (com o logo no topo).
   return (
+    // [PV-1] O PAINEL DE MARCA das telas de acesso: sempre escuro nos dois temas e só aparece a partir de 1024 px (classe lg:flex).
     <aside className="relative hidden overflow-hidden border-r border-white/[0.06] bg-noite text-white dark:bg-noite-alt lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
       {/* Textura: arco da marca em escala gigante, quase invisível */}
       <svg
@@ -41,6 +42,7 @@ export default function BrandPanel() {
       <CaisLogo size={40} tone="claro" />
 
       <div className="relative max-w-md">
+        {/* [PV-2] A MENSAGEM do painel de marca (título e frase abaixo dele). Mude aqui para trocar o texto de todas as telas de acesso. */}
         <h2 className="font-space text-4xl font-semibold leading-[1.1] tracking-tight xl:text-5xl">
           Novo caminho, sua trilha para o futuro.
         </h2>
@@ -49,10 +51,12 @@ export default function BrandPanel() {
           aos projetos e aos resultados nos dashboards.
         </p>
 
+        {/* [PV-3] O desenho dos três pilares, o mesmo da homepage (components/marca/TresPilares.tsx). */}
         {/* Constelação dos três pilares (mesmo desenho da homepage). */}
         <TresPilares className="mt-10" />
       </div>
 
+      {/* [PV-4] O rodapé de direitos do painel; o ano vem do relógio do navegador. */}
       <p className="relative text-sm text-white/40">
         © {new Date().getFullYear()} Projeto CAIS
       </p>

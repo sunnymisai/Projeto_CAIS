@@ -9,6 +9,7 @@
 import { FileText, PlayCircle, FileType2, Headphones, Presentation, Link2, ListChecks } from 'lucide-react';
 import type { Etapa, TipoEtapa, Trilha } from './tipos';
 
+// [PV-1] Rótulo e ícone de cada tipo de etapa (Texto, Vídeo, PDF, Áudio, Apresentação, Link, Quiz). Tipo novo: acrescente aqui (o TypeScript cobra).
 /**
  * Rótulo e ícone de cada tipo de etapa.
  * `Record<TipoEtapa, ...>` obriga a ter uma entrada para CADA tipo: se alguém
@@ -25,6 +26,7 @@ export const TIPOS_ETAPA: Record<TipoEtapa, { rotulo: string; icone: typeof File
   quiz: { rotulo: 'Quiz', icone: ListChecks },
 };
 
+// [PV-2] As três camadas de trilha (geral, da empresa, do profissional): nomes, descrições e a cor oficial de cada uma do deck (hex fixo de propósito).
 /* Cores de alcance, as mesmas do slide 5 do deck */
 /**
  * Rótulo, descrição e cor de cada alcance de trilha (§4).
@@ -38,6 +40,7 @@ export const ALCANCE: Record<Trilha['alcance'], { rotulo: string; descricao: str
   profissional: { rotulo: 'Trilha do profissional', descricao: 'Vale para uma pessoa ou um grupo escolhido a dedo.', cor: '#F5A524' },
 };
 
+// [PV-3] Tentativas do quiz quando a etapa não define (3). O máximo é 10 (lib/quiz.ts). TODO(PROGLOGIC): confirmar o padrão.
 /**
  * Tentativas de quiz quando a etapa não define `tentativasMax` (dados antigos ou etapa nova).
  * 0 nas etapas significa "sem limite".
@@ -45,6 +48,7 @@ export const ALCANCE: Record<Trilha['alcance'], { rotulo: string; descricao: str
 // TODO(PROGLOGIC): confirmar o padrão de tentativas (hoje 3).
 export const TENTATIVAS_PADRAO = 3;
 
+// [PV-4] O que impede PUBLICAR uma trilha com quiz: precisa de pelo menos uma pergunta, com enunciado, duas alternativas e a correta marcada.
 /**
  * Pendências de UMA etapa de quiz que impedem publicar a trilha.
  * Regra: pelo menos uma pergunta, e cada pergunta com enunciado, duas ou mais
@@ -70,6 +74,7 @@ export function problemasDoQuiz(etapa: Etapa, numero: number): string[] {
   return erros;
 }
 
+// [PV-5] O endereço do player de uma etapa (/minhas-trilhas/<trilha>/etapa/<etapa>); todo link para uma etapa passa por aqui.
 /**
  * Endereço do player de uma etapa (tela do D03), usado pelos botões "Começar"/"Continuar".
  * @param trilhaId - id da trilha.

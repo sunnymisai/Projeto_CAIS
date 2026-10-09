@@ -48,11 +48,13 @@ import { dataCurta, normalizar } from '@/lib/utils';
 export default function Projetos() {
   const d = useDados();
   const { sessao } = useAuth();
+  // [PV-1] O ESCOPO DA LISTA: o administrador vê todos os projetos, a empresa só os dela e o profissional só aqueles em que está alocado (lib/escopo.ts). É conveniência de tela; a segurança real é do back-end.
   // Projetos que a sessão pode ver. Sem sessão (só por um instante) a lista é vazia.
   // Filtrar aqui é conveniência de interface; a segurança real é do back-end (§7).
   const visiveis = useMemo(() => (sessao ? projetosVisiveis(sessao, d) : []), [sessao, d]);
   // Empresas do filtro: só as dos projetos visíveis (a Empresa não vê as outras no seletor).
   const empresasDoFiltro = useMemo(() => (sessao ? empresasVisiveis(sessao, d) : []), [sessao, d]);
+  // [PV-2] QUEM CRIA PROJETO: só quem tem a permissão "editar_projeto" (lib/permissoes.ts). O botão fica escondido, não desabilitado, para os outros perfis.
   // "+ Novo projeto" é ESCONDIDO (não desabilitado) de quem não pode: o botão nunca teria uso
   // para esse perfil, e esconder evita dúvida e o anúncio de "indisponível" no leitor de tela.
   const podeCriar = !!sessao && podeFazer(sessao.perfil, 'editar_projeto');
@@ -63,6 +65,7 @@ export default function Projetos() {
   const [empresa, setEmpresa] = useState('');
   const [status, setStatus] = useState('');
 
+  // [PV-3] OS FILTROS DA LISTA: empresa, status e busca por nome (sem acento).
   // Aplica os três filtros em sequência. Cada .filter deixa passar tudo
   // quando o filtro está vazio (o "!empresa ||" faz isso).
   // normalizar() tira acentos e maiúsculas: "projeto" acha "Projéto".

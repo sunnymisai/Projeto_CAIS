@@ -20,6 +20,7 @@ import { cx } from '@/lib/utils';
  */
 export interface Segmento { rotulo: string; valor: number; cor: string }
 
+// [PV-1] AS CORES DOS GRÁFICOS (concluída, andamento, revisão, a fazer, não iniciada...) como variáveis CSS que trocam com o tema. Os valores ficam em app/globals.css (--grafico-*).
 /**
  * Cores dos gráficos, como referência às variáveis de app/globals.css (--grafico-*).
  * São var(...) e não hex: assim a cor troca sozinha entre o tema claro e o escuro.
@@ -37,6 +38,7 @@ export const COR_GRAFICO = {
   extra2: 'var(--grafico-extra-2)',
 } as const;
 
+// [PV-2] A cor de cada lista do quadro por POSIÇÃO (A fazer, Fazendo, Revisão, azul, rosa). A última lista ("Pronto") usa COR_GRAFICO.concluida.
 /**
  * Cores das colunas do quadro pela POSIÇÃO (1ª, 2ª, 3ª...): A fazer, Fazendo,
  * Revisão, depois azul e rosa. A última coluna ("Pronto") não usa esta lista:
@@ -44,6 +46,7 @@ export const COR_GRAFICO = {
  */
 export const TONS_COLUNA = [COR_GRAFICO.aFazer, COR_GRAFICO.andamento, COR_GRAFICO.revisao, COR_GRAFICO.extra, COR_GRAFICO.extra2];
 
+// [PV-3] A barra horizontal dividida em segmentos (trilhas, entregas). Tem resumo em texto para leitor de tela.
 /**
  * Barra empilhada horizontal (ex.: situação das pessoas numa trilha).
  * @param segmentos pedaços da barra; cada um ocupa sua fração do total.
@@ -67,6 +70,7 @@ export function BarraEmpilhada({ segmentos, altura = 10 }: { segmentos: Segmento
   );
 }
 
+// [PV-4] A legenda dos gráficos: bolinha de cor, nome e número. Cor nunca aparece sozinha.
 /**
  * Legenda com quadradinho de cor, rótulo e valor de cada segmento.
  * @param itens os mesmos segmentos passados ao gráfico.
@@ -85,6 +89,7 @@ export function Legenda({ itens }: { itens: Segmento[] }) {
   );
 }
 
+// [PV-5] O gráfico de rosca (SVG próprio, sem biblioteca) com número no centro.
 /**
  * Rosca (donut) com total no centro.
  * @param segmentos pedaços da rosca.
@@ -125,6 +130,7 @@ export function Rosca({ segmentos, tamanho = 148, centro, subcentro }: { segment
   );
 }
 
+// [PV-6] Barras com linha de limite (a carga de cada pessoa do painel do admin). Aceita o nível do semáforo (texto e cor) ao lado do número.
 /**
  * Barras horizontais com linha de limite (ex.: carga semanal x 40 h, §5).
  * Passar do limite pinta a barra de âmbar: "é aviso, não bloqueio".
@@ -169,6 +175,7 @@ export function BarrasComLimite({ itens, maximoEscala }: {
   );
 }
 
+// [PV-7] As colunas verticais simples (tarefas por lista, entregas por semana). A altura máxima vem do parâmetro altura.
 /**
  * Colunas verticais simples (ex.: tarefas por etapa do quadro).
  * @param itens lista de { rotulo, valor, cor }.

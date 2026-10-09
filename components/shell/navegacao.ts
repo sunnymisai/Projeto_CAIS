@@ -10,6 +10,7 @@
 import { LayoutDashboard, Building2, Users, GraduationCap, FolderKanban, Palette, Gauge, KeyRound, BookOpenCheck, ListChecks } from 'lucide-react';
 import type { Perfil } from '@/lib/tipos';
 
+// [PV-1] O MENU LATERAL: grupos, rótulos, ícones, endereços e quais perfis veem cada item. Tela nova precisa ser registrada aqui (e em lib/permissoes.ts, que é quem barra o acesso).
 /**
  * Itens do menu lateral, em grupos. Cada item tem `href` (rota da página em
  * app/(sistema)), `rotulo` (texto do menu), `icone` (componente lucide-react)
@@ -41,10 +42,12 @@ export const NAVEGACAO: {
   { grupo: 'Programa', itens: [
     { href: '/trilhas', rotulo: 'Trilhas', icone: GraduationCap, perfis: ['admin'] },
     { href: '/carga', rotulo: 'Carga da equipe', icone: Gauge, perfis: ['admin'] },
+    // [PV-2] A ORDEM do menu de cada perfil é a ordem desta lista; por isso "Projetos" aparece duas vezes (depois de Carga para admin e empresa, depois de Minhas tarefas para o profissional).
     { href: '/projetos', rotulo: 'Projetos', icone: FolderKanban, perfis: ['admin', 'empresa'] },
     { href: '/minhas-trilhas', rotulo: 'Minhas trilhas', icone: BookOpenCheck, perfis: ['profissional'] },
     { href: '/minhas-tarefas', rotulo: 'Minhas tarefas', icone: ListChecks, perfis: ['profissional'] },
     { href: '/projetos', rotulo: 'Projetos', icone: FolderKanban, perfis: ['profissional'] },
+    // [PV-3] A empresa abre a mesma tela de Minhas trilhas, só com outro nome no menu ("Trilha da empresa"). Para mudar o nome que ela vê, é aqui.
     // Mesma rota de "Minhas trilhas": a tela é uma só; muda só o rótulo para a Empresa (§3).
     { href: '/minhas-trilhas', rotulo: 'Trilha da empresa', icone: BookOpenCheck, perfis: ['empresa'] },
   ] },

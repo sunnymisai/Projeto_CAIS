@@ -17,12 +17,14 @@
 
 import type { Anexo, Dados } from './tipos.ts';
 
+// [PV-1] Limite de tamanho por arquivo anexado: 10 MB. Mude este cálculo (e os textos das telas) para aceitar arquivos maiores.
 /** Limite de tamanho por arquivo: 10 MB (10 × 1024 × 1024 bytes). */
 export const LIMITE_BYTES = 10 * 1024 * 1024;
 
 /** Categorias de arquivo (ícone e filtro da aba Arquivos). */
 export type CategoriaAnexo = 'imagem' | 'pdf' | 'planilha' | 'documento' | 'compactado' | 'outro';
 
+// [PV-2] Nomes das categorias de arquivo (Imagens, PDFs...) usados no filtro da aba Arquivos.
 /** Nome de cada categoria, em português (filtro e rótulos). */
 export const ROTULO_CATEGORIA: Record<CategoriaAnexo, string> = {
   imagem: 'Imagens',
@@ -57,6 +59,7 @@ export function tamanhoLegivel(bytes: number): string {
   return `${(kb / 1024).toFixed(1).replace('.', ',').replace(',0', '')} MB`;
 }
 
+// [PV-3] Como um arquivo vira categoria (imagem, PDF, planilha...), pelo tipo MIME ou pela extensão. Extensão nova: acrescente na lista da categoria.
 /**
  * Categoria de um arquivo, pelo tipo MIME e, na falta dele, pela extensão do nome.
  * @param nome - nome do arquivo.
@@ -74,6 +77,7 @@ export function categoriaDoAnexo(nome: string, tipo: string): CategoriaAnexo {
   return 'outro';
 }
 
+// [PV-4] A validação de upload: recusa arquivo vazio ou acima do limite, com mensagem em português dizendo como corrigir.
 /**
  * Confere o arquivo escolhido: não pode passar de 10 MB nem estar vazio.
  * @param arquivo - o que o navegador entrega (nome e tamanho bastam).
@@ -86,6 +90,7 @@ export function validarArquivo(arquivo: { name: string; size: number }): string 
   return null;
 }
 
+// [PV-5] O que é guardado de um anexo: SÓ nome, tipo, tamanho, autor e data (nunca o conteúdo). TODO(API): guardar a url do upload.
 /**
  * Cria o metadado de um anexo a partir do arquivo escolhido (o conteúdo NÃO é guardado).
  * @param arquivo - nome, tipo e tamanho do arquivo.

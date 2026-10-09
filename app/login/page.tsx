@@ -26,6 +26,7 @@ import AcessoLayout from '@/components/AcessoLayout';
 export default function LoginPage() {
   return (
     <AcessoLayout>
+      {/* [PV-1] A PÁGINA DE LOGIN (/login): só monta a moldura e o formulário. O Suspense é obrigatório porque o LoginForm usa useSearchParams; sem ele o build falha. */}
       {/* ⚠️ ATENÇÃO: o LoginForm lê ?voltar= com useSearchParams. Sem este
         * <Suspense>, o `npm run build` falha com "useSearchParams() should
         * be wrapped in a suspense boundary" (notas-next16 §2). */}

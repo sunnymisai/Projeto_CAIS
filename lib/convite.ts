@@ -6,6 +6,7 @@
    Contexto: §11 (convite por e-mail leva ao primeiro acesso), §12 (fluxo 1) e §15 item 1.
    ============================================================================ */
 
+// [PV-1] Formato do link de convite (/primeiro-acesso?convite=<pessoaId>). TODO(API): o convite real é um token assinado, com validade e uso único.
 /**
  * Monta o link de convite de uma pessoa: `<endereço do site>/primeiro-acesso?convite=<pessoaId>`.
  * Só chamar no navegador (usa window.location).
@@ -19,6 +20,7 @@ export function linkDeConvite(pessoaId: string): string {
   return `${window.location.origin}/primeiro-acesso?convite=${encodeURIComponent(pessoaId)}`;
 }
 
+// [PV-2] Copiar para a área de transferência, com plano B quando o navegador bloqueia; usado nos botões "Copiar link".
 /**
  * Copia um texto para a área de transferência.
  * navigator.clipboard só existe em contexto seguro (https ou localhost) e a pessoa pode

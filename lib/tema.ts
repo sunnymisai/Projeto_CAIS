@@ -21,6 +21,7 @@ import { useSyncExternalStore } from 'react';
  * restaurada na próxima visita. Fora esse script, ninguém mais escreve 'cais-tema'.
  */
 
+// [PV-1] Chave do tema salvo ('cais-tema'). O script inline de app/layout.tsx repete este nome: mude os dois juntos, senão a tela pisca no tema errado.
 /** Chave do localStorage onde a escolha fica guardada. */
 export const CHAVE_TEMA = 'cais-tema';
 
@@ -50,6 +51,7 @@ export function lerTema(): Tema {
   }
 }
 
+// [PV-2] Como o tema escuro é ligado: a classe .dark no <html>. As cores de cada tema ficam em app/globals.css.
 /**
  * Liga ou desliga as cores escuras na página.
  * @param escuro - true coloca a classe "dark" no <html> (o app/globals.css troca as cores por ela).
@@ -58,6 +60,7 @@ function aplicar(escuro: boolean) {
   document.documentElement.classList.toggle('dark', escuro);
 }
 
+// [PV-3] Troca de tema: grava a escolha (ou apaga, no modo "seguir o sistema") e aplica na hora. É o ÚNICO lugar que escreve a chave do tema.
 /**
  * Escolhe o tema: aplica na hora, grava e avisa os outros botões de tema.
  * @param tema - 'claro', 'escuro' ou 'sistema' (apaga a escolha e volta a seguir o sistema).

@@ -14,6 +14,7 @@
  * Convenção: datas são texto "AAAA-MM-DD"; ids são texto com prefixo (ex.: 'emp_', 'pes_').
  */
 
+// [PV-1] Os três perfis do sistema. Um perfil novo exige: rotas e ações em permissoes.ts, menu em navegacao.ts, um painel e o rótulo em metricas.ts (ROTULO_PERFIL).
 /**
  * Os três perfis de acesso (§3).
  * ⚠️ ATENÇÃO: lib/auth.tsx só deixa entrar 'admin'; renomear um valor quebra o login, o seed e os filtros por perfil das telas.
@@ -22,6 +23,7 @@ export type Perfil = 'admin' | 'empresa' | 'profissional';
 /** Prioridade de projeto e de tarefa. Rótulos e cores ficam em lib/metricas.ts. */
 export type Prioridade = 'baixa' | 'media' | 'alta';
 
+// [PV-2] Formato de uma empresa (status, contato, endereço). Campo novo: acrescente aqui, em seed.ts e no formulário de app/(sistema)/empresas/page.tsx.
 /** Empresa parceira que traz projetos para o programa (§11). */
 export interface Empresa {
   id: string;
@@ -47,6 +49,7 @@ export interface Empresa {
   dataEntrada: string; // AAAA-MM-DD
 }
 
+// [PV-3] Formato de uma pessoa (perfil, status, área, nível). cargaMax é o limite de horas do semáforo de carga (lib/carga.ts).
 /**
  * Pessoa cadastrada. Uma só forma para os três perfis (§11): os campos que
  * não se aplicam ao perfil ficam vazios ('' ou 0).
@@ -81,6 +84,7 @@ export interface Pessoa {
   densidadeTabela?: 'confortavel' | 'compacta';
 }
 
+// [PV-4] Tipos de conteúdo de uma etapa de trilha. Tipo novo exige: ícone e rótulo em lib/trilhas.ts e tratamento em components/trilhas/ConteudoEtapa.tsx.
 /** Tipos de conteúdo que uma etapa de trilha pode ter (§4). Ícones em lib/trilhas.ts. */
 export type TipoEtapa = 'texto' | 'video' | 'pdf' | 'audio' | 'apresentacao' | 'link' | 'quiz';
 
@@ -96,6 +100,7 @@ export interface Pergunta {
   correta: number;
 }
 
+// [PV-5] Formato de uma etapa: conteúdo (texto e endereço), quiz (perguntas, notaMinima, tentativasMax de 1 a 10) e se trava a próxima (obrigatoria).
 /**
  * Uma etapa dentro de uma trilha.
  * ⚠️ ATENÇÃO: `conteudo`, `perguntas` e `tentativasMax` são opcionais para dados
@@ -116,6 +121,7 @@ export interface Etapa {
   tentativasMax?: number;
 }
 
+// [PV-6] Formato de uma trilha: alcance, status, prazoDias (0 = prazo indeterminado), etapas e o progresso de cada pessoa (concluidas, nota, tentativas, concluidaEm).
 /** Trilha de onboarding (Pilar 1, §4). */
 export interface Trilha {
   id: string;
@@ -168,6 +174,7 @@ export interface Coluna {
   titulo: string;
 }
 
+// [PV-7] Formato de um projeto: empresa, datas, status e as listas (colunas) do quadro. Lista nova padrão: COLUNAS_PADRAO em seed.ts.
 /** Projeto trazido por uma empresa (Pilar 2, §5). */
 export interface Projeto {
   id: string;
@@ -194,6 +201,7 @@ export interface Projeto {
   colunas: Coluna[];
 }
 
+// [PV-8] Formato de uma alocação: pessoa, papel, período e horas por semana. É a base do semáforo de carga (lib/carga.ts).
 /** Alocação: liga uma pessoa a um projeto, com papel, período e carga (§5). */
 export interface Alocacao {
   id: string;
@@ -226,6 +234,7 @@ export interface Comentario {
   data: string; // ISO
 }
 
+// [PV-9] Anexo de tarefa: SÓ metadados (nome, tipo, tamanho, autor, data), nunca o conteúdo (limite do localStorage). Upload real é TODO(API).
 /**
  * Anexo de uma tarefa (§5): SÓ os metadados do arquivo, nunca o conteúdo.
  * ⚠️ ATENÇÃO: o localStorage tem limite de poucos MB (em geral 5 a 10 MB por endereço); guardar o
@@ -246,6 +255,7 @@ export interface Anexo {
   data: string;
 }
 
+// [PV-10] Formato de uma tarefa: responsável, prazo, checklist, comentários, anexos e a aprovação da empresa (aprovadaEm/aprovadaPorId, só em Revisão ou Pronto).
 /** Tarefa do dia a dia, que vive numa coluna do quadro (§5). */
 export interface Tarefa {
   id: string;
@@ -277,6 +287,7 @@ export interface Tarefa {
   aprovadaPorId?: string;
 }
 
+// [PV-11] Todos os dados juntos (o que a store guarda e o seed cria). Coleção nova entra aqui, em seed.ts, em lib/store.tsx (COLECOES e Salvavel) e pede nova chave do localStorage.
 /**
  * Todos os dados do sistema juntos — é o que a store guarda e o seed cria.
  * ⚠️ ATENÇÃO: adicionar/renomear coleção exige mudar o tipo `Salvavel` em lib/store.tsx e lib/seed.ts.

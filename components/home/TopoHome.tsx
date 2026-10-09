@@ -18,10 +18,12 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/auth";
 import { SECOES_NAV } from "./secoes";
 
+// [PV-1] O VISUAL do botão "Entrar" do topo da homepage (um link com cara de botão primário).
 // Classes do botão de entrada (um link com cara de botão primário).
 const BOTAO_ENTRAR =
   "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-xl bg-botao px-4 text-sm font-semibold text-white transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie";
 
+// [PV-2] O VISUAL dos links de seção do topo (desktop e menu do celular).
 // Classes dos links de âncora (desktop e menu do celular).
 const LINK_ANCORA =
   "rounded-lg px-3 py-2 text-sm font-medium text-tinta-suave transition-colors hover:bg-superficie-alt hover:text-tinta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50";
@@ -46,6 +48,7 @@ export default function TopoHome() {
   // Só troca o botão depois que a sessão foi lida do localStorage (pronto):
   // assim o servidor e o navegador mostram o mesmo "Entrar" no 1º desenho.
   const logado = pronto && !!sessao;
+  // [PV-3] O BOTÃO DO TOPO: sem sessão mostra "Entrar" e leva a /login; com sessão mostra "Ir para o sistema" e leva a /painel. A home não redireciona quem já está logado.
   const destino = logado ? "/painel" : "/login";
   const textoEntrar = logado ? "Ir para o sistema" : "Entrar";
 
@@ -58,6 +61,7 @@ export default function TopoHome() {
     botaoMenu.current?.focus({ preventScroll: true });
   };
 
+  // [PV-4] O menu do celular fecha com Esc (e devolve o foco ao botão que o abriu).
   // Efeito: enquanto o menu está aberto, a tecla Esc o fecha.
   // Roda quando `aberto` muda; ao fechar (ou desmontar) remove o ouvinte.
   useEffect(() => {
@@ -94,6 +98,7 @@ export default function TopoHome() {
           <CaisLogo size={28} />
         </Link>
 
+        {/* [PV-5] Os links de seção no desktop (a partir de 768 px); no celular viram o menu que abre e fecha logo abaixo. A lista vem de ./secoes. */}
         {/* Âncoras no desktop (md+). No celular este <nav> some (display: none). */}
         <nav aria-label="Seções da página" className="hidden items-center gap-1 md:flex">
           {SECOES_NAV.map((s) => (

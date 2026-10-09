@@ -12,6 +12,7 @@ import { Suspense } from 'react';
 import AcessoLayout from '@/components/AcessoLayout';
 import PrimeiroAcessoForm from '@/components/PrimeiroAcessoForm';
 
+// [PV-1] O TÍTULO DA ABA da página de primeiro acesso ("Primeiro acesso · CAIS").
 /** Título da aba: "Primeiro acesso · CAIS" (o template vem de app/layout.tsx). */
 export const metadata: Metadata = { title: 'Primeiro acesso' };
 
@@ -23,6 +24,7 @@ export const metadata: Metadata = { title: 'Primeiro acesso' };
 export default function PrimeiroAcessoPage() {
   return (
     <AcessoLayout>
+      {/* [PV-2] A PÁGINA DE PRIMEIRO ACESSO (/primeiro-acesso?convite=...). O Suspense é obrigatório porque o formulário lê a URL com useSearchParams. */}
       {/* ⚠️ ATENÇÃO: o formulário lê ?convite= com useSearchParams. Sem este
         * <Suspense>, o `npm run build` falha (notas-next16 §2). */}
       <Suspense>

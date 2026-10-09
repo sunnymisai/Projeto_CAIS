@@ -17,9 +17,11 @@ import { ShieldOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import CaisLogo from '@/components/CaisLogo';
 
+// [PV-1] O NOME DO PERFIL mostrado na mensagem de acesso negado.
 /** Nome de cada perfil para a mensagem (o texto da interface é em português). */
 const NOME_PERFIL = { admin: "Administrador", empresa: "Empresa", profissional: "Profissional" } as const;
 
+// [PV-2] A TELA DE ACESSO NEGADO: fica FORA de app/(sistema) de propósito (dentro dela o layout mandaria para cá em laço). Quem decide o bloqueio é lib/permissoes.ts.
 /**
  * Página "sem permissão".
  * Fica FORA do grupo (sistema) de propósito: se ficasse dentro, o layout

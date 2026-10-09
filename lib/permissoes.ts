@@ -16,6 +16,7 @@ import { publicoDaTrilha } from './metricas.ts';
  * TODO(API): trocar estas regras locais pelas permissões devolvidas pela API.
  */
 
+// [PV-1] QUEM ABRE CADA TELA: a lista de rotas por perfil. Tela nova precisa entrar aqui (rota fora da lista é só do admin) e no menu (components/shell/navegacao.ts).
 /**
  * Prefixo de rota → perfis que podem abrir.
  * ⚠️ ATENÇÃO: toda rota nova em app/(sistema)/ precisa entrar aqui; se esquecer,
@@ -43,6 +44,7 @@ export const ROTAS_POR_PERFIL: Record<string, readonly Perfil[]> = {
   '/minhas-tarefas': ['profissional'],
 };
 
+// [PV-2] Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema).
 /**
  * Diz se o perfil pode abrir o caminho.
  * O prefixo MAIS LONGO que casa vence (ex.: "/projetos/prj_1" casa com "/projetos").
@@ -92,6 +94,7 @@ export interface ContextoAcao {
   enxergaProjeto?: boolean;
 }
 
+// [PV-3] A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO.
 /**
  * Diz se o perfil pode fazer a ação.
  * @param perfil - perfil da sessão.
@@ -102,6 +105,7 @@ export interface ContextoAcao {
  */
 export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {}): boolean {
   switch (acao) {
+    // [PV-4] Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo.
     // §5: criar/editar/excluir tarefa, editar lista (renomear/excluir coluna) e editar projeto
     // são só do Administrador (quem opera o programa, §3).
     // TODO(PROGLOGIC): confirmar
@@ -112,6 +116,7 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
     case 'editar_projeto':
       return perfil === 'admin';
 
+    // [PV-5] ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca.
     // Decisão da PROGLOGIC (09/10/2026): a EMPRESA aloca o time nos projetos DELA. O administrador
     // aloca em qualquer projeto; o profissional não aloca. Sem a informação de escopo (enxergaProjeto),
     // a empresa NÃO aloca (lado seguro). Quem chama passa enxergaProjeto de lib/escopo.ts.
@@ -119,11 +124,13 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
       if (perfil === 'admin') return true;
       return perfil === 'empresa' && contexto.enxergaProjeto === true;
 
+    // [PV-6] APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado.
     // Decisão da PROGLOGIC (09/10/2026): a EMPRESA aprova (e desaprova) as entregas do projeto dela.
     // É só da empresa: o admin acompanha, mas quem aprova é o cliente. Sem escopo, nega.
     case 'aprovar_entrega':
       return perfil === 'empresa' && contexto.enxergaProjeto === true;
 
+    // [PV-7] MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa.
     // §3/§5: "o profissional vê e move as próprias tarefas"; Empresa só acompanha.
     // Sem pessoaId ou responsavelId no contexto o profissional NÃO move (lado seguro).
     // TODO(PROGLOGIC): confirmar
@@ -134,6 +141,7 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
       }
       return false;
 
+    // [PV-8] COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está).
     // §5: "Empresa vê as tarefas do projeto dela e comenta"; o profissional também
     // comenta onde está. Vale para qualquer perfil que enxerga o projeto; o admin
     // enxerga todos. Sem a informação de escopo, negamos (lado seguro).
@@ -142,6 +150,7 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
       if (perfil === 'admin') return true;
       return contexto.enxergaProjeto === true;
 
+    // [PV-9] ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê.
     // G03: anexar e remover arquivo seguem a regra de mover: admin em qualquer tarefa; profissional
     // só nas próprias; Empresa só vê (§5). Sem pessoaId ou responsavelId no contexto, nega (lado seguro).
     // TODO(PROGLOGIC): confirmar
@@ -156,6 +165,7 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
    GUARDA DA TRILHA OBRIGATÓRIA (§12, fluxo 1: "conclui e libera o sistema")
    ============================================================================ */
 
+// [PV-10] A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some.
 /**
  * Liga/desliga a guarda da trilha obrigatória no primeiro acesso do profissional.
  * `false` por enquanto: as telas de trilha do profissional (/minhas-trilhas) só nascem
@@ -166,6 +176,7 @@ export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {
  */
 export const EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = true;
 
+// [PV-11] Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado.
 /**
  * Diz se a pessoa ainda precisa concluir uma trilha obrigatória.
  * Regra conservadora (a "Trilha" não tem um campo "obrigatória"; só as etapas têm):
@@ -191,6 +202,7 @@ export function temTrilhaObrigatoriaPendente(pessoaId: string, dados: Dados): bo
   });
 }
 
+// [PV-12] As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel).
 /**
  * Diz se a rota continua liberada enquanto a trilha obrigatória está pendente.
  * Só /minhas-trilhas (e o que vem depois dela) e /painel; o resto mostra o aviso de bloqueio.
@@ -208,6 +220,7 @@ export function rotaLiberadaComTrilhaPendente(caminho: string): boolean {
    LEITURA DAS REGRAS PARA TELAS (Acessos: "O que cada perfil pode fazer")
    ============================================================================ */
 
+// [PV-13] Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também.
 /**
  * Nome de cada rota de ROTAS_POR_PERFIL, em português, para mostrar à equipe.
  * ⚠️ ATENÇÃO: toda rota nova de ROTAS_POR_PERFIL precisa de um nome aqui; o caso de teste
@@ -227,6 +240,7 @@ export const ROTULO_DAS_ROTAS: Record<string, string> = {
   '/minhas-tarefas': 'Minhas tarefas',
 };
 
+// [PV-14] Nomes das ações na tabela de permissões de /acessos.
 /** Nome de cada ação de `podeFazer`, em português. */
 export const ROTULO_DAS_ACOES: Record<Acao, string> = {
   criar_tarefa: 'Criar tarefa',
@@ -241,6 +255,7 @@ export const ROTULO_DAS_ACOES: Record<Acao, string> = {
   aprovar_entrega: 'Aprovar a entrega de uma tarefa',
 };
 
+// [PV-15] A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista.
 /**
  * Todas as ações, na ordem em que aparecem na tabela de permissões.
  * ⚠️ ATENÇÃO: ação nova em `Acao` precisa entrar aqui e em ROTULO_DAS_ACOES (o TypeScript cobra o rótulo).
@@ -273,6 +288,7 @@ export function permissaoDaAcao(perfil: Perfil, acao: Acao): 'sim' | 'nao' | 'co
   return 'condicional';
 }
 
+// [PV-16] O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos.
 /** Explicação da condição, para as ações que podem ser 'condicional'. */
 export const CONDICAO_DA_ACAO: Partial<Record<Acao, string>> = {
   mover_tarefa: 'só as próprias tarefas',

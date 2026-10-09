@@ -23,6 +23,7 @@ import { useToast } from "@/lib/toast";
 import { EMAIL_REGEX, cnpjValido, mascaraCNPJ, mascaraTelefone, soDigitos } from "@/lib/utils";
 import CabecalhoSecao from "./CabecalhoSecao";
 
+// [PV-1] A CHAVE DE TESTE do erro de envio: true mostra o estado de falha na tela. SIMULADO: some quando a API existir.
 // SIMULADO: troque para true para ver o estado de ERRO DE ENVIO na tela.
 // Com a API da PROGLOGIC, o erro virá da resposta do servidor e esta constante some.
 // TODO(API): remover quando o envio for real.
@@ -45,6 +46,7 @@ interface Interesse extends Record<string, unknown> {
 // Formulário vazio (usado no início e em "Enviar outro").
 const VAZIO: Interesse = { razaoSocial: "", cnpj: "", contato: "", email: "", telefone: "", segmento: "", mensagem: "" };
 
+// [PV-2] AS OPÇÕES DO CAMPO "Segmento" (opcional). Lista genérica, a PROGLOGIC pode ajustar.
 // Opções do segmento (campo opcional).
 // Lista genérica: não vem do deck, a PROGLOGIC pode ajustar.
 const SEGMENTOS = ["Tecnologia", "Indústria", "Comércio e serviços", "Educação", "Saúde", "Financeiro", "Outro"].map((s) => ({
@@ -52,6 +54,7 @@ const SEGMENTOS = ["Tecnologia", "Indústria", "Comércio e serviços", "Educaç
   rotulo: s,
 }));
 
+// [PV-3] AS REGRAS DO FORMULÁRIO: razão social, CNPJ (com dígitos verificadores), contato e e-mail são obrigatórios; o telefone, se preenchido, precisa de DDD e número.
 /**
  * Valida os campos do formulário (função pura, fora do componente para o
  * useFormulario receber sempre a mesma função).
@@ -93,6 +96,7 @@ export default function FormularioInteresse() {
   // Mensagem de sucesso: recebe o foco ao aparecer, para o leitor de tela anunciá-la.
   const sucessoRef = useRef<HTMLDivElement>(null);
 
+  // [PV-4] O ENVIO (SIMULADO): valida, espera 700 ms e mostra o sucesso; nada é gravado. TODO(API): POST na API da PROGLOGIC com os valores do formulário.
   /**
    * Envio do formulário.
    * 1) Valida tudo; se houver erro, leva o foco ao primeiro campo com erro.
@@ -140,6 +144,7 @@ export default function FormularioInteresse() {
   const enviando = fase === "enviando";
 
   return (
+    // [PV-5] A seção "Participar" (id participar), destino do botão da abertura da homepage.
     <section id="participar" aria-labelledby="titulo-participar" className="scroll-mt-20 bg-fundo py-16 sm:py-24">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
         <div>

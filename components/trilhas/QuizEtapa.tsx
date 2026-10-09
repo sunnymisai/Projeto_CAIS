@@ -21,6 +21,7 @@ import { cx } from '@/lib/utils';
 /** Letras das alternativas (só para mostrar). */
 const LETRAS = 'ABCDEFGH';
 
+// [PV-1] O PONTO DE QUEBRA DO QUIZ: a partir de 768 px todas as perguntas aparecem juntas; abaixo disso, uma por vez no celular.
 /** Largura a partir da qual todas as perguntas aparecem juntas (md do Tailwind). */
 const CONSULTA_DESKTOP = '(min-width: 768px)';
 
@@ -41,6 +42,7 @@ function useTelaLarga() {
 /** O que o quiz devolve ao enviar, para o player gravar. */
 export interface EnvioQuiz { correcao: CorrecaoQuiz; resultado: ResultadoQuiz }
 
+// [PV-2] O QUIZ DA ETAPA: não grava nada sozinho; ao enviar, entrega a correção e o resultado ao player, que registra a tentativa (lib/quiz.ts) e conclui a etapa se aprovado.
 /**
  * Quiz de uma etapa.
  * Não grava nada sozinho: ao enviar, chama `onEnviar` e quem chama grava a tentativa
@@ -73,6 +75,7 @@ export default function QuizEtapa({ etapa, tentativasUsadas, tentativasMax, jaAp
   const refResultado = useRef<HTMLDivElement>(null);
   const refPergunta = useRef<HTMLFieldSetElement>(null);
 
+  // [PV-3] A ORDEM DAS ALTERNATIVAS: na primeira rodada, a original; nas tentativas seguintes, embaralhada com uma semente por pergunta (a ordem não pula ao redesenhar).
   // Ordem das alternativas de cada pergunta nesta rodada. Na 1ª rodada, a original; depois,
   // embaralhada com uma semente por pergunta (a ordem não "pula" quando a tela redesenha).
   const ordens = useMemo(() => perguntas.map((p, i) => {
@@ -81,6 +84,7 @@ export default function QuizEtapa({ etapa, tentativasUsadas, tentativasMax, jaAp
   }), [perguntas, rodada, tentativasUsadas]);
 
   const faltam = perguntas.filter((p) => respostas[p.id] === undefined).length;
+  // [PV-4] O LIMITE DE TENTATIVAS vem da etapa (tentativasMax, 0 = sem limite; a PROGLOGIC permite até 10, LIMITE_TENTATIVAS em lib/quiz.ts). Esgotadas, só a coordenação libera uma nova.
   const semTentativas = tentativasMax > 0 && tentativasUsadas >= tentativasMax && !jaAprovado;
 
   // Já aprovado antes (revendo a etapa): só o resumo; refazer não muda a nota.
@@ -99,6 +103,7 @@ export default function QuizEtapa({ etapa, tentativasUsadas, tentativasMax, jaAp
   /** Corrige, decide o resultado, avisa o player e mostra o resultado (com o foco nele). */
   const enviar = () => {
     const correcao = corrigirQuiz(perguntas, respostas);
+    // [PV-5] O RESULTADO DA TENTATIVA: aprovado, reprovado com tentativas sobrando ou reprovado sem tentativas, pela nota mínima da etapa (resultadoDoQuiz, lib/quiz.ts).
     // +1: esta tentativa conta.
     const resultado = resultadoDoQuiz(correcao.nota, etapa.notaMinima, tentativasUsadas + 1, tentativasMax);
     const novo = { correcao, resultado };
@@ -122,6 +127,7 @@ export default function QuizEtapa({ etapa, tentativasUsadas, tentativasMax, jaAp
   if (envio) {
     const { correcao, resultado, usadas } = envio;
     const aprovado = resultado === 'aprovado';
+    // [PV-6] QUANDO O GABARITO APARECE: só quando não há mais o que tentar (aprovado ou sem tentativas); com tentativas sobrando ele tornaria a próxima tentativa decoreba.
     // A resposta certa só aparece quando não há mais nada a tentar (aprovado ou sem tentativas);
     // com tentativas sobrando, mostrar o gabarito tornaria a próxima tentativa decoreba.
     const mostrarGabarito = resultado !== 'reprovado_pode_tentar';

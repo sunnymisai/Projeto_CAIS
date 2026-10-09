@@ -25,6 +25,7 @@ import Button from "./button";
 import Checkbox from "./checkbox";
 import { CaisMark } from "./CaisLogo";
 
+// [PV-1] OS TEXTOS DA TELA DE LOGIN: título, rótulos, mensagens de erro (senha errada, conta inativa, convite pendente) e o texto dos botões de demonstração. Troque o texto aqui, não no meio do JSX.
 /* ============================================================================
    1) TEXTOS DA TELA — centralizados para facilitar a customização
    ============================================================================ */
@@ -54,6 +55,7 @@ const COPY = {
   demoSenha: "Senha de todas (até alguém trocar a sua)",
 };
 
+// [PV-2] OS LINKS da tela: "Esqueceu a senha?" vai para /recuperar-senha; "Criar conta" ainda é "#" porque o cadastro só existe por convite (/primeiro-acesso). TODO(API).
 /* ============================================================================
    2) LINKS — troque os "#" pelas rotas reais do app
    ============================================================================ */
@@ -63,6 +65,7 @@ const COPY = {
 const FORGOT_PASSWORD_HREF = "/recuperar-senha";
 const CREATE_ACCOUNT_HREF = "#";
 
+// [PV-3] OS BOTÕES "ENTRAR COMO" (só no protótipo): um por perfil, usando a primeira conta daquele perfil em CONTAS_DEMO (lib/auth.tsx). Apagar quando a API real entrar.
 // SIMULADO: um botão por perfil, na ordem do §3. Cada um usa a PRIMEIRA conta daquele
 // perfil em CONTAS_DEMO (na Empresa, o Marcos, da Vértice).
 // TODO(API): apagar junto com os botões quando a API real estiver ligada.
@@ -75,6 +78,7 @@ const BOTOES_DEMO: { perfil: Perfil; rotulo: string; Icone: typeof ShieldCheck }
 /** Mensagens de erro por campo; campo sem erro fica sem a chave (undefined). */
 type Erros = { email?: string; password?: string };
 
+// [PV-4] AS REGRAS DO FORMULÁRIO de login: e-mail obrigatório e no formato certo (EMAIL_REGEX), senha obrigatória.
 /**
  * Valida os campos do login sem mexer na tela (função "pura").
  * @param email e-mail digitado.
@@ -121,6 +125,7 @@ export const LoginForm = () => {
   const voltar = params.get("voltar");
   // ?aviso=inativa: o layout do sistema encerrou a sessão de uma conta que foi inativada enquanto estava aberta.
   const avisoDaUrl = params.get("aviso") === "inativa" ? COPY.inactive : "";
+  // [PV-5] PARA ONDE O LOGIN LEVA: o endereço de ?voltar= (só caminho interno, nunca "//" nem /login, para não abrir outro site nem entrar em laço) ou /painel.
   // Só aceita caminho interno ("/algo", mas não "//site.com", que o navegador
   // trataria como outro site) e nunca o próprio /login (cairia em laço).
   // Qualquer outro valor vira /painel.
@@ -148,6 +153,7 @@ export const LoginForm = () => {
     setErros((prev) => ({ ...prev, [campo]: v[campo] }));
   };
 
+  // [PV-6] O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx.
   /* ==========================================================================
      3) AUTENTICAÇÃO — é aqui que você pluga sua API real
      ==========================================================================
@@ -193,10 +199,12 @@ export const LoginForm = () => {
         router.replace(destino);
         return; // mantém o botão carregando até a troca de página
       }
+      // [PV-7] A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui.
       // Login recusado: cada motivo tem a sua mensagem (senha errada, conta inativa ou convite pendente).
       setAuthError(r.motivo === 'inativo' ? COPY.inactive : r.motivo === 'convidado' ? COPY.invited : COPY.authFailed);
       setShakeKey((k) => k + 1);
     } catch {
+      // [PV-8] A mensagem de falha de rede ou servidor (diferente de senha errada).
       // Falha de rede ou servidor (a promessa deu erro): mensagem diferente de "senha errada".
       setAuthError("Não foi possível conectar. Verifique sua internet e tente de novo.");
       setShakeKey((k) => k + 1);

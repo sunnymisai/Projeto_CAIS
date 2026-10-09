@@ -19,6 +19,7 @@ import { ROTULO_PRIORIDADE, TOM_PRIORIDADE } from '@/lib/metricas';
 import { cx, dataBR, dataCurta, diasEntre, hojeISO, somaDias } from '@/lib/utils';
 import { COR_GRAFICO, TONS_COLUNA } from '@/components/ui/Graficos';
 
+// [PV-1] A COR DO STATUS nas vistas: a última lista é sempre verde; as demais usam as 3 primeiras cores de TONS_COLUNA (components/ui/Graficos.tsx).
 /**
  * Cor que representa a lista (status) de uma tarefa (bolinha e barra do cronograma).
  * A última lista ("Pronto") é sempre verde; as demais usam as 3 primeiras
@@ -35,6 +36,7 @@ const corColuna = (p: Projeto, colunaId: string) => {
   return i === p.colunas.length - 1 ? COR_GRAFICO.concluida : TONS_COLUNA[Math.min(i, 2)] ?? COR_GRAFICO.aFazer;
 };
 
+// [PV-2] A VISTA EM LISTA: a mesma tarefa em tabela, ordenável por prazo (padrão), prioridade e status. Clicar na linha abre o detalhe.
 /**
  * Vista em lista: a mesma tarefa, em tabela ordenável.
  * Clicar na linha (ou no título) abre o detalhe da tarefa.
@@ -47,6 +49,7 @@ export function VistaLista({ projeto, tarefas, onAbrir }: { projeto: Projeto; ta
   const d = useDados();
   // Coluna pela qual a tabela está ordenada (começa por prazo).
   const [ordem, setOrdem] = useState<'prazo' | 'prioridade' | 'status'>('prazo');
+  // [PV-3] A ORDEM DE PRIORIDADE ao ordenar: alta primeiro, depois média e baixa.
   // Peso numérico para ordenar prioridade: alta vem primeiro.
   const peso = { alta: 0, media: 1, baixa: 2 };
   const ultima = projeto.colunas.at(-1)?.id;
@@ -124,6 +127,7 @@ function Ordenar({ campo, ordem, setOrdem, children }: { campo: Ordem; ordem: Or
   );
 }
 
+// [PV-4] O CRONOGRAMA: uma barra por tarefa sobre a janela do projeto, com a linha de "hoje" e a da entrega prevista. Rola na horizontal no celular.
 /**
  * Cronograma: cada tarefa é uma barra do início estimado até o prazo,
  * sobre a janela do projeto. A linha vertical marca hoje.
@@ -141,6 +145,7 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
   const hoje = hojeISO();
   // Tarefas em ordem de prazo: as que vencem antes ficam no topo.
   const itens = [...tarefas].sort((a, b) => a.prazo.localeCompare(b.prazo));
+  // [PV-5] A JANELA DO CRONOGRAMA: começa no menor entre o início do projeto e o início estimado das tarefas e termina no maior entre a entrega e os prazos.
   /*
    * Janela do gráfico: começa no MENOR entre o início do projeto e o início
    * estimado de cada tarefa; termina no MAIOR entre a entrega e os prazos.
@@ -190,6 +195,7 @@ export function VistaCronograma({ projeto, tarefas, onAbrir }: { projeto: Projet
             </div>
             <ul>
               {itens.map((t) => {
+                // [PV-6] O INÍCIO ESTIMADO DA BARRA (SIMULADO): a tarefa não tem data de início, então conta 1 dia por item do checklist, no mínimo 3, antes do prazo.
                 // SIMULADO: tarefa não tem data de início; estima 1 dia por item
                 // do checklist (mínimo 3) antes do prazo.
                 const ini = somaDias(t.prazo, -Math.max(3, t.checklist.length));

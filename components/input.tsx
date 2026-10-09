@@ -14,6 +14,7 @@
 import React, { InputHTMLAttributes, forwardRef, useId, useState } from 'react';
 import { CircleAlert, CircleCheck, Eye, EyeOff } from 'lucide-react';
 
+// [PV-1] AS OPÇÕES DO CAMPO DE TEXTO: rótulo, ícone, erro, sucesso (valid), dica (hint) e o modo compacto. Opção nova entra aqui.
 /**
  * Campo de texto do Design System CAIS.
  *
@@ -63,6 +64,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const isPassword = type === 'password';
     const tipoReal = isPassword && mostrarSenha ? 'text' : type;
 
+    // [PV-2] AS CORES DO CAMPO por estado, nesta prioridade: erro (vermelho), sucesso (verde) e padrão (roxo ao focar).
     // Classes de borda e anel conforme o estado. Prioridade: erro > sucesso > padrão.
     const estado = error
       ? 'border-erro focus:border-erro focus:ring-erro/25'
@@ -70,6 +72,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         ? 'border-sucesso/70 focus:border-sucesso focus:ring-sucesso/25'
         : 'border-borda hover:border-tinta-fraca/60 focus:border-primaria focus:ring-primaria/25';
 
+    // [PV-3] O espaço à direita do texto digitado, para não passar por cima do olho da senha nem dos ícones de erro e sucesso.
     // Espaço à direita para o ícone de status e/ou botão do olho
     const paddingDireita = isPassword ? 'pr-11' : (error || valid) ? 'pr-10' : 'pr-3.5';
 
@@ -94,6 +97,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
 
+          {/* [PV-4] O CAMPO em si: altura de 48 px (40 px no modo compacto), borda, foco e desabilitado. Mude as classes para mudar todos os campos do sistema. */}
           {/* pl-11 abre espaço para o ícone. aria-invalid e aria-describedby fazem o
            * leitor de tela anunciar "inválido" e ler a mensagem junto com o campo. */}
           <input
@@ -113,6 +117,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {isPassword ? (
             <button
               type="button"
+              // [PV-5] O botão do olho dos campos de senha: alterna entre mostrar e ocultar o que foi digitado.
               // Alterna mostrar/ocultar; aria-pressed conta ao leitor de tela se está ligado.
               onClick={() => setMostrarSenha((v) => !v)}
               aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}

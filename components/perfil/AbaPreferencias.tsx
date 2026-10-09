@@ -14,6 +14,7 @@ import { useToast } from '@/lib/toast';
 import { Card, CardTitulo } from '@/components/ui/basicos';
 import { Segmentado } from '@/components/ui/form';
 
+// [PV-1] AS TRÊS ESCOLHAS DE TEMA (claro, escuro, seguir o sistema) e seus nomes. A regra de aplicar o tema fica em lib/tema.ts.
 /** Textos das três escolhas de tema. */
 const TEMAS: { valor: Tema; rotulo: string }[] = [
   { valor: 'claro', rotulo: 'Claro' },
@@ -21,6 +22,7 @@ const TEMAS: { valor: Tema; rotulo: string }[] = [
   { valor: 'sistema', rotulo: 'Seguir o sistema' },
 ];
 
+// [PV-2] AS DUAS DENSIDADES DE TABELA (confortável e compacta) e seus nomes. O efeito está em components/ui/Tabela.tsx.
 /** Textos das duas densidades. */
 const DENSIDADES: { valor: Densidade; rotulo: string }[] = [
   { valor: 'confortavel', rotulo: 'Confortável' },
@@ -39,6 +41,7 @@ export default function AbaPreferencias({ pessoa }: { pessoa: Pessoa }) {
   const { tema, definir } = useTema();
   const densidade: Densidade = pessoa.densidadeTabela ?? 'confortavel';
 
+  // [PV-3] A DENSIDADE fica no cadastro da pessoa (vale em qualquer navegador); o tema fica só neste navegador. TODO(API): PATCH nas preferências.
   /**
    * Salva a densidade escolhida no cadastro da pessoa e confirma com um aviso.
    * @param nova - a densidade escolhida.

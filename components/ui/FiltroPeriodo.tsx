@@ -20,11 +20,13 @@ import { Segmentado } from '@/components/ui/form';
 import Input from '@/components/input';
 import { dataBR } from '@/lib/utils';
 
+// [PV-1] O período padrão dos painéis quando a URL não traz um válido: 30 dias.
 /** Período usado quando a URL não traz um válido. */
 export const PERIODO_PADRAO_DIAS = 30;
 /** Data AAAA-MM-DD (o mínimo para aceitar o que veio da URL). */
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 
+// [PV-2] A leitura do período na URL (?de=&ate=). URL sem período, com data malformada ou com fim antes do início volta ao padrão. Precisa de <Suspense> na página.
 /**
  * Lê o período da URL (?de=&ate=) e devolve a função que troca o período.
  * URL sem período, com data malformada ou com fim antes do início → últimos 30 dias.
@@ -42,6 +44,7 @@ export function usePeriodo() {
   const valido = DATA.test(de) && DATA.test(ate) && de <= ate;
   const periodo: Periodo = valido ? { de, ate } : ultimosDias(PERIODO_PADRAO_DIAS);
 
+  // [PV-3] Trocar o período grava na URL (replace, não push: o botão Voltar não passa por cada período). É o que faz o link ser compartilhável.
   /**
    * Troca o período e grava na URL.
    * NAVEGA (GRAVA na URL): replace e não push, para o "Voltar" do navegador não passar por
@@ -72,6 +75,7 @@ export default function FiltroPeriodo({ periodo, onChange }: { periodo: Periodo;
   // Datas digitadas no personalizado (só viram período quando são válidas).
   const [de, setDe] = useState(periodo.de);
   const [ate, setAte] = useState(periodo.ate);
+  // [PV-4] A validação do "Personalizado": o fim não pode vir antes do início; com erro, o período não é aplicado.
   const erro = de && ate && ate < de ? 'O fim não pode vir antes do início.' : undefined;
   const marcado: AtalhoPeriodo = personalizando ? 'personalizado' : atalho;
 
@@ -94,6 +98,7 @@ export default function FiltroPeriodo({ periodo, onChange }: { periodo: Periodo;
   return (
     <div className="flex flex-wrap items-end gap-3">
       <Segmentado rotulo="Período" valor={marcado} onChange={escolher} opcoes={[
+        // [PV-5] Os atalhos do filtro (7, 30 e 90 dias, Este mês, Personalizado) e seus nomes. O significado de cada um está em lib/metricas.ts (ultimosDias, esteMes).
         { valor: '7', rotulo: '7 dias' }, { valor: '30', rotulo: '30 dias' }, { valor: '90', rotulo: '90 dias' },
         { valor: 'mes', rotulo: 'Este mês' }, { valor: 'personalizado', rotulo: 'Personalizado' },
       ]} />

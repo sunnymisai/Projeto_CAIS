@@ -16,8 +16,10 @@ import { Circle, CircleCheck, CircleAlert, TriangleAlert } from 'lucide-react';
 import { LIMIARES, ROTULO_NIVEL, TOM_NIVEL, type NivelCarga } from '@/lib/carga';
 import { cx, dataBR } from '@/lib/utils';
 
+// [PV-1] O ÍCONE de cada nível do semáforo (círculo vazio, check, alerta, triângulo). A forma muda junto com a cor para quem não distingue cores.
 /** Ícone de cada nível: a forma muda junto com a cor, para quem não distingue cores. */
 const ICONE: Record<NivelCarga, typeof Circle> = { livre: Circle, verde: CircleCheck, amarelo: CircleAlert, vermelho: TriangleAlert };
+// [PV-2] As cores de fundo e texto de cada tom do semáforo (mesmas das etiquetas do design system).
 // Tom → classes (mesmas cores suaves da Etiqueta do design system).
 const TONS = {
   neutro: 'bg-superficie-alt text-tinta-suave',
@@ -26,6 +28,7 @@ const TONS = {
   erro: 'bg-erro/12 text-erro',
 } as const;
 
+// [PV-3] O texto lido pelo leitor de tela e mostrado no tooltip ("113%, acima do limite"). Mude aqui para mudar o texto de todas as células.
 /**
  * Texto completo de um nível para leitor de tela e tooltip.
  * @param pct - ocupação em %.
@@ -46,6 +49,7 @@ export function rotuloSemana(segunda: string): string {
   return dataBR(segunda).slice(0, 5);
 }
 
+// [PV-4] A pílula do semáforo (ícone + percentual, e o nome do nível no modo normal). É a peça usada em /carga, aba Equipe, painéis e ficha.
 /**
  * Pílula de um nível: ícone + "85%" (compacto) ou ícone + "85% · No limite".
  * O texto do nível aparece por extenso no modo normal; no compacto ele vai no aria-label e no title.
@@ -73,6 +77,7 @@ export function IndicadorCarga({ nivel, pct, compacto, rotulo, decorativo }: { n
 /** Uma semana da fileira: a segunda-feira, a ocupação (pico) e o nível. */
 export interface SemanaCarga { segunda: string; pct: number; nivel: NivelCarga }
 
+// [PV-5] A fileira de semanas com a data da segunda acima de cada indicador; com onSelecionar vira botões. Usada no modal de alocação, nos painéis e na ficha.
 /**
  * Fileira de semanas: a data da segunda acima de cada indicador ("13/10").
  * Com `onSelecionar`, cada semana vira um botão (teclado: Tab e Enter).
@@ -110,6 +115,7 @@ export function LinhaDeSemanas({ semanas, onSelecionar, rotulo = 'Carga por sema
   );
 }
 
+// [PV-6] A legenda dos quatro níveis; as faixas de % são lidas de LIMIARES (lib/carga.ts), então mudam sozinhas.
 /**
  * Legenda dos quatro níveis, com o ícone, o nome e a faixa de % (lida de LIMIARES).
  * @returns a legenda.

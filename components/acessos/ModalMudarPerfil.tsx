@@ -19,6 +19,7 @@ import { Select, Segmentado } from '@/components/ui/form';
 import { Aviso } from '@/components/ui/basicos';
 import Button from '@/components/button';
 
+// [PV-1] O TEXTO DO ESCOPO de cada perfil mostrado no modal ("vê todos os projetos...", "vê só os da empresa vinculada..."). Espelha lib/escopo.ts: mude os dois juntos.
 // O que cada perfil enxerga DENTRO dos projetos (o escopo de dados).
 // ⚠️ ATENÇÃO: espelha lib/escopo.ts; se aquela regra mudar, atualize estes textos.
 const ESCOPO: Record<Perfil, string> = {
@@ -41,11 +42,13 @@ export default function ModalMudarPerfil({ pessoa, onFechar }: { pessoa: Pessoa;
   const [erro, setErro] = useState('');
   const mudou = novo !== pessoa.perfil;
   const m = mudancaDeAcesso(pessoa.perfil, novo);
+  // [PV-2] Quais empresas podem ser escolhidas: as encerradas não aparecem (mesma regra de /pessoas), exceto a que a pessoa já tem.
   // Empresas encerradas não aparecem: não faz sentido vincular alguém a elas (mesma regra de /pessoas).
   const empresas = d.empresas.filter((e) => e.status !== 'encerrada' || e.id === empresaId);
   // Mudando de empresa (perfil Empresa → outra empresa): a pessoa perde os projetos da anterior.
   const trocaEmpresa = novo === 'empresa' && pessoa.perfil === 'empresa' && empresaId !== pessoa.empresaId;
 
+  // [PV-3] A MUDANÇA DE PERFIL: o perfil Empresa exige empresa vinculada (§11); grava o novo perfil e mantém os dados de profissional guardados, para a mudança ser reversível. TODO(API): PATCH no usuário.
   /** Confirma: valida a empresa (§11) e grava. */
   const confirmar = () => {
     // §11: o perfil Empresa só existe com empresa vinculada.
@@ -66,6 +69,7 @@ export default function ModalMudarPerfil({ pessoa, onFechar }: { pessoa: Pessoa;
       rodape={<><Button variante="secundario" onClick={onFechar}>Cancelar</Button>
         <Button onClick={confirmar} disabled={!mudou && !trocaEmpresa && pessoa.empresaId === empresaId}>Confirmar mudança</Button></>}>
       <div className="space-y-5">
+        {/* [PV-4] Os perfis que o administrador pode escolher e a ordem deles no modal (Profissional, Empresa, Administrador). */}
         <Segmentado rotulo="Novo perfil" valor={novo} onChange={(p) => { setNovo(p); setErro(''); }}
           opcoes={(['profissional', 'empresa', 'admin'] as Perfil[]).map((p) => ({ valor: p, rotulo: ROTULO_PERFIL[p] }))} />
         {/* Empresa obrigatória no perfil Empresa (§11). */}

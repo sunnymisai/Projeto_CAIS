@@ -7,6 +7,7 @@
    Depende de: nada (só constantes de cor).
    Contexto: §5 Projetos (quadro kanban) e §9 Design system e marca.
    ============================================================================ */
+// [PV-1] AS CORES DE FUNDO DO QUADRO (roxo, verde, âmbar, azul, rosa, tinta): nome, gradiente e cor sólida. Renomear ou apagar uma chave manda os projetos que a usam para o roxo.
 /* Fundos de quadro, como os "planos de fundo" do Trello.
    São gradientes escuros o bastante para o texto branco do cabeçalho. */
 /**
@@ -29,6 +30,7 @@ export const CORES_QUADRO: Record<string, { nome: string; fundo: string; solida:
   tinta: { nome: 'Tinta', fundo: 'linear-gradient(135deg, #0B0C12 0%, #14161F 55%, #2A2E42 100%)', solida: '#14161F' },
 };
 
+// [PV-2] O PLANO B DA COR: chave desconhecida cai no roxo, para o quadro nunca ficar sem fundo.
 /**
  * Devolve as cores de um quadro a partir da chave salva no projeto.
  * Se a chave não existir (dado antigo ou digitado errado), usa o roxo,

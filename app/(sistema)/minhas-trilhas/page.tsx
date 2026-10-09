@@ -29,6 +29,7 @@ import { Card, Progresso, Esqueleto, EstadoVazio, Aviso } from '@/components/ui/
 import { classesBotao } from '@/components/button';
 import PrazoTrilha from '@/components/trilhas/PrazoTrilha';
 
+// [PV-1] A ORDEM DOS GRUPOS na tela (§4): trilha geral, depois a da empresa e por último a do profissional. Grupo sem trilha não aparece.
 /** Ordem dos grupos na tela (§4: geral → empresa → profissional). */
 const ORDEM_ALCANCE: Trilha['alcance'][] = ['geral', 'empresa', 'profissional'];
 
@@ -78,6 +79,7 @@ export default function PaginaMinhasTrilhas() {
     );
   }
 
+  // [PV-2] O "CONTINUE DE ONDE PAROU": a primeira trilha não concluída; a lista já vem com o prazo mais curto primeiro (trilhasDaPessoaDetalhadas).
   // "Continue de onde parou": a primeira não concluída (a lista já vem com o prazo mais curto primeiro).
   const atual = minhas.find((t) => t.situacao !== 'concluida');
 
@@ -120,6 +122,7 @@ export default function PaginaMinhasTrilhas() {
   );
 }
 
+// [PV-3] O DESTAQUE DO TOPO: trilha, próxima etapa e botão; o texto muda entre "Comece por aqui" e "Continue de onde parou". A faixa usa a cor do alcance da trilha.
 /**
  * Destaque do topo (§4: "próximo passo em destaque"): trilha, próxima etapa e botão.
  * @param props.t a trilha não concluída de prazo mais curto.

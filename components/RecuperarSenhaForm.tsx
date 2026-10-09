@@ -31,6 +31,7 @@ function PedirLink({ onEnviado }: { onEnviado: (email: string) => void }) {
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
+  // [PV-1] A REGRA DO E-MAIL do passo 1: obrigatório e no formato nome@empresa.com.
   /**
    * Valida o e-mail (vazio e formato) e devolve a mensagem de erro, ou '' se estiver certo.
    * @param valor - o e-mail digitado.
@@ -53,6 +54,7 @@ function PedirLink({ onEnviado }: { onEnviado: (email: string) => void }) {
     // E-mail inválido: não "envia" nada.
     if (msg) return;
     setEnviando(true);
+    // [PV-2] O ENVIO DO LINK (simulado: espera 700 ms). A resposta é igual exista ou não a conta, para ninguém descobrir quem é cadastrado. TODO(API): pedir o e-mail à API.
     // SIMULADO: espera 700 ms para fingir a ida ao servidor e mostrar o botão carregando.
     // TODO(API): POST na API da PROGLOGIC pedindo o e-mail de redefinição; a API manda o link real.
     await new Promise((r) => setTimeout(r, 700));
@@ -137,6 +139,7 @@ function NovaSenha({ email }: { email: string }) {
   // Erro geral do salvamento (ex.: navegador não deixou gravar), mostrado no topo do formulário.
   const [erroGeral, setErroGeral] = useState('');
 
+  // [PV-3] AS REGRAS DA NOVA SENHA: dentro das regras de lib/senha.ts e confirmação igual.
   /**
    * Regras do formulário: a senha precisa cumprir as regras e a confirmação precisa ser igual.
    * useCallback mantém a mesma função entre renders, pois o useFormulario depende dela.
@@ -153,6 +156,7 @@ function NovaSenha({ email }: { email: string }) {
   }, []);
   const f = useFormulario<ValoresNovaSenha>({ senha: '', confirmacao: '' }, validar);
 
+  // [PV-4] A TROCA DE SENHA: grava a nova senha (a antiga deixa de valer), avisa e volta ao login. TODO(API): vira PATCH com o token do link.
   /**
    * Salva a nova senha e volta para o login.
    * @param ev - evento de envio do <form>.
@@ -227,6 +231,7 @@ export default function RecuperarSenhaForm() {
   const token = params.get('token');
   const emailDoLink = params.get('email') ?? '';
 
+  // [PV-5] QUAL PASSO ABRIR: com ?token= aceita só "demo" e e-mail válido (simulado, vira a validação da API) e mostra a nova senha; senão, link inválido. Sem token, passo 1 ou 2.
   // Veio de um link (?token=): só "demo" com e-mail em formato válido é aceito (SIMULADO).
   // TODO(API): a API valida o token de verdade (assinado, com validade e uso único).
   if (token !== null) {

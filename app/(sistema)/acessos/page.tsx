@@ -27,9 +27,11 @@ import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import ModalMudarPerfil from '@/components/acessos/ModalMudarPerfil';
 import MatrizDePermissoes from '@/components/acessos/MatrizDePermissoes';
 
+// [PV-1] OS NOMES E AS CORES DOS STATUS da pessoa (Convidado, Ativo, Inativo) na tabela e no filtro. Cor sempre com texto.
 const STATUS = { convidado: 'Convidado', ativo: 'Ativo', inativo: 'Inativo' } as const;
 // Cor da etiqueta por status (§9): convidado pede atenção, ativo é sucesso, inativo é neutro. Sempre com texto.
 const TOM = { convidado: 'aviso', ativo: 'sucesso', inativo: 'neutro' } as const;
+// [PV-2] QUANTAS PESSOAS POR PÁGINA na tabela de acessos: 10.
 const POR_PAGINA = 10;
 
 /** Qual confirmação está aberta: redefinir senha, inativar ou mudar perfil de uma pessoa. */
@@ -51,11 +53,13 @@ export default function PaginaAcessos() {
   const [pagina, setPagina] = useState(1);
   const [acao, setAcao] = useState<Acao | null>(null);
 
+  // [PV-3] O ÚLTIMO ACESSO de cada pessoa (SIMULADO): vem do navegador, registrado no login (lib/auth.tsx).
   // Último acesso de cada pessoa. Lê o navegador só depois que a store carregou (d.pronto), quando
   // a tela já é só do navegador; antes disso mostramos o esqueleto e o servidor não diverge.
   // SIMULADO: vem do localStorage (registrado no login, lib/auth.tsx).
   const ultimos = useMemo(() => (d.pronto ? lerUltimosAcessos() : {}), [d.pronto]);
 
+  // [PV-4] OS FILTROS E A ORDEM DA TABELA: busca por nome ou e-mail (sem acento), perfil, status e empresa, em ordem alfabética por nome.
   const filtradas = useMemo(() => {
     const q = normalizar(busca.trim());
     return d.pessoas
@@ -71,9 +75,11 @@ export default function PaginaAcessos() {
   const temFiltro = busca || perfil || status || empresa;
   const limpar = () => { setBusca(''); setPerfil(''); setStatus(''); setEmpresa(''); };
 
+  // [PV-5] A TRAVA DO ÚLTIMO ADMINISTRADOR: quando só resta um ativo, ele não pode ser rebaixado nem inativado (travaria o sistema).
   // Quantos administradores ativos existem: o último não pode ser rebaixado nem inativado (travaria o sistema).
   const adminsAtivos = d.pessoas.filter((p) => p.perfil === 'admin' && p.status === 'ativo').length;
 
+  // [PV-6] O REENVIO DE CONVITE (SIMULADO): só copia o link de primeiro acesso; nenhum e-mail é enviado. TODO(API): a API reenvia o e-mail.
   /**
    * Copia o link de convite (SIMULADO: nenhum e-mail é enviado).
    * @param p - a pessoa convidada.
@@ -85,6 +91,7 @@ export default function PaginaAcessos() {
     else avisar(`Não foi possível copiar automaticamente. Copie o link: ${link}`, 'erro');
   };
 
+  // [PV-7] A REDEFINIÇÃO DE SENHA: grava a senha temporária de demonstração (SENHA_DEMO). SIMULADO: nunca para produção. TODO(API): senha aleatória enviada por e-mail, com troca obrigatória.
   /** Confirma a redefinição de senha: grava a senha temporária. */
   // GRAVA: define a senha da pessoa como a temporária de demonstração (SIMULADO, NUNCA PARA PRODUÇÃO).
   // TODO(API): a API gera uma senha temporária aleatória, envia por e-mail e obriga a troca no próximo login.
@@ -94,6 +101,7 @@ export default function PaginaAcessos() {
     setAcao(null);
   };
 
+  // [PV-8] INATIVAR E REATIVAR: só troca o status; nada é excluído (§11), e alocações, tarefas e trilhas ficam no histórico.
   /**
    * Inativa ou reativa a pessoa (nunca exclui, §11).
    * @param p - a pessoa.
@@ -161,6 +169,7 @@ export default function PaginaAcessos() {
                         )}>
                           {(fechar) => (
                             <>
+                              {/* [PV-9] O MENU DE AÇÕES de cada linha: Reenviar convite (convidado), Redefinir senha (ativo), Mudar perfil (não inativo, nem a própria pessoa, nem o último admin), Reativar (inativo) ou Inativar (qualquer não admin). */}
                               {p.status === 'convidado' && <ItemMenu icone={<Link2 />} onClick={() => { fechar(); reenviarConvite(p); }}>Reenviar convite</ItemMenu>}
                               {p.status === 'ativo' && <ItemMenu icone={<RefreshCcw />} onClick={() => { fechar(); setAcao({ tipo: 'senha', pessoa: p }); }}>Redefinir senha</ItemMenu>}
                               {/* Ninguém muda o próprio perfil nem rebaixa o último admin (travaria o sistema). */}

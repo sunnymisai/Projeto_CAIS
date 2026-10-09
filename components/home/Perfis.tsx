@@ -22,6 +22,7 @@ interface Perfil {
   etiqueta?: string;
 }
 
+// [PV-1] OS TRÊS CARDS DE PERFIL (§3): nome, resumo, itens e ícone de cada um. A Empresa vem em destaque por ser o público da página (destaque: true).
 // Perfis do §3. O da Empresa vem em destaque porque é para quem esta página fala.
 const PERFIS: Perfil[] = [
   {

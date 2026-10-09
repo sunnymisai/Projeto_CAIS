@@ -35,6 +35,7 @@ export default function AbaSeguranca({ pessoa }: { pessoa: Pessoa }) {
   // Erro geral do salvamento (ex.: navegador não deixou gravar).
   const [erroGeral, setErroGeral] = useState('');
 
+  // [PV-1] AS REGRAS DA TROCA DE SENHA: senha atual preenchida, nova dentro das regras (lib/senha.ts) e diferente da atual, confirmação igual.
   /**
    * Regras: senha atual preenchida, nova dentro das regras e diferente da atual, confirmação igual.
    * useCallback mantém a mesma função entre renders, pois o useFormulario depende dela.
@@ -53,6 +54,7 @@ export default function AbaSeguranca({ pessoa }: { pessoa: Pessoa }) {
   }, []);
   const f = useFormulario<Valores>(VAZIO, validar);
 
+  // [PV-2] A TROCA DE SENHA: confere a senha atual, grava a nova e limpa o formulário. SIMULADO (texto puro no navegador, nunca para produção). TODO(API): a API confere a senha atual.
   /**
    * Confere a senha atual e grava a nova.
    * @param ev - evento de envio do <form>.

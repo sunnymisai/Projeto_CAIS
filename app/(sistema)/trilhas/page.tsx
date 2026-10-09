@@ -45,11 +45,13 @@ export default function Trilhas() {
   // Filtro escolhido no seletor: todas, um dos três alcances ou só rascunhos.
   const [filtro, setFiltro] = useState<'todas' | Trilha['alcance'] | 'rascunho'>('todas');
 
+  // [PV-1] O FILTRO DA LISTA: Todas, Gerais, Da empresa, Do profissional (pelo alcance) ou Rascunhos (pelo status).
   // "todas" deixa passar tudo; "rascunho" olha o status; os demais valores
   // ("geral", "empresa", "profissional") comparam com o alcance da trilha.
   const lista = useMemo(() => d.trilhas.filter((t) =>
     filtro === 'todas' ? true : filtro === 'rascunho' ? t.status === 'rascunho' : t.alcance === filtro), [d.trilhas, filtro]);
 
+  // [PV-2] A TRILHA NOVA: nasce como rascunho, alcance geral e prazo de 7 dias; abre o editor, que salva sozinho. TODO(API): POST.
   /**
    * Cria uma trilha em branco e abre o editor dela.
    * Nasce como rascunho, alcance geral e prazo de 7 dias; o admin ajusta tudo
@@ -94,6 +96,7 @@ export default function Trilhas() {
             // Rótulo e cor do alcance (roxo geral, verde empresa, âmbar
             // profissional — §4).
             const a = ALCANCE[t.alcance];
+            // [PV-3] O TEXTO "QUEM RECEBE" do cartão: o nome da empresa, "N pessoa(s)" ou "Todos", conforme o alcance.
             // Texto "quem recebe": nome da empresa, "N pessoa(s)" ou "Todos".
             const alvo = t.alcance === 'empresa' ? d.empresa(t.empresaId)?.nomeFantasia : t.alcance === 'profissional' ? `${t.pessoaIds.length} pessoa(s)` : 'Todos';
             return (

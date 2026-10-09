@@ -12,9 +12,11 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Card, CardTitulo, Esqueleto, Aviso } from '@/components/ui/basicos';
 
+// [PV-1] Os três estados de um bloco: carregando, erro ou pronto. O vazio e o "com dado" ficam com o conteúdo de cada bloco.
 /** Estado de um bloco: o vazio e o "com dado" ficam com o conteúdo de cada bloco. */
 export type EstadoBloco = 'carregando' | 'erro' | 'pronto';
 
+// [PV-2] O link do canto dos blocos ("Ver todas" é o texto padrão). Cada painel passa a tela de destino e, se quiser, outro texto.
 /**
  * Link "Ver todas" do canto de um bloco.
  * @param props.href a tela completa. NAVEGA: para ela.
@@ -25,6 +27,7 @@ export function VerTodas({ href, rotulo = 'Ver todas' }: { href: string; rotulo?
   return <Link href={href} className="rounded text-[13px] font-semibold text-primaria hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">{rotulo}</Link>;
 }
 
+// [PV-3] A MOLDURA de todo bloco dos painéis: título, link do canto e os estados carregando (esqueleto) e erro (cadastro da sessão não encontrado). O texto do erro está aqui.
 /**
  * Moldura de um bloco de painel com os estados (§13): carregando (esqueleto) e erro
  * (cadastro da sessão não encontrado). O erro de leitura dos dados é tratado pelo layout.

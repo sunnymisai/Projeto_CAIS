@@ -18,6 +18,7 @@ import { useDensidadeTabela } from '@/lib/preferencias';
 /* Tabela densa do CAIS. Rola na horizontal dentro do próprio contêiner,
    com cabeçalho fixo e linhas com hover. */
 
+// [PV-1] A tabela padrão: rolagem horizontal própria (a página não rola de lado) e rótulo para leitor de tela. Toda lista de dados usa Tabela, Th, Td e Tr.
 /**
  * Contêiner da tabela. Abaixo de 720 px de largura ela rola na horizontal
  * dentro da própria caixa, em vez de esmagar as colunas ou quebrar a página.
@@ -30,6 +31,7 @@ import { useDensidadeTabela } from '@/lib/preferencias';
  * <Tabela rotulo="Empresas"><thead><tr><Th>Nome</Th></tr></thead><tbody><Tr><Td>Acme</Td></Tr></tbody></Tabela>
  */
 export function Tabela({ children, rotulo }: { children: ReactNode; rotulo: string }) {
+  // [PV-2] A densidade das tabelas (confortável ou compacta) vem da preferência da pessoa; muda o espaçamento de todas as linhas.
   const densidade = useDensidadeTabela();
   return (
     <div className="rolagem overflow-x-auto">
@@ -41,6 +43,7 @@ export function Tabela({ children, rotulo }: { children: ReactNode; rotulo: stri
   );
 }
 
+// [PV-3] O cabeçalho de coluna (fica fixo no topo da rolagem). Mude as classes para mudar o visual de todos os cabeçalhos.
 /**
  * Célula de cabeçalho. "sticky top-0" a mantém visível enquanto as linhas rolam.
  * @param className classes extras; o resto das props vai para o <th>.
@@ -63,6 +66,7 @@ export function Td({ className, children, ...r }: TdHTMLAttributes<HTMLTableCell
   return <td className={cx('border-b border-borda px-4 py-3 align-middle text-tinta group-data-[densidade=compacta]/tabela:py-1.5', className)} {...r}>{children}</td>;
 }
 
+// [PV-4] A linha da tabela: com onClick vira clicável (cursor e destaque ao passar o mouse).
 /**
  * Linha da tabela com destaque ao passar o mouse.
  * @param children células (Td).

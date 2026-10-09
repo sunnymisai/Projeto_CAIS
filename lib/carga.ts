@@ -39,6 +39,7 @@ import { diasEntre, somaDias } from './utils.ts';
    CONSTANTES QUE O TIME PODE AJUSTAR
    --------------------------------------------------------------------------- */
 
+// [PV-1] ONDE MUDAR AS CORES DO SEMÁFORO: os limites em % que separam folga (até 75), no limite (até 100) e acima do limite. Vale para /carga, painéis, alocação e ficha.
 /**
  * Onde cada nível começa, em % da carga máxima da pessoa.
  * - livre: exatamente 0% (nenhuma alocação ativa);
@@ -49,22 +50,26 @@ import { diasEntre, somaDias } from './utils.ts';
  */
 export const LIMIARES = { verde: 75, amarelo: 100 } as const;
 
+// [PV-2] Projeto pausado conta na carga da pessoa? Hoje sim. TODO(PROGLOGIC): confirmar. Troque para false para pausado deixar de ocupar a agenda.
 /** Projeto pausado continua ocupando a agenda da pessoa (a alocação não acabou). */
 // TODO(PROGLOGIC): confirmar se projeto pausado deve contar na carga.
 export const CONTAR_PAUSADOS = true;
 
+// [PV-3] Acima do limite é AVISO ou BLOQUEIO? Hoje false (aviso, §5). Com true, o modal de alocação recusa quando alguma semana fica vermelha.
 /**
  * false = acima do limite é AVISO, NÃO BLOQUEIO (§5): alocar continua permitido.
  * true faria o modal de alocação recusar quando alguma semana fica vermelha (F04).
  */
 export const BLOQUEAR_SOBRECARGA = false;
 
+// [PV-4] Até quantos dias à frente a sugestão de "primeira data livre" procura antes de desistir (365).
 /** Quantos dias para frente proximaJanelaLivre procura antes de desistir. */
 export const DIAS_DE_BUSCA = 365;
 
 /** Os quatro níveis do semáforo. */
 export type NivelCarga = 'livre' | 'verde' | 'amarelo' | 'vermelho';
 
+// [PV-5] Os textos dos quatro níveis ("Livre", "Com folga", "No limite", "Acima do limite") que aparecem em todas as telas do semáforo.
 /** Texto de cada nível (a tela junta ícone e cor; aqui fica só o texto, que vale para todo lugar). */
 export const ROTULO_NIVEL: Record<NivelCarga, string> = {
   livre: 'Livre',
@@ -73,6 +78,7 @@ export const ROTULO_NIVEL: Record<NivelCarga, string> = {
   vermelho: 'Acima do limite',
 };
 
+// [PV-6] A cor semântica de cada nível (cinza, verde, âmbar, vermelho). Cor sempre vem junto de ícone e texto.
 /**
  * Tom (cor semântica, §9) de cada nível, nos nomes das etiquetas do design system.
  * Cor nunca aparece sozinha: as telas mostram também ROTULO_NIVEL e um ícone.
@@ -101,6 +107,7 @@ function diaDaSemana(iso: string): number {
   return new Date(iso + 'T12:00:00').getDay();
 }
 
+// [PV-7] Regra de dia útil (segunda a sexta). TODO(PROGLOGIC): feriados ainda contam como dia útil; é aqui que entraria uma lista de feriados.
 /**
  * Diz se a data é dia útil (segunda a sexta).
  * TODO(PROGLOGIC): feriados nacionais e locais ainda contam como dia útil.
@@ -197,6 +204,7 @@ type PessoaCarga = Pick<Pessoa, 'id' | 'cargaMax' | 'status'>;
 /** O mínimo dos dados que a regra lê (aceita o `Dados` inteiro de useDados()). */
 type DadosCarga = Pick<Dados, 'alocacoes' | 'projetos'>;
 
+// [PV-8] Quem entra no semáforo: pessoa inativa e pessoa com limite de horas 0 ficam fora. Mudar aqui muda quem aparece em /carga.
 /**
  * A pessoa entra no semáforo? Inativa (fora da operação, §11) e limite 0 ficam fora.
  * @param pessoa - a pessoa.
@@ -206,6 +214,7 @@ function pessoaConta(pessoa: PessoaCarga): boolean {
   return pessoa.status !== 'inativo' && pessoa.cargaMax > 0;
 }
 
+// [PV-9] Quais alocações ocupam a agenda: projeto concluído não conta; pausado depende de CONTAR_PAUSADOS. É o filtro de toda a conta de carga.
 /**
  * Alocações da pessoa que ocupam a agenda: tira a ignorada (edição no modal) e as
  * de projeto concluído (e pausado, se CONTAR_PAUSADOS for false).
@@ -239,6 +248,7 @@ export interface ParteDaCarga {
   carga: number;
 }
 
+// [PV-10] A CONTA DA CARGA: soma das horas semanais das alocações ativas no dia ÷ limite da pessoa, em %. Duas alocações que não se cruzam no tempo não se somam.
 /**
  * Ocupação da pessoa num dia.
  * Dia não útil (sábado, domingo) e pessoa fora do semáforo dão 0.
@@ -261,6 +271,7 @@ export function ocupacaoNoDia(pessoa: PessoaCarga, dia: string, dados: DadosCarg
   };
 }
 
+// [PV-11] A semana vale pelo PICO (o dia mais cheio), não pela média. Também calcula as horas proporcionais por projeto. Mudar aqui muda todos os níveis do semáforo.
 /**
  * Ocupação da pessoa numa semana (segunda a sexta).
  * @param pessoa - a pessoa.
@@ -351,6 +362,7 @@ export function simularAlocacao(pessoa: PessoaCarga, nova: { inicio: string; fim
   });
 }
 
+// [PV-12] A sugestão de "usar dd/mm como início" do modal de alocação: primeira data em que a carga nova cabe sem passar de 100% em nenhum dia útil.
 /**
  * Primeira data em que uma alocação nova cabe sem passar de 100% em NENHUM dia útil.
  * Testa cada dia a partir de `aPartirDe` (até DIAS_DE_BUSCA dias): a janela são os

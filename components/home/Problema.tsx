@@ -9,6 +9,7 @@
 import { Check, Minus } from "lucide-react";
 import CabecalhoSecao from "./CabecalhoSecao";
 
+// [PV-1] OS TEXTOS DA COLUNA "Como é hoje" (§2). Texto direto, sem números inventados.
 // Como é hoje (§2). Texto direto, sem números inventados.
 const HOJE = [
   "Material de onboarding espalhado em PDF, vídeo e e-mail.",
@@ -18,6 +19,7 @@ const HOJE = [
   "Nenhum lugar mostra formação e entrega lado a lado.",
 ];
 
+// [PV-2] OS TEXTOS DA COLUNA "Com o CAIS" (§2).
 // Como fica com o CAIS (§2).
 const COM_CAIS = [
   "Uma trilha única por público, com prazo e nota.",
@@ -27,6 +29,7 @@ const COM_CAIS = [
   "Um painel liga o que a pessoa aprendeu ao que ela entregou.",
 ];
 
+// [PV-3] A seção "O programa" (id programa): título, descrição e as duas colunas. O id é o destino do link de secoes.ts.
 /**
  * Seção "O programa". Server Component.
  * Fundo bg-fundo (a seção seguinte usa bg-superficie, para alternar).

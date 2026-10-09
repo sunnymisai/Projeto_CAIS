@@ -9,6 +9,7 @@
 import { ListChecks } from "lucide-react";
 import CabecalhoSecao from "./CabecalhoSecao";
 
+// [PV-1] OS QUATRO NÍVEIS do §5 (Empresa, Projeto, Alocação, Tarefa) e a frase de cada um. Passo novo entra aqui; o desenho acompanha a quantidade.
 // Os quatro níveis do §5, na ordem em que acontecem.
 const PASSOS = [
   { nome: "Empresa", texto: "Quem traz a demanda para o programa." },
@@ -17,6 +18,7 @@ const PASSOS = [
   { nome: "Tarefa", texto: "O trabalho do dia a dia, com responsável e prazo." },
 ];
 
+// [PV-2] A seção "Como funciona" (id como-funciona): título, descrição e os passos lado a lado no desktop e empilhados no celular.
 /**
  * Seção "Como funciona". Server Component.
  * Os passos são uma lista ordenada (<ol>): no celular ficam um embaixo do

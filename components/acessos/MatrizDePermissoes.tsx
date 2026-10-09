@@ -13,6 +13,7 @@ import type { Perfil } from '@/lib/tipos';
 import { Card, CardTitulo, Etiqueta } from '@/components/ui/basicos';
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 
+// [PV-1] A ORDEM DAS COLUNAS das duas tabelas: Administrador, Empresa, Profissional.
 const PERFIS: Perfil[] = ['admin', 'empresa', 'profissional'];
 
 /**
@@ -26,6 +27,7 @@ function Celula({ valor, nota }: { valor: 'sim' | 'nao' | 'condicional'; nota?: 
   return <Etiqueta tom="aviso"><CircleDot className="h-3 w-3" aria-hidden />Em parte{nota ? `: ${nota}` : ''}</Etiqueta>;
 }
 
+// [PV-2] A MATRIZ "O que cada perfil pode fazer": só leitura, gerada de lib/permissoes.ts. Para mudar uma regra, mude lá; esta tela se atualiza sozinha.
 /**
  * Bloco com as duas tabelas. É só leitura: para mudar uma regra, edita-se lib/permissoes.ts.
  * @returns o card com a tabela de telas e a de ações.
@@ -35,6 +37,7 @@ export default function MatrizDePermissoes() {
     <Card className="mt-8">
       <CardTitulo titulo="O que cada perfil pode fazer" descricao="Gerado a partir das regras do código (lib/permissoes.ts). Somente leitura: serve para o time e a PROGLOGIC validarem. Regras marcadas TODO(PROGLOGIC) ainda serão confirmadas." />
       <div className="mt-3">
+        {/* [PV-3] A TABELA DE TELAS: uma linha por rota de ROTAS_POR_PERFIL, com Sim ou Não para cada perfil. */}
         <Tabela rotulo="Telas que cada perfil pode abrir">
           <thead><tr><Th>Tela</Th>{PERFIS.map((p) => <Th key={p}>{ROTULO_PERFIL[p]}</Th>)}</tr></thead>
           <tbody>
@@ -46,6 +49,7 @@ export default function MatrizDePermissoes() {
             ))}
           </tbody>
         </Tabela>
+        {/* [PV-4] A TABELA DE AÇÕES: uma linha por ação de TODAS_AS_ACOES; "Em parte" mostra a condição escrita em CONDICAO_DA_ACAO (lib/permissoes.ts). */}
         <Tabela rotulo="Ações que cada perfil pode fazer">
           <thead><tr><Th>Ação em projetos</Th>{PERFIS.map((p) => <Th key={p}>{ROTULO_PERFIL[p]}</Th>)}</tr></thead>
           <tbody>

@@ -21,6 +21,7 @@ import ThemeToggle from '@/components/ThemeToggle';
  */
 export default function AcessoLayout({ children }: { children: ReactNode }) {
   return (
+    // [PV-1] A DIVISÃO DAS TELAS DE ACESSO: duas colunas a partir de 1024 px (marca à esquerda, cartão à direita) e uma só abaixo disso. O ponto de quebra e a proporção estão na classe lg:grid-cols-[1.05fr_1fr].
     // lg:grid-cols-[1.05fr_1fr]: a partir de 1024 px, duas colunas quase iguais
     // (a da marca um pouco mais larga). Abaixo disso, uma coluna só.
     <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
@@ -34,6 +35,7 @@ export default function AcessoLayout({ children }: { children: ReactNode }) {
           className="pointer-events-none absolute right-[-10%] top-[-15%] h-[520px] w-[520px] rounded-full bg-primaria/10 blur-3xl dark:bg-primaria/[0.07]"
         />
 
+        {/* [PV-2] O topo da coluna do cartão: o logo (só no celular) e o botão de tema. Item novo que deva aparecer em todas as telas de acesso entra aqui. */}
         {/* No celular: logo à esquerda e botão de tema à direita.
           * No desktop (lg): o logo some (já aparece no BrandPanel) e o botão
           * de tema vai para a direita (lg:justify-end). */}

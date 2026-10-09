@@ -53,6 +53,7 @@ export default function PainelProfissional() {
     const minhas = pronto ? tarefasVisiveis(sessao!, d).filter((t) => t.responsavelId === pessoaId) : [];
     return agruparMinhasTarefas(minhas, d.projetos);
   }, [pronto, sessao, pessoaId, d]);
+  // [PV-1] A CARGA DAS PRÓXIMAS 8 SEMANAS a partir da atual (linhaDoTempo, lib/carga.ts); a primeira é "esta semana". O limite vem do cargaMax da pessoa (padrão 40 h).
   // Semáforo de carga (F04): as próximas 8 semanas a partir da atual; a primeira é "esta semana".
   const semanasCarga = useMemo(() => {
     const p = pronto ? d.pessoa(pessoaId) : undefined;
@@ -60,6 +61,7 @@ export default function PainelProfissional() {
   }, [pronto, pessoaId, d]);
   const estaSemana = semanasCarga[0];
   const limite = d.pessoa(pessoaId)?.cargaMax ?? 40;
+  // [PV-2] O HISTÓRICO DE ENTREGAS: semanas do período escolhido, só com as tarefas concluídas dentro dele (entregasPorSemana, lib/metricas.ts).
   // Semanas do período escolhido (G01), com só as entregas dentro dele.
   const entregas = useMemo(() => (pronto ? entregasPorSemana(pessoaId, d, 8, hojeISO(), periodo) : []), [pronto, pessoaId, d, periodo]);
 
@@ -70,11 +72,13 @@ export default function PainelProfissional() {
   // ---- Bloco 1: trilhas ----
   const concluidas = trilhas.filter((t) => t.situacao === 'concluida').length;
   const emAndamento = trilhas.length - concluidas;
+  // [PV-3] OS NÚMEROS DE TRILHAS: concluídas, em andamento, prazo perto e vencido. As regras de prazo estão em lib/metricas.ts (situacaoDoPrazo).
   const perto = trilhas.filter((t) => t.situacaoPrazo === 'perto').length;
   const vencidas = trilhas.filter((t) => t.situacaoPrazo === 'vencido').length;
   const atual = trilhas.find((t) => t.situacao !== 'concluida');
   const etapaAtual = atual && atual.proximaEtapa !== null ? atual.trilha.etapas[atual.proximaEtapa] : undefined;
 
+  // [PV-4] AS 5 PRÓXIMAS TAREFAS: abertas, na ordem de Minhas tarefas (atrasadas, hoje, esta semana, depois).
   // ---- Bloco 2: as 5 próximas tarefas abertas, na ordem da tela de tarefas ----
   const abertas: Tarefa[] = [...grupos.atrasadas, ...grupos.hoje, ...grupos.semana, ...grupos.depois];
   const proximas = abertas.slice(0, 5);
@@ -141,6 +145,7 @@ export default function PainelProfissional() {
               <ul className="space-y-2">
                 {proximas.map((t) => {
                   const faltam = diasEntre(hojeISO(), t.prazo);
+                  // [PV-5] O TEXTO E A COR DO PRAZO de cada tarefa: "Atrasada há N dias" (vermelho), "Vence hoje" (âmbar), "Amanhã" ou a data (neutro).
                   const prazo = faltam < 0 ? { texto: `Atrasada há ${-faltam} dia${faltam < -1 ? 's' : ''}`, cls: 'text-erro font-semibold', I: CircleAlert }
                     : faltam === 0 ? { texto: 'Vence hoje', cls: 'text-aviso font-semibold', I: Clock }
                     : { texto: faltam === 1 ? 'Amanhã' : dataCurta(t.prazo), cls: 'text-tinta-suave', I: CalendarDays };
@@ -162,6 +167,7 @@ export default function PainelProfissional() {
           )}
         </Bloco>
 
+        {/* [PV-6] O BLOCO DE CARGA: nível desta semana (do dia mais cheio), as próximas 8 semanas e a quebra por projeto (F04, lib/carga.ts). */}
         {/* 3) Minha carga da semana: semáforo (F04, lib/carga.ts). O nível desta semana vem do dia mais
           * cheio; a linha mostra as próximas 8 semanas; a lista quebra esta semana por projeto. */}
         <Bloco titulo="Minha carga da semana" estado={estado}>

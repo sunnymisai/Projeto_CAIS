@@ -12,6 +12,7 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
+// [PV-1] O CABEÇALHO PADRÃO de toda tela interna: título (o único h1), descrição, ação principal à direita e caminho de volta (breadcrumb). Mude aqui para mudar todas as telas.
 /**
  * Título e ação: o que é a página e o botão principal (§10, slide 15 do deck).
  * @param titulo título da página (vira o <h1>; deve existir só um por tela).
@@ -52,6 +53,7 @@ export function CabecalhoPagina({ titulo, descricao, acao, trilha }: {
   );
 }
 
+// [PV-2] Onde ficam os filtros de uma lista: sempre acima do conteúdo e quebrando linha no celular (§10).
 /**
  * Filtros: sempre acima do conteúdo, nunca escondidos (§10).
  * @param children os filtros (busca, selects, segmentados).

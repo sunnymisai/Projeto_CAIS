@@ -30,6 +30,7 @@ import { useToast } from '@/lib/toast';
 /* Documentação viva: cada componente aparece com seus estados, como pede
    o slide 13 ("Documentado ao vivo"). */
 
+// [PV-1] A TABELA DE TOKENS da documentação: os hex são só para exibir; a cor real vem de app/globals.css e os dois precisam ser atualizados juntos. Hoje o tema escuro de Erro e de Névoa aqui difere do globals.css: confira.
 /**
  * Tabela dos tokens de cor mostrada na seção "Tokens". Cada token tem um valor por tema.
  * @example
@@ -47,6 +48,7 @@ const CORES = [
   { nome: 'Névoa', token: '--fundo', uso: 'Fundo da aplicação', claro: '#F6F7FB', escuro: '#0B0C12' },
 ];
 
+// [PV-2] OS ATALHOS DO TOPO da página: cada id precisa existir como id de uma <Secao>, senão o link não rola.
 // Atalhos do topo da página: [id da seção, rótulo do link].
 // ⚠️ ATENÇÃO: o id precisa ser igual ao id de uma <Secao>; se não for, o link âncora não rola para lugar nenhum.
 const SECOES = [
@@ -54,6 +56,7 @@ const SECOES = [
   ['etiquetas', 'Etiquetas e avatar'], ['feedback', 'Avisos e estados'], ['navegacao', 'Abas e paginação'], ['dados', 'Tabela e gráficos'], ['semaforo', 'Semáforo de carga'], ['periodo', 'Filtro de período'], ['modal', 'Modal'],
 ] as const;
 
+// [PV-3] O BLOCO PADRÃO de cada seção da documentação. Componente novo do design system entra como nova <Secao> e ganha um atalho em SECOES.
 /**
  * Bloco padrão de cada seção da documentação: título, descrição e um card com os exemplos.
  * @param id âncora usada pelos atalhos do topo (#id).

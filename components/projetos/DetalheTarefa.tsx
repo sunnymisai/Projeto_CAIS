@@ -32,6 +32,7 @@ import { Select } from '@/components/ui/form';
 import { Avatar, Etiqueta, EtiquetaTarefa, Progresso, corEtiqueta } from '@/components/ui/basicos';
 import { cx, dataBR, novoId, tempoRelativo, hojeISO } from '@/lib/utils';
 
+// [PV-1] AS ETIQUETAS-ATALHO oferecidas no detalhe da tarefa; o campo "Nova etiqueta" cria outras. A cor de cada uma está em components/ui/basicos.tsx (FIXAS).
 // Etiquetas oferecidas como atalho; o usuário pode criar outras no campo "Nova etiqueta".
 const ETIQUETAS_SUGERIDAS = ['Front', 'UX', 'API', 'QA', 'Login', 'Gráfico', 'Back'];
 
@@ -68,6 +69,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
   // ACIMA deste return porque o React exige que rodem sempre na mesma ordem.
   if (!t) return null;
   const projeto = d.projeto(t.projetoId)!;
+  // [PV-2] AS PERMISSÕES DO DETALHE (editar, excluir, mover, comentar), todas por podeFazer (lib/permissoes.ts). Quem não pode editar vê os campos como texto. O "mover" precisa concordar com o Quadro.
   // Permissões desta sessão (lib/permissoes.ts). Sem sessão, nada é permitido.
   // ⚠️ ATENÇÃO: o mesmo 'mover_tarefa' é conferido em components/projetos/Quadro.tsx; as duas
   // telas precisam concordar, senão dá para mover pelo detalhe o que o quadro bloqueia.
@@ -76,6 +78,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
   const podeMover = !!sessao && podeFazer(sessao.perfil, 'mover_tarefa', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   // Comentar: qualquer perfil que enxerga o projeto (escopo em lib/escopo.ts).
   const podeComentar = !!sessao && podeFazer(sessao.perfil, 'comentar_tarefa', { enxergaProjeto: podeVerProjeto(sessao, t.projetoId, d) });
+  // [PV-3] A APROVAÇÃO DA ENTREGA (decisão da PROGLOGIC, 09/10/2026): só a empresa dona do projeto aprova, e só com a tarefa em Revisão ou Pronto. Desfazer apaga a data e quem aprovou.
   // Aprovar a entrega (decisão da PROGLOGIC, 09/10/2026): só a EMPRESA dona do projeto, e só com a tarefa em
   // Revisão ou Pronto (colunaAceitaAprovacao). O admin e o profissional apenas veem o estado.
   const podeAprovar = !!sessao && podeFazer(sessao.perfil, 'aprovar_entrega', { enxergaProjeto: podeVerProjeto(sessao, t.projetoId, d) });
@@ -91,13 +94,16 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
     atualizar(aprovar ? { aprovadaEm: hojeISO(), aprovadaPorId: sessao.pessoaId } : { aprovadaEm: undefined, aprovadaPorId: undefined });
     avisar(aprovar ? 'Entrega aprovada.' : 'Aprovação desfeita.');
   };
+  // [PV-4] QUEM ANEXA ARQUIVO: o administrador em qualquer tarefa, o profissional só nas próprias; a empresa só vê a lista.
   // Anexar e remover arquivo (G03): admin em qualquer tarefa; profissional só nas próprias; Empresa só vê.
   const podeAnexar = !!sessao && podeFazer(sessao.perfil, 'anexar_arquivo', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   const coluna = projeto.colunas.find((c) => c.id === t.colunaId);
   const feitos = t.checklist.filter((c) => c.feito).length;
+  // [PV-5] QUEM PODE SER RESPONSÁVEL: os alocados no projeto mais o responsável atual (mesmo que já tenha saído da equipe).
   // Opções de responsável: equipe alocada + o responsável atual (mesmo que
   // já tenha saído da equipe, para o select não ficar sem valor).
   const equipe = [...new Set([...d.alocacoes.filter((a) => a.projetoId === projeto.id).map((a) => a.pessoaId), t.responsavelId])].map((id) => d.pessoa(id)!).filter(Boolean);
+  // [PV-6] O SALVAR DO DETALHE: não há botão Salvar; cada campo grava ao mudar. TODO(API): vira PATCH da tarefa.
   /**
    * Salva só os campos alterados, mantendo o resto da tarefa.
    * @param p campos que mudaram.
@@ -215,6 +221,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
             {!podeEditar && t.checklist.length === 0 && <p className="text-[13px] text-tinta-suave">Esta tarefa não tem checklist.</p>}
           </section>
 
+          {/* [PV-7] A SEÇÃO "Aprovação da entrega": aparece com a tarefa em Revisão ou Pronto (ou já aprovada). Só a empresa vê o botão; os outros perfis veem o estado. */}
           {/* Aprovação da entrega (empresa): aparece quando a tarefa está em Revisão ou Pronto (ou já foi aprovada).
             * A empresa vê o botão; os outros perfis veem só o estado. Cor nunca sozinha: ícone e texto. */}
           {(entregue || !!t.aprovadaEm) && (
@@ -278,6 +285,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
 
         {/* Lateral: campos obrigatórios e opcionais */}
         <aside className="space-y-4">
+          {/* [PV-8] O STATUS é o "mover para..." do celular, no lugar de arrastar: o administrador sempre, o profissional só nas próprias tarefas. */}
           {/*
             * Status = em que lista a tarefa está. No celular este é o
             * "mover para..." que substitui o arrastar (§5).
@@ -333,6 +341,7 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
             </form>
           </div>}
 
+          {/* [PV-9] A EXCLUSÃO DA TAREFA: em dois passos, só para quem pode excluir; apaga também checklist e comentários. TODO(API): DELETE da tarefa. */}
           {/* Exclusão em dois passos para evitar clique acidental. Só quem pode excluir tarefa. */}
           {podeExcluir && <div className="border-t border-borda pt-4">
             {!confirmar ? (
