@@ -200,6 +200,9 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
   // avisoCep guarda a mensagem quando o CEP não existe ou o ViaCEP não respondeu.
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [avisoCep, setAvisoCep] = useState('');
+  // Mesma ideia para a consulta do CNPJ (BrasilAPI).
+  const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+  const [avisoCnpj, setAvisoCnpj] = useState('');
   // Aba da ficha: 'dados' (formulário) ou 'pessoas' (vínculo pessoa-empresa, §11). Só existe para empresa já cadastrada.
   const [aba, setAba] = useState<'dados' | 'pessoas'>('dados');
 
@@ -243,7 +246,43 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
   // Ao editar, começa com uma cópia da empresa; ao criar, com o formulário em branco.
   const f = useFormulario<ValEmpresa>(empresa ? { ...empresa } : VAZIA, validar);
 
-  // [PV-9] A BUSCA DE CEP: ao sair do campo consulta o ViaCEP (serviço público externo) e preenche logradouro e cidade/UF, que continuam editáveis. Falha nunca bloqueia o cadastro.
+  // [PV-9] A BUSCA DE CNPJ: ao sair do campo, com o CNPJ válido, consulta a BrasilAPI (serviço público externo, dados da Receita) e preenche só os campos ainda vazios: razão social, nome fantasia, CEP, logradouro, número e cidade/UF. Falha nunca bloqueia o cadastro.
+  /**
+   * Busca os dados da empresa na BrasilAPI quando o usuário sai do campo CNPJ (onBlur).
+   * Só preenche o que está vazio, para nunca apagar o que a pessoa digitou. Se a Receita
+   * diz que a empresa não está ativa, avisa (o cadastro continua permitido).
+   * @returns Promise vazia; o resultado aparece nos campos ou no aviso.
+   */
+  const buscarCnpj = async () => {
+    // Como o onBlur do input foi trocado por esta função, marcamos o campo como "tocado" aqui.
+    f.blur('cnpj');
+    // CNPJ incompleto ou com dígitos errados: nem consulta (o erro de validação já avisa).
+    if (!cnpjValido(f.valores.cnpj)) return;
+    setBuscandoCnpj(true); setAvisoCnpj('');
+    try {
+      // Fetch externo para a API pública da BrasilAPI (não é da PROGLOGIC, não precisa de token).
+      const r = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${soDigitos(f.valores.cnpj)}`);
+      if (r.status === 404) { setAvisoCnpj('CNPJ não encontrado na Receita. Preencha os dados manualmente.'); return; }
+      if (!r.ok) throw new Error(String(r.status));
+      const j = await r.json();
+      const v = f.valores;
+      // GRAVA: preenche os campos do formulário que estão vazios; todos continuam editáveis.
+      if (!v.razaoSocial.trim() && j.razao_social) f.set('razaoSocial', j.razao_social);
+      if (!v.nomeFantasia.trim() && (j.nome_fantasia || j.razao_social)) f.set('nomeFantasia', j.nome_fantasia || j.razao_social);
+      if (!v.cep && j.cep) f.set('cep', mascaraCEP(String(j.cep)));
+      if (!v.logradouro.trim() && j.logradouro) f.set('logradouro', [j.descricao_tipo_de_logradouro, j.logradouro].filter(Boolean).join(' '));
+      if (!v.numero.trim() && j.numero) f.set('numero', String(j.numero));
+      if (!v.cidadeUf.trim() && j.municipio) f.set('cidadeUf', `${j.municipio} / ${j.uf}`);
+      // Situação diferente de ATIVA (baixada, suspensa, inapta): só avisa.
+      if (j.descricao_situacao_cadastral && j.descricao_situacao_cadastral !== 'ATIVA') setAvisoCnpj(`Atenção: a Receita informa a situação "${j.descricao_situacao_cadastral}" para este CNPJ.`);
+    } catch {
+      // Sem internet ou BrasilAPI fora do ar (ou limite de consultas): avisa e deixa preencher à mão.
+      setAvisoCnpj('Não foi possível consultar o CNPJ agora. Preencha os dados manualmente.');
+    }
+    setBuscandoCnpj(false);
+  };
+
+  // [PV-10] A BUSCA DE CEP: ao sair do campo consulta o ViaCEP (serviço público externo) e preenche logradouro e cidade/UF, que continuam editáveis. Falha nunca bloqueia o cadastro.
   /**
    * Busca o endereço no ViaCEP quando o usuário sai do campo CEP (onBlur).
    * O CEP preenche o endereço, mas os campos continuam editáveis (§11).
@@ -281,7 +320,7 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
     setBuscandoCep(false);
   };
 
-  // [PV-10] O SALVAR DA EMPRESA: valida tudo, grava com id novo "emp" se for cadastro. SIMULADO: espera 350 ms. TODO(API): POST ou PUT na API da PROGLOGIC.
+  // [PV-11] O SALVAR DA EMPRESA: valida tudo, grava com id novo "emp" se for cadastro. SIMULADO: espera 350 ms. TODO(API): POST ou PUT na API da PROGLOGIC.
   /**
    * Valida tudo e salva a empresa no store.
    * Se houver erro, mostra um toast e para; os campos com erro ficam destacados.
@@ -309,7 +348,7 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
       // O cálculo do plural evita "1 projetos".
       descricao={empresa ? `${nProjetos} projeto${nProjetos === 1 ? '' : 's'} · entrou em ${dataBR(empresa.dataEntrada)}` : 'Campos com * são obrigatórios.'}
       rodape={<>
-        {/* [PV-11] A EXCLUSÃO DA EMPRESA: o botão só aparece para empresa sem projetos e não apaga em cascata (pessoas vinculadas ficam apontando para uma empresa que não existe mais). */}
+        {/* [PV-12] A EXCLUSÃO DA EMPRESA: o botão só aparece para empresa sem projetos e não apaga em cascata (pessoas vinculadas ficam apontando para uma empresa que não existe mais). */}
         {/*
           * Excluir só aparece para empresa sem projetos: projetos e trilhas dependem dela
           * e o store não apaga empresas em cascata.
@@ -344,13 +383,19 @@ function FormEmpresa({ empresa, onFechar }: { empresa: Empresa | null; onFechar:
               * CNPJ: mascaraCNPJ formata enquanto digita (00.000.000/0000-00).
               * valid acende o check verde só quando não há erro E os dígitos verificadores batem.
               */}
-            <Input compacto label="CNPJ" required placeholder="00.000.000/0000-00" inputMode="numeric" {...f.campo('cnpj', mascaraCNPJ)} valid={!f.erros.cnpj && cnpjValido(f.valores.cnpj)} />
+            <div className="relative">
+              {/* O onBlur depois do spread substitui o do f.campo: ao sair do CNPJ válido, busca na BrasilAPI. */}
+              <Input compacto label="CNPJ" required placeholder="00.000.000/0000-00" inputMode="numeric" {...f.campo('cnpj', mascaraCNPJ)} onBlur={buscarCnpj} hint={buscandoCnpj ? 'Buscando dados da empresa…' : undefined} valid={!f.erros.cnpj && cnpjValido(f.valores.cnpj)} />
+              {buscandoCnpj && <Loader2 className="absolute right-10 top-[34px] h-4 w-4 animate-spin text-primaria" aria-hidden />}
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <Select label="Segmento" placeholder="Selecione" value={f.valores.segmento} onChange={(e) => f.set('segmento', e.target.value)} opcoes={SEGMENTOS.map((s) => ({ valor: s, rotulo: s }))} />
               <Select label="Porte" placeholder="Selecione" value={f.valores.porte} onChange={(e) => f.set('porte', e.target.value)} opcoes={PORTES.map((s) => ({ valor: s, rotulo: s }))} />
             </div>
             <Input compacto label="Site" placeholder="https://" icon={<Globe className="h-4 w-4" />} {...f.campo('site')} />
           </div>
+          {/* Aviso só aparece se a BrasilAPI não achou o CNPJ, falhou ou a Receita diz que não está ativa. */}
+          {avisoCnpj && <Aviso tipo="aviso">{avisoCnpj}</Aviso>}
         </SecaoForm>
 
         <SecaoForm titulo="Endereço">
