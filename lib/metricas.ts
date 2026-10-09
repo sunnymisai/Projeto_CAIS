@@ -93,12 +93,15 @@ export function trilhasDaPessoa(pessoaId: string, d: Dados) {
  * quem já estava no programa conta da publicação; quem entrou depois, da própria entrada.
  * @param trilha - a trilha (precisa de `publicadaEm`).
  * @param pessoa - a pessoa (usa `dataEntrada`).
- * @returns a data limite (AAAA-MM-DD) ou null se a trilha nunca foi publicada.
+ * @returns a data limite (AAAA-MM-DD), ou null se a trilha nunca foi publicada OU tem prazo indeterminado
+ *   (`prazoDias` 0: o administrador não definiu prazo, por exemplo porque a empresa não pediu).
  * @example prazoDaPessoaNaTrilha({ publicadaEm: '2026-10-01', prazoDias: 7 }, { dataEntrada: '2026-10-05' }) // '2026-10-12'
  */
 // TODO(PROGLOGIC): confirmar regra (o deck diz "quando abre" e "até quando", mas não de onde o prazo conta).
 export function prazoDaPessoaNaTrilha(trilha: Pick<Trilha, 'publicadaEm' | 'prazoDias'>, pessoa: Pick<Pessoa, 'dataEntrada'>): string | null {
   if (!trilha.publicadaEm) return null;
+  // Prazo indeterminado (0): a trilha não vence para ninguém.
+  if (!trilha.prazoDias) return null;
   // Comparar texto funciona porque o formato é AAAA-MM-DD; sem dataEntrada, vale a publicação.
   const inicio = pessoa.dataEntrada && pessoa.dataEntrada > trilha.publicadaEm ? pessoa.dataEntrada : trilha.publicadaEm;
   return somaDias(inicio, trilha.prazoDias);
@@ -204,28 +207,39 @@ export function progressoProjeto(projetoId: string, d: Dados) {
 }
 
 /**
- * Entregas de um projeto para o painel da empresa (§6): aprovadas × aguardando revisão.
- * - aprovadas: tarefas na ÚLTIMA coluna do quadro (mesma regra de "pronta" em progressoProjeto);
- * - revisao: tarefas na PENÚLTIMA coluna, que no quadro padrão é "Revisão" (§5);
+ * A empresa pode aprovar uma tarefa que está nesta lista do quadro? Só nas duas últimas: Revisão e Pronto
+ * (no quadro padrão); em quadro com menos de 3 listas, só na última. Tarefa que ainda está em A fazer ou
+ * Fazendo não foi entregue, então não se aprova.
+ * @param projeto - o projeto (só `colunas` é lido).
+ * @param colunaId - lista onde a tarefa está.
+ * @returns true se dá para aprovar.
+ * @example colunaAceitaAprovacao({ colunas: [{ id: 'a' }, { id: 'r' }, { id: 'p' }] }, 'r') // true
+ */
+export function colunaAceitaAprovacao(projeto: { colunas: { id: string }[] } | undefined, colunaId: string): boolean {
+  const c = projeto?.colunas ?? [];
+  if (c.length === 0) return false;
+  if (colunaId === c[c.length - 1].id) return true;
+  return c.length >= 3 && colunaId === c[c.length - 2].id;
+}
+
+/**
+ * Entregas de um projeto para o painel da empresa (§6): aprovadas × aguardando aprovação.
+ * - aprovadas: tarefas que a EMPRESA aprovou (`aprovadaEm`) e que ainda estão em Revisão ou Pronto;
+ * - aguardando: tarefas em Revisão ou Pronto que a empresa ainda não aprovou (a bola está com ela);
  * - emProducao: o resto (A fazer, Fazendo...).
- * Quadro com menos de 3 colunas não tem etapa de revisão: a penúltima seria "A fazer",
- * então `temRevisao` fica false e tudo que não está pronto conta como em produção.
- * TODO(PROGLOGIC): o deck fala em "entregas aprovadas"; não há passo de aprovação, então Pronto = aprovada.
  * @param projetoId - id do projeto.
  * @param d - todos os dados (só `projetos` e `tarefas` são lidos).
- * @returns `{ total, aprovadas, revisao, emProducao, temRevisao }`.
- * @example entregasDoProjeto('prj_portal', d) // { total: 8, aprovadas: 3, revisao: 1, emProducao: 4, temRevisao: true }
+ * @returns `{ total, aprovadas, aguardando, emProducao }`.
+ * @example entregasDoProjeto('prj_portal', d) // { total: 8, aprovadas: 3, aguardando: 2, emProducao: 3 }
  */
 export function entregasDoProjeto(projetoId: string, d: Pick<Dados, 'projetos' | 'tarefas'>) {
   const proj = d.projetos.find((p) => p.id === projetoId);
-  const colunas = proj?.colunas ?? [];
-  const ultima = colunas[colunas.length - 1]?.id;
-  const temRevisao = colunas.length >= 3;
-  const penultima = temRevisao ? colunas[colunas.length - 2].id : undefined;
   const tarefas = d.tarefas.filter((t) => t.projetoId === projetoId);
-  const aprovadas = tarefas.filter((t) => t.colunaId === ultima).length;
-  const revisao = penultima ? tarefas.filter((t) => t.colunaId === penultima).length : 0;
-  return { total: tarefas.length, aprovadas, revisao, emProducao: tarefas.length - aprovadas - revisao, temRevisao };
+  // Só conta aprovação de tarefa que está numa lista que aceita aprovar (defesa contra dado antigo).
+  const entregues = tarefas.filter((t) => colunaAceitaAprovacao(proj, t.colunaId));
+  const aprovadas = entregues.filter((t) => !!t.aprovadaEm).length;
+  const aguardando = entregues.length - aprovadas;
+  return { total: tarefas.length, aprovadas, aguardando, emProducao: tarefas.length - entregues.length };
 }
 
 /** Janela padrão de "Próximas entregas" na Visão geral do projeto, em dias (E02). */
@@ -532,8 +546,8 @@ export function tarefasConcluidasPorEmpresa(d: Pick<Dados, 'tarefas' | 'projetos
 }
 
 /**
- * Entregas aprovadas de um projeto no período (painel da empresa, G01).
- * "Aprovada" = tarefa na última coluna com `concluidaEm` dentro do período (mesma regra de entregasDoProjeto).
+ * Entregas aprovadas pela empresa num projeto, dentro do período (painel da empresa, G01).
+ * "Aprovada" = tarefa com `aprovadaEm` dentro do período, ainda numa lista que aceita aprovação.
  * @param projetoId - id do projeto.
  * @param d - todos os dados (só `projetos` e `tarefas` são lidos).
  * @param periodo - o período.
@@ -542,8 +556,7 @@ export function tarefasConcluidasPorEmpresa(d: Pick<Dados, 'tarefas' | 'projetos
  */
 export function aprovadasNoPeriodo(projetoId: string, d: Pick<Dados, 'projetos' | 'tarefas'>, periodo: Periodo): number {
   const proj = d.projetos.find((p) => p.id === projetoId);
-  const ultima = proj?.colunas[proj.colunas.length - 1]?.id;
-  return d.tarefas.filter((t) => t.projetoId === projetoId && t.colunaId === ultima && !!t.concluidaEm && dentroDoPeriodo(t.concluidaEm, periodo)).length;
+  return d.tarefas.filter((t) => t.projetoId === projetoId && colunaAceitaAprovacao(proj, t.colunaId) && !!t.aprovadaEm && dentroDoPeriodo(t.aprovadaEm, periodo)).length;
 }
 
 /** Atalhos do filtro de período (FiltroPeriodo). */

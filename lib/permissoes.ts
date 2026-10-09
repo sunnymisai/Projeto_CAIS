@@ -79,7 +79,8 @@ export type Acao =
   | 'editar_projeto'
   | 'mover_tarefa'
   | 'comentar_tarefa'
-  | 'anexar_arquivo';
+  | 'anexar_arquivo'
+  | 'aprovar_entrega';
 
 /** Informação extra que algumas ações precisam para decidir. */
 export interface ContextoAcao {
@@ -87,7 +88,7 @@ export interface ContextoAcao {
   pessoaId?: string;
   /** id do responsável da tarefa (para 'mover_tarefa' e 'anexar_arquivo'). */
   responsavelId?: string;
-  /** true se a pessoa enxerga o projeto (para 'comentar_tarefa'; veja lib/escopo.ts). */
+  /** true se a pessoa enxerga o projeto (para 'comentar_tarefa', 'alocar' e 'aprovar_entrega'; veja lib/escopo.ts). */
   enxergaProjeto?: boolean;
 }
 
@@ -101,16 +102,27 @@ export interface ContextoAcao {
  */
 export function podeFazer(perfil: Perfil, acao: Acao, contexto: ContextoAcao = {}): boolean {
   switch (acao) {
-    // §5: criar/editar/excluir tarefa, editar lista (renomear/excluir coluna),
-    // alocar e editar projeto são só do Administrador (quem opera o programa, §3).
+    // §5: criar/editar/excluir tarefa, editar lista (renomear/excluir coluna) e editar projeto
+    // são só do Administrador (quem opera o programa, §3).
     // TODO(PROGLOGIC): confirmar
     case 'criar_tarefa':
     case 'editar_tarefa':
     case 'excluir_tarefa':
     case 'editar_lista':
-    case 'alocar':
     case 'editar_projeto':
       return perfil === 'admin';
+
+    // Decisão da PROGLOGIC (09/10/2026): a EMPRESA aloca o time nos projetos DELA. O administrador
+    // aloca em qualquer projeto; o profissional não aloca. Sem a informação de escopo (enxergaProjeto),
+    // a empresa NÃO aloca (lado seguro). Quem chama passa enxergaProjeto de lib/escopo.ts.
+    case 'alocar':
+      if (perfil === 'admin') return true;
+      return perfil === 'empresa' && contexto.enxergaProjeto === true;
+
+    // Decisão da PROGLOGIC (09/10/2026): a EMPRESA aprova (e desaprova) as entregas do projeto dela.
+    // É só da empresa: o admin acompanha, mas quem aprova é o cliente. Sem escopo, nega.
+    case 'aprovar_entrega':
+      return perfil === 'empresa' && contexto.enxergaProjeto === true;
 
     // §3/§5: "o profissional vê e move as próprias tarefas"; Empresa só acompanha.
     // Sem pessoaId ou responsavelId no contexto o profissional NÃO move (lado seguro).
@@ -226,13 +238,14 @@ export const ROTULO_DAS_ACOES: Record<Acao, string> = {
   mover_tarefa: 'Mover tarefa de coluna',
   comentar_tarefa: 'Comentar em tarefa',
   anexar_arquivo: 'Anexar e remover arquivos da tarefa',
+  aprovar_entrega: 'Aprovar a entrega de uma tarefa',
 };
 
 /**
  * Todas as ações, na ordem em que aparecem na tabela de permissões.
  * ⚠️ ATENÇÃO: ação nova em `Acao` precisa entrar aqui e em ROTULO_DAS_ACOES (o TypeScript cobra o rótulo).
  */
-export const TODAS_AS_ACOES: Acao[] = ['criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista', 'alocar', 'editar_projeto', 'mover_tarefa', 'comentar_tarefa', 'anexar_arquivo'];
+export const TODAS_AS_ACOES: Acao[] = ['criar_tarefa', 'editar_tarefa', 'excluir_tarefa', 'editar_lista', 'alocar', 'editar_projeto', 'mover_tarefa', 'comentar_tarefa', 'anexar_arquivo', 'aprovar_entrega'];
 
 /**
  * Prefixos de rota que o perfil pode abrir (na ordem de ROTAS_POR_PERFIL).
@@ -264,6 +277,8 @@ export function permissaoDaAcao(perfil: Perfil, acao: Acao): 'sim' | 'nao' | 'co
 export const CONDICAO_DA_ACAO: Partial<Record<Acao, string>> = {
   mover_tarefa: 'só as próprias tarefas',
   anexar_arquivo: 'só as próprias tarefas',
+  alocar: 'só nos projetos da própria empresa',
+  aprovar_entrega: 'só nos projetos da própria empresa',
   comentar_tarefa: 'só nos projetos que enxerga',
 };
 

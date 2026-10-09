@@ -63,12 +63,30 @@ export function corrigirQuiz(perguntas: Pergunta[], respostas: Record<string, nu
 /** Os três desfechos possíveis de uma tentativa. */
 export type ResultadoQuiz = 'aprovado' | 'reprovado_pode_tentar' | 'reprovado_sem_tentativas';
 
+/** Máximo de tentativas que um quiz pode permitir (regra da PROGLOGIC: de 1 a 10). */
+export const LIMITE_TENTATIVAS = 10;
+
+/**
+ * Quantas tentativas o quiz permite de verdade, sempre entre 1 e LIMITE_TENTATIVAS (10).
+ * Sem valor (dados antigos) usa o padrão; o antigo "0 = sem limite" vira o máximo (10); acima de 10 cai para 10.
+ * @param tentativasMax - o que a etapa guardou (pode faltar).
+ * @param padrao - tentativas quando a etapa não definiu nada (TENTATIVAS_PADRAO de lib/trilhas.ts).
+ * @returns um inteiro de 1 a 10.
+ * @example tentativasDoQuiz(undefined, 3) // 3
+ * @example tentativasDoQuiz(0, 3) // 10 (era "sem limite")
+ */
+export function tentativasDoQuiz(tentativasMax: number | undefined, padrao: number): number {
+  if (tentativasMax === undefined) return Math.min(LIMITE_TENTATIVAS, Math.max(1, Math.floor(padrao)));
+  if (tentativasMax === 0) return LIMITE_TENTATIVAS;
+  return Math.min(LIMITE_TENTATIVAS, Math.max(1, Math.floor(tentativasMax)));
+}
+
 /**
  * Decide o resultado de uma tentativa.
  * @param nota - nota desta tentativa (0 a 100).
  * @param notaMinima - nota para aprovar (0 a 100); a nota IGUAL à mínima aprova.
  * @param tentativasUsadas - quantas tentativas a pessoa já usou, CONTANDO esta.
- * @param tentativasMax - limite de tentativas; 0 = sem limite.
+ * @param tentativasMax - limite de tentativas (use tentativasDoQuiz); 0 = sem limite (só dados antigos).
  * @returns 'aprovado', 'reprovado_pode_tentar' ou 'reprovado_sem_tentativas'.
  * @example resultadoDoQuiz(60, 70, 3, 3) // 'reprovado_sem_tentativas' (era a última)
  */

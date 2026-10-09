@@ -152,7 +152,9 @@ function FichaProjeto() {
   // terá uso para esse perfil, então desabilitado só geraria dúvida e seria anunciado como
   // "indisponível" pelo leitor de tela.
   const podeCriarTarefa = !!sessao && podeFazer(sessao.perfil, 'criar_tarefa');
-  const podeAlocar = !!sessao && podeFazer(sessao.perfil, 'alocar');
+  // Alocar: o admin em qualquer projeto e a empresa nos DELA (esta página só abre para quem enxerga o projeto,
+  // então enxergaProjeto é verdadeiro aqui; quem está fora do escopo já foi mandado para /sem-permissao).
+  const podeAlocar = !!sessao && podeFazer(sessao.perfil, 'alocar', { enxergaProjeto: true });
   const podeEditarProjeto = !!sessao && podeFazer(sessao.perfil, 'editar_projeto');
   // Todas as tarefas deste projeto; useMemo evita refiltrar a cada render.
   const tarefas = useMemo(() => d.tarefas.filter((t) => t.projetoId === id), [d.tarefas, id]);

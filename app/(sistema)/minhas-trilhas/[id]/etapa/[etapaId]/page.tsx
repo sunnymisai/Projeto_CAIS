@@ -8,7 +8,7 @@
      card "Continue de onde parou" de /minhas-trilhas.
    Depende de: next/navigation (useParams, useRouter), lib/auth.tsx (useAuth),
      lib/store.tsx (useDados: salvar), lib/metricas.ts (trilhasDaPessoaDetalhadas),
-     lib/quiz.ts (concluirEtapa, registrarTentativa, tentativasUsadas), lib/trilhas.ts
+     lib/quiz.ts (concluirEtapa, registrarTentativa, tentativasDoQuiz, tentativasUsadas), lib/trilhas.ts
      (TIPOS_ETAPA, TENTATIVAS_PADRAO, hrefEtapa), lib/toast.tsx,
      components/trilhas/ConteudoEtapa.tsx, components/trilhas/QuizEtapa.tsx,
      components/button.tsx e components/ui/basicos.tsx.
@@ -27,7 +27,7 @@ import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { useToast } from '@/lib/toast';
 import { trilhasDaPessoaDetalhadas } from '@/lib/metricas';
-import { concluirEtapa, registrarTentativa, tentativasUsadas } from '@/lib/quiz';
+import { concluirEtapa, registrarTentativa, tentativasDoQuiz, tentativasUsadas } from '@/lib/quiz';
 import { TIPOS_ETAPA, TENTATIVAS_PADRAO, hrefEtapa } from '@/lib/trilhas';
 import ConteudoEtapa from '@/components/trilhas/ConteudoEtapa';
 import QuizEtapa, { type EnvioQuiz } from '@/components/trilhas/QuizEtapa';
@@ -166,7 +166,7 @@ export default function PlayerEtapa() {
           // key: trocar de etapa recria o quiz do zero (respostas e rodada não vazam de um quiz para outro).
           <QuizEtapa key={etapa.id} etapa={etapa}
             tentativasUsadas={tentativasUsadas(trilha, pessoaId, etapa.id)}
-            tentativasMax={etapa.tentativasMax ?? TENTATIVAS_PADRAO}
+            tentativasMax={tentativasDoQuiz(etapa.tentativasMax, TENTATIVAS_PADRAO)}
             // Concluída por um quiz = já aprovado (inclusive dados do seed, que não têm o registro por quiz).
             jaAprovado={concluida || !!registroQuiz?.aprovado}
             notaAprovada={registroQuiz?.aprovado ? registroQuiz.nota : t.nota}

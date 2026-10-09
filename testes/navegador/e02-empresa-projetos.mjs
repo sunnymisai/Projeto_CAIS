@@ -31,7 +31,7 @@ const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'
 const COMENTARIO = `Comentário de teste do cliente ${Date.now()}`;
 
 try {
-  await ev(`localStorage.removeItem('cais-dados-v5')`);
+  await ev(`localStorage.removeItem('cais-dados-v6')`);
   await entrar(CONTAS.marcos);
 
   // 1) /projetos só com os da Vértice.
@@ -59,7 +59,7 @@ try {
   await abrir(`/projetos/prj_portal?aba=tarefas&tarefa=${tarefaId}`, `(document.querySelector('[role=dialog]')?.innerText ?? '').includes(${JSON.stringify(COMENTARIO)})`);
   const linha = await ev(`(() => { const li = [...document.querySelectorAll('[role=dialog] li')].find((x) => x.innerText.includes(${JSON.stringify(COMENTARIO)})); return li?.querySelector('p')?.innerText ?? ''; })()`);
   c('admin: comentário com a etiqueta "Empresa" ao lado do nome', linha.includes('Marcos Vieira') && linha.includes('Empresa'), linha);
-  // O admin continua vendo a carga na Equipe (a regra de privacidade é só para a empresa).
+  // O admin continua vendo a carga na Equipe, com o semáforo (o pico) que a empresa não vê.
   await abrir('/projetos/prj_portal?aba=equipe', `!!document.querySelector('main table')`);
   c('admin: Equipe continua com carga', (await texto()).includes('h/sem'));
 
@@ -68,14 +68,17 @@ try {
   await abrir('/projetos/prj_portal?aba=equipe', `!!document.querySelector('main table')`);
   // textContent (e não innerText): o cabeçalho da tabela fica em caixa alta só por CSS.
   const cab = await ev(`[...document.querySelectorAll('main thead th')].map((th) => th.textContent.trim()).filter(Boolean).join('|')`);
-  c('Equipe (empresa): colunas pessoa, papel e período', cab === 'Pessoa|Papel|Período', cab);
-  c('Equipe (empresa): nenhuma carga em horas', !/h\/sem/.test(await texto()));
+  // Decisão da PROGLOGIC (09/10/2026): a empresa vê as horas de cada pessoa no projeto dela, e aloca o time.
+  // O semáforo (pico somando outros clientes) e as trilhas continuam só com o admin.
+  c('Equipe (empresa): colunas pessoa, papel, período, carga e ações (sem trilhas)', cab === 'Pessoa|Papel|Período|Carga|Ações', cab);
+  c('Equipe (empresa): vê as horas por semana de cada pessoa', /\d+ h\/sem/.test(await texto()));
+  c('Equipe (empresa): não vê o semáforo (pico de outros projetos)', !(await ev(`!![...document.querySelectorAll('main td [role=img]')].find((x) => (x.getAttribute('aria-label') ?? '').startsWith('Pico de'))`)));
   await abrir('/projetos/prj_portal?aba=geral', `(document.querySelector('main')?.innerText ?? '').includes('Próximas entregas')`);
   const geral = await texto();
   c('Visão geral: prazo, status, líder e progresso', geral.includes('Período') && geral.includes('Status do projeto') && geral.includes('Líder') && geral.includes('Tarefas prontas'));
   c('Visão geral: card "Próximas entregas"', geral.includes('Próximas entregas') && (/em \d+ dias?|vence hoje/.test(geral) || geral.includes('Nenhuma tarefa vence')));
   await abrir('/painel', `[...document.querySelectorAll('main a')].some((a) => a.textContent.trim() === 'Ver projetos')`);
-  c('painel (empresa): nenhuma carga em horas', !/h\/sem/.test(await texto()));
+  c('painel (empresa): mostra as horas por semana no projeto dela', /\d+ h\/sem/.test(await texto()));
 
   // 6) Projeto da Aurora pela URL → /sem-permissao.
   await abrir('/projetos/prj_agenda', `location.pathname === '/sem-permissao'`);

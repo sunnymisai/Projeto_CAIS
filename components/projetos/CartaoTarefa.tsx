@@ -75,7 +75,7 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAbrir(); } }}
       role="button"
       tabIndex={0}
-      aria-label={`${tarefa.titulo}. ${prazoTexto}. Responsável: ${resp?.nome ?? 'ninguém'}.${cadeado ? ' Só o responsável pode mover.' : ''}`}
+      aria-label={`${tarefa.titulo}. ${prazoTexto}.${tarefa.aprovadaEm ? ' Entrega aprovada pela empresa.' : ''} Responsável: ${resp?.nome ?? 'ninguém'}.${cadeado ? ' Só o responsável pode mover.' : ''}`}
       /*
        * cursor-grab/active:cursor-grabbing: mãozinha de "pegar" o cartão (só se for arrastável;
        * senão cursor-pointer, porque o cartão continua clicável).
@@ -110,6 +110,12 @@ export default function CartaoTarefa({ tarefa, concluida, arrastando, arrastavel
           <span className={cx('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold',
             feitos === tarefa.checklist.length ? 'bg-sucesso/12 text-sucesso' : 'text-tinta-suave')}>
             <CheckSquare className="h-3 w-3" aria-hidden />{feitos}/{tarefa.checklist.length}
+          </span>
+        )}
+        {/* Selo "Aprovada": a empresa aprovou a entrega (ícone + texto, nunca só a cor). */}
+        {tarefa.aprovadaEm && (
+          <span className="inline-flex items-center gap-1 rounded-md bg-sucesso/12 px-1.5 py-0.5 text-[11px] font-semibold text-sucesso" title={`Aprovada pela empresa em ${dataCurta(tarefa.aprovadaEm)}`}>
+            <CircleCheck className="h-3 w-3" aria-hidden />Aprovada
           </span>
         )}
         {/* Contador de comentários, só se houver algum. */}

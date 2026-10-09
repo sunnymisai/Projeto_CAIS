@@ -116,7 +116,7 @@ export default function Trilhas() {
                   <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-tinta-suave">
                     <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5" aria-hidden />{t.etapas.length} etapas</span>
                     <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" aria-hidden />{alvo}</span>
-                    <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" aria-hidden />{t.prazoDias} dias</span>
+                    <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" aria-hidden />{t.prazoDias > 0 ? `${t.prazoDias} dias` : 'Sem prazo'}</span>
                   </div>
                   {/* Barra de progresso só faz sentido em trilha publicada e com
                     * alguém no público. ⚠️ ATENÇÃO: as cores são as mesmas do

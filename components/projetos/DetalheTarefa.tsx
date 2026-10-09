@@ -3,7 +3,8 @@
    O que é: o painel (modal) com todos os dados de uma tarefa. Admin edita na hora;
                  os outros perfis veem os campos como TEXTO somente leitura (a regra
                  está em lib/permissoes.ts). Comentar fica liberado a quem enxerga o projeto;
-                 comentário de quem é do perfil Empresa ganha a etiqueta "Empresa".
+                 comentário de quem é do perfil Empresa ganha a etiqueta "Empresa". A empresa aprova a
+                 entrega (tarefa em Revisão ou Pronto) numa seção própria.
    Onde é usado: app/(sistema)/projetos/[id]/page.tsx, aberto ao clicar num
                  cartão do Quadro ou numa linha das vistas Lista/Cronograma.
    Depende de: lib/store (useDados), lib/auth (useAuth, autor do comentário),
@@ -11,18 +12,19 @@
                lib/toast (useToast), components/ui/Modal, components/button,
                components/ui/form (Select), components/ui/basicos, components/projetos/AnexosDaTarefa e lib/utils.
    Contexto: §5 Projetos (tarefa com responsável e prazo obrigatórios,
-             checklist, etiquetas, anexos, comentários; detalhe abre por cima do quadro).
+             checklist, etiquetas, anexos, aprovação da entrega pela empresa, comentários;
+             detalhe abre por cima do quadro).
    ============================================================================ */
 "use client";
 
 import { useState } from 'react';
-import { X, AlignLeft, CheckSquare, Square, MessageSquare, Tag, Trash2, Plus, CreditCard } from 'lucide-react';
+import { X, AlignLeft, BadgeCheck, CheckSquare, Square, MessageSquare, Tag, Trash2, Plus, CreditCard } from 'lucide-react';
 import { useDados, Tarefa } from '@/lib/store';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { podeFazer } from '@/lib/permissoes';
 import { podeVerProjeto } from '@/lib/escopo';
-import { ROTULO_PRIORIDADE } from '@/lib/metricas';
+import { colunaAceitaAprovacao, ROTULO_PRIORIDADE } from '@/lib/metricas';
 import Modal from '@/components/ui/Modal';
 import AnexosDaTarefa from './AnexosDaTarefa';
 import Button from '@/components/button';
@@ -74,6 +76,21 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
   const podeMover = !!sessao && podeFazer(sessao.perfil, 'mover_tarefa', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   // Comentar: qualquer perfil que enxerga o projeto (escopo em lib/escopo.ts).
   const podeComentar = !!sessao && podeFazer(sessao.perfil, 'comentar_tarefa', { enxergaProjeto: podeVerProjeto(sessao, t.projetoId, d) });
+  // Aprovar a entrega (decisão da PROGLOGIC, 09/10/2026): só a EMPRESA dona do projeto, e só com a tarefa em
+  // Revisão ou Pronto (colunaAceitaAprovacao). O admin e o profissional apenas veem o estado.
+  const podeAprovar = !!sessao && podeFazer(sessao.perfil, 'aprovar_entrega', { enxergaProjeto: podeVerProjeto(sessao, t.projetoId, d) });
+  const entregue = colunaAceitaAprovacao(projeto, t.colunaId);
+  const aprovadoPor = t.aprovadaPorId ? d.pessoa(t.aprovadaPorId) : undefined;
+  /**
+   * Aprova a entrega da tarefa (ou desfaz a aprovação).
+   * GRAVA: aprovadaEm (hoje) e aprovadaPorId na tarefa; desfazer apaga os dois.
+   * @param aprovar - true aprova; false desfaz.
+   */
+  const aprovarEntrega = (aprovar: boolean) => {
+    if (!sessao) return;
+    atualizar(aprovar ? { aprovadaEm: hojeISO(), aprovadaPorId: sessao.pessoaId } : { aprovadaEm: undefined, aprovadaPorId: undefined });
+    avisar(aprovar ? 'Entrega aprovada.' : 'Aprovação desfeita.');
+  };
   // Anexar e remover arquivo (G03): admin em qualquer tarefa; profissional só nas próprias; Empresa só vê.
   const podeAnexar = !!sessao && podeFazer(sessao.perfil, 'anexar_arquivo', { pessoaId: sessao.pessoaId, responsavelId: t.responsavelId });
   const coluna = projeto.colunas.find((c) => c.id === t.colunaId);
@@ -197,6 +214,22 @@ export default function DetalheTarefa({ tarefaId, onFechar }: { tarefaId: string
             </form>}
             {!podeEditar && t.checklist.length === 0 && <p className="text-[13px] text-tinta-suave">Esta tarefa não tem checklist.</p>}
           </section>
+
+          {/* Aprovação da entrega (empresa): aparece quando a tarefa está em Revisão ou Pronto (ou já foi aprovada).
+            * A empresa vê o botão; os outros perfis veem só o estado. Cor nunca sozinha: ícone e texto. */}
+          {(entregue || !!t.aprovadaEm) && (
+            <section aria-labelledby="aprovacao-titulo">
+              <h3 id="aprovacao-titulo" className={secao}><BadgeCheck className="h-4 w-4" aria-hidden />Aprovação da entrega</h3>
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-borda px-3 py-2.5">
+                {t.aprovadaEm
+                  ? <p className="min-w-0 flex-1 text-sm text-tinta"><strong className="text-sucesso">Aprovada</strong> pela empresa em {dataBR(t.aprovadaEm)}{aprovadoPor ? ` por ${aprovadoPor.nome}` : ''}.</p>
+                  : <p className="min-w-0 flex-1 text-sm text-tinta-suave">Aguardando a aprovação da empresa.</p>}
+                {podeAprovar && (t.aprovadaEm
+                  ? <Button variante="secundario" tamanho="sm" onClick={() => aprovarEntrega(false)}>Desfazer aprovação</Button>
+                  : <Button tamanho="sm" onClick={() => aprovarEntrega(true)}><BadgeCheck className="h-4 w-4" aria-hidden />Aprovar entrega</Button>)}
+              </div>
+            </section>
+          )}
 
           {/* Anexos (G03, SIMULADO: só metadados) — entre o checklist e os comentários. */}
           <AnexosDaTarefa tarefa={t} podeAnexar={podeAnexar} />

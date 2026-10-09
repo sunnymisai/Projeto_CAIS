@@ -1,8 +1,9 @@
 /* ============================================================================
    COMPONENTS/PAINEIS/PAINELEMPRESA.TSX (PAINEL DA EMPRESA)
    O que é: o painel do perfil Empresa com os quatro blocos do §6: andamento dos
-     projetos próprios, quem está alocado e em quê (com período, sem horas), entregas
-     aprovadas × aguardando revisão por projeto e o progresso da trilha do time.
+     projetos próprios, quem está alocado e em quê (com período e as horas por semana no projeto
+     dela), entregas aprovadas pela empresa × aguardando a aprovação dela por projeto e o progresso
+     da trilha do time.
      O cabeçalho mostra o nome fantasia e o status da empresa no programa.
    Onde é usado: app/(sistema)/painel/page.tsx, quando o perfil da sessão é empresa.
    Depende de: lib/auth.tsx (useAuth), lib/store.tsx (useDados), lib/escopo.ts
@@ -19,7 +20,7 @@ import { BookOpenCheck, CircleAlert, FolderKanban, PackageCheck, Users } from 'l
 import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { alocacoesVisiveis, projetosVisiveis, tarefasVisiveis } from '@/lib/escopo';
-import { aprovadasNoPeriodo, dentroDoPeriodo, entregasDoProjeto, progressoProjeto, resumoTrilha, ROTULO_STATUS_EMPRESA, ROTULO_STATUS_PROJETO, TOM_STATUS_EMPRESA, TOM_STATUS_PROJETO } from '@/lib/metricas';
+import { aprovadasNoPeriodo, colunaAceitaAprovacao, dentroDoPeriodo, entregasDoProjeto, progressoProjeto, resumoTrilha, ROTULO_STATUS_EMPRESA, ROTULO_STATUS_PROJETO, TOM_STATUS_EMPRESA, TOM_STATUS_PROJETO } from '@/lib/metricas';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import { Avatar, EstadoVazio, Etiqueta, Progresso } from '@/components/ui/basicos';
 import { BarraEmpilhada, Legenda, COR_GRAFICO } from '@/components/ui/Graficos';
@@ -47,12 +48,14 @@ export default function PainelEmpresa() {
   const tarefas = useMemo(() => (pronto ? tarefasVisiveis(sessao!, d) : []), [pronto, sessao, d]);
   const alocacoes = useMemo(() => (pronto ? alocacoesVisiveis(sessao!, d) : []), [pronto, sessao, d]);
 
-  // Entregas: "feita" = está na última coluna do projeto (mesma regra do quadro).
-  // TODO(PROGLOGIC): o deck fala em "entregas aprovadas"; hoje não há aprovação, então Pronto conta como entregue.
-  const ultimaColuna = (projetoId: string) => { const p = d.projeto(projetoId); return p?.colunas[p.colunas.length - 1]?.id; };
-  // Últimas entregas DO PERÍODO (G01): aprovadas com concluidaEm dentro do período, as mais recentes primeiro.
-  const feitas = tarefas.filter((t) => t.colunaId === ultimaColuna(t.projetoId) && !!t.concluidaEm && dentroDoPeriodo(t.concluidaEm, periodo))
-    .sort((a, b) => (b.concluidaEm ?? b.prazo).localeCompare(a.concluidaEm ?? a.prazo));
+  // Entregas: a EMPRESA aprova (decisão da PROGLOGIC, 09/10/2026). "Entregue" = tarefa em Revisão ou Pronto
+  // (colunaAceitaAprovacao); "aprovada" = a empresa registrou aprovadaEm no detalhe da tarefa.
+  const entregues = tarefas.filter((t) => colunaAceitaAprovacao(d.projeto(t.projetoId), t.colunaId));
+  // Aguardando a aprovação DESTA empresa: a bola está com ela, então vem em destaque no bloco.
+  const aguardando = entregues.filter((t) => !t.aprovadaEm).sort((a, b) => a.prazo.localeCompare(b.prazo));
+  // Últimas entregas DO PERÍODO (G01): aprovadas com aprovadaEm dentro do período, as mais recentes primeiro.
+  const feitas = entregues.filter((t) => !!t.aprovadaEm && dentroDoPeriodo(t.aprovadaEm, periodo))
+    .sort((a, b) => b.aprovadaEm!.localeCompare(a.aprovadaEm!));
 
   // Trilhas da empresa (alcance "empresa", publicadas): o progresso do time dela (§6).
   const trilhasDaEmpresa = pronto && pessoa?.empresaId
@@ -107,15 +110,14 @@ export default function PainelEmpresa() {
           )}
         </Bloco>
 
-        {/* 2) Quem está alocado e em quê: pessoa, papel, projeto e período.
-          * PRIVACIDADE (decisão do E01): a empresa NÃO vê a carga em horas nem os outros projetos
-          * da pessoa. Esses dados mostram quanto ela trabalha para OUTROS clientes do programa.
-          * alocacoesVisiveis (lib/escopo.ts) já traz só as alocações dos projetos desta empresa;
-          * aqui também não mostramos as horas (a.carga), que só o admin vê (Equipe e /carga).
-          * TODO(PROGLOGIC): confirmar se a empresa pode ver ao menos as horas no projeto dela. */}
-        <Bloco titulo="Quem está no time" estado={estado}>
+        {/* 2) Quem está alocado e em quê: pessoa, papel, projeto, período e as horas por semana.
+          * DECISÃO DA PROGLOGIC (09/10/2026): a empresa aloca o time nos projetos dela, então vê as horas
+          * semanais de cada pessoa NO PROJETO DELA (a.carga). PRIVACIDADE que continua: ela não vê os
+          * outros projetos da pessoa nem a soma das horas (são de outros clientes); alocacoesVisiveis
+          * (lib/escopo.ts) já traz só as alocações dos projetos desta empresa. */}
+        <Bloco titulo="Quem está no time" estado={estado} acao={<VerTodas href="/projetos" rotulo="Gerenciar equipes" />}>
           {alocacoes.length === 0 ? (
-            <EstadoVazio icone={<Users className="h-6 w-6" aria-hidden />} titulo="Ninguém alocado ainda" descricao="Quando a coordenação alocar profissionais nos seus projetos, eles aparecem aqui com o papel." />
+            <EstadoVazio icone={<Users className="h-6 w-6" aria-hidden />} titulo="Ninguém alocado ainda" descricao="Abra um projeto, vá na aba Equipe e aloque os profissionais. Eles aparecem aqui com o papel e as horas." />
           ) : (
             <ul className="divide-y divide-borda">
               {alocacoes.map((a) => {
@@ -130,6 +132,7 @@ export default function PainelEmpresa() {
                     </span>
                     {/* Período da alocação; quem ainda não começou ganha o "a partir de" para não parecer que já está no time. */}
                     <span className="shrink-0 text-right text-[12px] text-tinta-suave">
+                      <span className="block font-semibold tabular-nums text-tinta">{a.carga} h/sem</span>
                       {a.inicio > hojeISO() ? <>A partir de {dataCurta(a.inicio)}</> : <>{dataCurta(a.inicio)} a {dataCurta(a.fim)}</>}
                     </span>
                   </li>
@@ -139,21 +142,21 @@ export default function PainelEmpresa() {
           )}
         </Bloco>
 
-        {/* 3) Entregas por projeto: aprovadas (última coluna) × aguardando revisão (penúltima), §6.
-          * A conta fica em entregasDoProjeto (lib/metricas.ts). Vazio quando nenhum projeto tem tarefa
-          * (ex.: a Aurora, com o projeto ainda planejado). */}
+        {/* 3) Entregas por projeto: aprovadas pela empresa × aguardando a aprovação dela × em produção, §6.
+          * A conta fica em entregasDoProjeto (lib/metricas.ts); a empresa aprova no detalhe da tarefa.
+          * Vazio quando nenhum projeto tem tarefa (ex.: a Aurora, com o projeto ainda planejado). */}
         <Bloco titulo="Entregas" estado={estado}>
           {tarefas.length === 0 ? (
-            <EstadoVazio icone={<PackageCheck className="h-6 w-6" aria-hidden />} titulo="Nenhuma entrega ainda" descricao="Quando o time começar as tarefas dos seus projetos, você vê aqui o que já foi aprovado e o que está aguardando revisão." />
+            <EstadoVazio icone={<PackageCheck className="h-6 w-6" aria-hidden />} titulo="Nenhuma entrega ainda" descricao="Quando o time começar as tarefas dos seus projetos, você vê aqui o que já foi aprovado e o que está esperando a sua aprovação." />
           ) : (
             <div className="space-y-4">
               <ul className="space-y-4">
                 {projetos.map((p) => {
                   const e = entregasDoProjeto(p.id, d);
-                  // Barra: aprovadas (verde), em revisão (âmbar) e o resto ainda em produção (cinza).
+                  // Barra: aprovadas (verde), aguardando a aprovação da empresa (âmbar) e o resto ainda em produção (cinza).
                   const seg = [
                     { rotulo: 'Aprovadas', valor: e.aprovadas, cor: COR_GRAFICO.concluida },
-                    ...(e.temRevisao ? [{ rotulo: 'Aguardando revisão', valor: e.revisao, cor: COR_GRAFICO.revisao }] : []),
+                    { rotulo: 'Aguardando sua aprovação', valor: e.aguardando, cor: COR_GRAFICO.revisao },
                     { rotulo: 'Em produção', valor: e.emProducao, cor: COR_GRAFICO.naoIniciada },
                   ];
                   return (
@@ -176,8 +179,25 @@ export default function PainelEmpresa() {
                   );
                 })}
               </ul>
+              {/* Aguardando a sua aprovação: o que a empresa precisa fazer. Cada linha abre a tarefa, onde ela aprova. */}
+              {aguardando.length > 0 && (
+                <div>
+                  <p className="text-[12px] font-semibold text-aviso">Aguardando a sua aprovação · {aguardando.length}</p>
+                  <ul className="mt-1.5 space-y-1.5">
+                    {aguardando.slice(0, 4).map((t) => (
+                      <li key={t.id}>
+                        {/* NAVEGA: abre a tarefa por cima do quadro; lá fica o botão "Aprovar entrega". */}
+                        <Link href={`/projetos/${t.projetoId}?aba=tarefas&tarefa=${t.id}`} className="flex items-center justify-between gap-3 rounded-lg border border-aviso/30 bg-aviso/5 px-2 py-1.5 text-sm hover:bg-aviso/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">
+                          <span className="min-w-0 truncate text-tinta">{t.titulo}</span>
+                          <span className="shrink-0 text-[12px] font-semibold text-aviso">Aprovar</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {/* Vazio do período: tem tarefa, mas nenhuma aprovada nas datas escolhidas. */}
-              {feitas.length === 0 && <p className="rounded-xl border border-dashed border-borda px-4 py-4 text-center text-[13px] text-tinta-suave">Nenhuma entrega aprovada de {dataBR(periodo.de)} a {dataBR(periodo.ate)}. Escolha um período maior.</p>}
+              {feitas.length === 0 && <p className="rounded-xl border border-dashed border-borda px-4 py-4 text-center text-[13px] text-tinta-suave">Nenhuma entrega aprovada de {dataBR(periodo.de)} a {dataBR(periodo.ate)}. Aprove as entregas no detalhe de cada tarefa ou escolha um período maior.</p>}
               {feitas.length > 0 && (
                 <>
                   <p className="text-[12px] font-semibold text-tinta-suave">Últimas entregas no período</p>
@@ -187,7 +207,7 @@ export default function PainelEmpresa() {
                         {/* NAVEGA: abre a tarefa por cima do quadro do projeto. */}
                         <Link href={`/projetos/${t.projetoId}?tarefa=${t.id}`} className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-superficie-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60">
                           <span className="min-w-0 truncate text-tinta">{t.titulo}</span>
-                          <span className="shrink-0 text-[12px] text-tinta-suave">{t.concluidaEm ? dataCurta(t.concluidaEm) : '—'}</span>
+                          <span className="shrink-0 text-[12px] text-tinta-suave">{t.aprovadaEm ? dataCurta(t.aprovadaEm) : '—'}</span>
                         </Link>
                       </li>
                     ))}

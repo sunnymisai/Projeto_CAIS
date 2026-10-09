@@ -16,7 +16,7 @@ const nav = await abrirNavegador('f02', 9365);
 const { ev, ir, entrar, erros } = nav;
 
 try {
-  await ev(`localStorage.removeItem('cais-dados-v5')`);
+  await ev(`localStorage.removeItem('cais-dados-v6')`);
   await entrar(CONTAS.admin);
   await ir('/painel', 500);
   // Espera o card de carga desenhar (até 15 s).

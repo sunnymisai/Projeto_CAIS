@@ -9,7 +9,8 @@
    Depende de: next/navigation (useParams, useRouter), lib/store.tsx
      (useDados: trilhas, pessoas, empresas, salvar, remover), lib/toast.tsx,
      lib/metricas.ts (publicoDaTrilha, situacaoNaTrilha), lib/trilhas.ts
-     (TIPOS_ETAPA, ALCANCE, TENTATIVAS_PADRAO, problemasDoQuiz), lib/utils.ts
+     (TIPOS_ETAPA, ALCANCE, TENTATIVAS_PADRAO, problemasDoQuiz), lib/quiz.ts
+     (LIMITE_TENTATIVAS, tentativasDoQuiz), lib/utils.ts
      (cx, hojeISO, novoId), components/trilhas/EditorConteudoEtapa.tsx (conteúdo
      e perguntas da etapa) e componentes de components/ui/.
    Contexto: §4 (Trilhas: alcances, anatomia trilha → etapa → conteúdo/quiz,
@@ -32,7 +33,8 @@ import { CabecalhoPagina } from '@/components/shell/Pagina';
 import Button from '@/components/button';
 import Input from '@/components/input';
 import Checkbox from '@/components/checkbox';
-import { Select, AreaTexto, Segmentado } from '@/components/ui/form';
+import { Select, AreaTexto, Segmentado, Interruptor } from '@/components/ui/form';
+import { LIMITE_TENTATIVAS, tentativasDoQuiz } from '@/lib/quiz';
 import { Card, CardTitulo, Etiqueta, Abas, Aviso, Avatar, Progresso, EstadoVazio, Esqueleto } from '@/components/ui/basicos';
 import { Tabela, Th, Td, Tr } from '@/components/ui/Tabela';
 import Modal from '@/components/ui/Modal';
@@ -284,12 +286,13 @@ export default function EditorTrilha() {
                                   className="w-14 rounded border border-borda bg-superficie px-1.5 py-0.5 text-tinta focus:outline-none focus:ring-2 focus:ring-primaria/40" />%
                               </label>
                             )}
-                            {/* Tentativas do quiz (§4). 0 = sem limite; sem valor salvo, mostra o padrão. */}
+                            {/* Tentativas do quiz (§4): de 1 a 10 (regra da PROGLOGIC). Sem valor salvo, mostra o padrão;
+                              * o antigo "0 = sem limite" aparece como 10. */}
                             {e.tipo === 'quiz' && (
-                              <label className="flex items-center gap-1" title="0 = sem limite">Tentativas
-                                <input type="number" min={0} max={20} value={e.tentativasMax ?? TENTATIVAS_PADRAO}
-                                  // Math.max/Math.floor: não aceita negativo nem fração.
-                                  onChange={(ev) => setEtapa(i, { tentativasMax: Math.max(0, Math.floor(Number(ev.target.value) || 0)) })}
+                              <label className="flex items-center gap-1" title={`De 1 a ${LIMITE_TENTATIVAS} tentativas`}>Tentativas
+                                <input type="number" min={1} max={LIMITE_TENTATIVAS} value={tentativasDoQuiz(e.tentativasMax, TENTATIVAS_PADRAO)}
+                                  // Math.floor/min/max: não aceita fração, zero, negativo nem mais que 10.
+                                  onChange={(ev) => setEtapa(i, { tentativasMax: Math.min(LIMITE_TENTATIVAS, Math.max(1, Math.floor(Number(ev.target.value) || 1))) })}
                                   className="w-12 rounded border border-borda bg-superficie px-1.5 py-0.5 text-tinta focus:outline-none focus:ring-2 focus:ring-primaria/40" />
                               </label>
                             )}
@@ -387,11 +390,14 @@ export default function EditorTrilha() {
                   hint="Recebem a trilha todas as pessoas alocadas em projetos desta empresa."
                   opcoes={d.empresas.filter((e) => e.status !== 'encerrada').map((e) => ({ valor: e.id, rotulo: e.nomeFantasia }))} />
               )}
-              {/* Prazo: Math.max(1, ...) impede 0 ou negativo.
-                * SIMULADO: "Quando abre" tem uma opção só e não faz nada
-                * (onChange vazio). TODO(API): "data marcada" chega com a API. */}
+              {/* Prazo (decisão da PROGLOGIC, 09/10/2026): indeterminado ou com os dias definidos pelo administrador,
+                * em geral a pedido da empresa. prazoDias 0 = indeterminado (a trilha não vence para ninguém).
+                * SIMULADO: "Quando abre" tem uma opção só e não faz nada (onChange vazio).
+                * TODO(API): "data marcada" chega com a API. */}
+              <Interruptor ligado={t.prazoDias === 0} onChange={(sem) => atualizar({ prazoDias: sem ? 0 : 14 })} rotulo="Prazo indeterminado"
+                descricao="A trilha não tem data limite. Desligue para definir os dias, por exemplo quando a empresa pedir um prazo." />
               <div className="grid grid-cols-2 gap-4">
-                <Input compacto label="Prazo para concluir (dias)" type="number" min={1} value={String(t.prazoDias)} onChange={(e) => atualizar({ prazoDias: Math.max(1, Number(e.target.value)) })} />
+                {t.prazoDias > 0 && <Input compacto label="Prazo para concluir (dias)" type="number" min={1} value={String(t.prazoDias)} onChange={(e) => atualizar({ prazoDias: Math.max(1, Math.floor(Number(e.target.value) || 1)) })} />}
                 <Select label="Quando abre" value="entrada" onChange={() => {}} opcoes={[{ valor: 'entrada', rotulo: 'Na entrada da pessoa' }]} hint="Data marcada chega com a API." />
               </div>
               <Aviso tipo="info">Uma pessoa pode receber trilhas das três camadas ao mesmo tempo.</Aviso>

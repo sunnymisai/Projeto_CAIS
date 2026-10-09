@@ -26,8 +26,9 @@ const diaMes = (iso: string) => dataBR(iso).slice(0, 5);
  */
 export function textoDoPrazo(t: Pick<TrilhaDaPessoa, 'situacao' | 'prazo' | 'situacaoPrazo'>, hoje = hojeISO()) {
   if (t.situacao === 'concluida') return { texto: 'Concluída', tom: 'sucesso' as const, Icone: CircleCheck };
-  // Trilha publicada antes do D01 pode não ter data de publicação: sem prazo calculável.
-  if (!t.prazo || !t.situacaoPrazo) return { texto: 'Sem prazo definido', tom: 'neutro' as const, Icone: CalendarClock };
+  // Sem prazo: a trilha tem prazo INDETERMINADO (prazoDias 0, decisão da PROGLOGIC) ou foi publicada antes de ter
+  // data de publicação. Nos dois casos não há data limite para mostrar.
+  if (!t.prazo || !t.situacaoPrazo) return { texto: 'Prazo indeterminado', tom: 'neutro' as const, Icone: CalendarClock };
   if (t.situacaoPrazo === 'vencido') return { texto: `Venceu em ${diaMes(t.prazo)}`, tom: 'erro' as const, Icone: CircleAlert };
   if (t.situacaoPrazo === 'perto') {
     const faltam = diasEntre(hoje, t.prazo);

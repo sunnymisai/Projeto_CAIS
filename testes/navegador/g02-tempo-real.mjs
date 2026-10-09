@@ -56,12 +56,12 @@ const esperarAte = async (aba, condicao, ms = 15000) => {
 
 let B;
 try {
-  await A.ev(`localStorage.removeItem('cais-dados-v5')`);
+  await A.ev(`localStorage.removeItem('cais-dados-v6')`);
   await A.entrar(CONTAS.admin);
   // A tarefa: a primeira da coluna "A fazer" do Portal.
   await A.ir('/projetos/prj_portal?aba=tarefas', 500);
   await esperarAte(A, `document.querySelectorAll('[data-cartao]').length > 0`);
-  const tarefa = await A.ev(`(() => { const d = JSON.parse(localStorage.getItem('cais-dados-v5') ?? 'null'); return d ? null : null; })()`) ?? null;
+  const tarefa = await A.ev(`(() => { const d = JSON.parse(localStorage.getItem('cais-dados-v6') ?? 'null'); return d ? null : null; })()`) ?? null;
   // Sem dados gravados ainda (seed só em memória): pega o cartão pela tela.
   const tarefaId = tarefa ?? await A.ev(`document.querySelector('[data-cartao]').dataset.cartao`);
   const titulo = await A.ev(`document.querySelector('[data-cartao="${tarefaId}"] p')?.textContent ?? ''`);
@@ -88,7 +88,7 @@ try {
   c('aba B: o cartão pisca em destaque sem recarregar a página', chegou);
   const aviso = await B.ev(`document.querySelector('main [role=status][aria-live=polite]')?.textContent ?? ''`);
   c('aba B: aviso aria-live "Administrador moveu ... para Revisão"', aviso === `Administrador moveu '${titulo}' para Revisão`, aviso);
-  const naColuna = await B.ev(`(() => { const d = JSON.parse(localStorage.getItem('cais-dados-v5')); const p = d.projetos.find((x) => x.id === 'prj_portal'); const t = d.tarefas.find((x) => x.id === '${tarefaId}'); return p.colunas.find((col) => col.id === t.colunaId)?.titulo; })()`);
+  const naColuna = await B.ev(`(() => { const d = JSON.parse(localStorage.getItem('cais-dados-v6')); const p = d.projetos.find((x) => x.id === 'prj_portal'); const t = d.tarefas.find((x) => x.id === '${tarefaId}'); return p.colunas.find((col) => col.id === t.colunaId)?.titulo; })()`);
   c('aba B: os dados da aba B foram recarregados (a tarefa está em Revisão)', naColuna === 'Revisão', naColuna);
   const somePosDestaque = await esperarAte(B, `!document.querySelector('[data-cartao="${tarefaId}"]')?.classList.contains('ring-primaria')`, 6000);
   c('aba B: o destaque some sozinho depois de alguns segundos', somePosDestaque);

@@ -11,7 +11,7 @@
    Como rodar: node --experimental-strip-types lib/metricas.casos.ts
    ============================================================================ */
 
-import { agruparMinhasTarefas, atalhoDoPeriodo, cargaDaSemana, entregasDoProjeto, entregasPorSemana, esteMes, evolucaoDaTurma, fimDaSemana, inicioDaSemana, proximasEntregas, semanasDoPeriodo, tarefasConcluidasPorEmpresa, trilhasConcluidasNoPeriodo, ultimosDias } from './metricas.ts';
+import { agruparMinhasTarefas, aprovadasNoPeriodo, atalhoDoPeriodo, colunaAceitaAprovacao, prazoDaPessoaNaTrilha, cargaDaSemana, entregasDoProjeto, entregasPorSemana, esteMes, evolucaoDaTurma, fimDaSemana, inicioDaSemana, proximasEntregas, semanasDoPeriodo, tarefasConcluidasPorEmpresa, trilhasConcluidasNoPeriodo, ultimosDias } from './metricas.ts';
 import type { Dados, Projeto, Tarefa, Trilha } from './tipos.ts';
 
 // Hoje fixo: quarta-feira, 7 de outubro de 2026 (domingo da semana = dia 11).
@@ -60,9 +60,12 @@ const quadro2 = { id: 'q2', colunas: [{ id: 'a2', titulo: 'A fazer' }, { id: 'p2
 const dadosEntregas = {
   projetos: [quadro4, quadro2],
   tarefas: [
-    tarefa('e1', HOJE, { projetoId: 'q4', colunaId: 'p' }), tarefa('e2', HOJE, { projetoId: 'q4', colunaId: 'p' }),
+    // q4: e1 Pronto e aprovada em 02/10; e2 Pronto sem aprovação; e3 Revisão sem aprovação; e4 e e7 ainda em A fazer
+    // (e7 tem aprovação gravada, dado antigo: não pode contar, porque não foi entregue).
+    tarefa('e1', HOJE, { projetoId: 'q4', colunaId: 'p', aprovadaEm: '2026-10-02' }), tarefa('e2', HOJE, { projetoId: 'q4', colunaId: 'p' }),
     tarefa('e3', HOJE, { projetoId: 'q4', colunaId: 'r' }), tarefa('e4', HOJE, { projetoId: 'q4', colunaId: 'a' }),
-    tarefa('e5', HOJE, { projetoId: 'q2', colunaId: 'p2' }), tarefa('e6', HOJE, { projetoId: 'q2', colunaId: 'a2' }),
+    tarefa('e7', HOJE, { projetoId: 'q4', colunaId: 'a', aprovadaEm: '2026-10-03' }),
+    tarefa('e5', HOJE, { projetoId: 'q2', colunaId: 'p2', aprovadaEm: '2026-08-01' }), tarefa('e6', HOJE, { projetoId: 'q2', colunaId: 'a2' }),
   ],
 };
 // Próximas entregas (janela de 14 dias a partir de 07/10): entra hoje e 21/10; ficam fora a atrasada,
@@ -88,8 +91,8 @@ const proximas = proximasEntregas('q4', {
     tarefa('pe-pronta', '2026-10-10', { projetoId: 'q4', colunaId: 'p' }),
   ],
 }, 14, HOJE);
-/** Resume entregasDoProjeto em texto curto ("total|aprovadas|revisao|emProducao|temRevisao"), para comparar num caso. */
-const resumoEntregas = (id: string) => { const e = entregasDoProjeto(id, dadosEntregas); return `${e.total}|${e.aprovadas}|${e.revisao}|${e.emProducao}|${e.temRevisao}`; };
+/** Resume entregasDoProjeto em texto curto ("total|aprovadas|aguardando|emProducao"), para comparar num caso. */
+const resumoEntregas = (id: string) => { const e = entregasDoProjeto(id, dadosEntregas); return `${e.total}|${e.aprovadas}|${e.aguardando}|${e.emProducao}`; };
 
 const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'quarta → domingo da mesma semana', obtido: fimDaSemana('2026-10-07'), esperado: '2026-10-11' },
@@ -114,10 +117,14 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'rótulo da semana é dia/mês da segunda', obtido: entregas.at(-1)?.rotulo, esperado: '5/10' },
   { porque: 'conta por semana do concluidaEm (2 na semana atual, 1 na anterior)', obtido: entregas.slice(-2).map((e) => e.valor).join(','), esperado: '1,2' },
   { porque: 'tarefa concluída que voltou para outra coluna não conta como entrega', obtido: entregas.reduce((s, e) => s + e.valor, 0), esperado: 3 },
-  { porque: 'quadro de 4 colunas: Pronto = aprovada, Revisão = aguardando, o resto em produção', obtido: resumoEntregas('q4'), esperado: '4|2|1|1|true' },
-  { porque: 'quadro de 2 colunas não tem revisão: a penúltima é A fazer e conta como em produção', obtido: resumoEntregas('q2'), esperado: '2|1|0|1|false' },
-  { porque: 'projeto sem tarefas (Aurora planejado): tudo zero, sem erro', obtido: resumoEntregas('nao-existe'), esperado: '0|0|0|0|false' },
+  { porque: 'entregas (quadro de 4 listas): só Revisão e Pronto contam; aprovada = a empresa aprovou; aprovação em tarefa ainda em A fazer é ignorada', obtido: resumoEntregas('q4'), esperado: '5|1|2|2' },
+  { porque: 'entregas (quadro de 2 listas): só a última lista aceita aprovação', obtido: resumoEntregas('q2'), esperado: '2|1|0|1' },
+  { porque: 'projeto sem tarefas (Aurora planejado): tudo zero, sem erro', obtido: resumoEntregas('nao-existe'), esperado: '0|0|0|0' },
+  { porque: 'aprovar só vale em Revisão e Pronto (e na última lista de um quadro curto)', obtido: [colunaAceitaAprovacao(quadro4, 'a'), colunaAceitaAprovacao(quadro4, 'f'), colunaAceitaAprovacao(quadro4, 'r'), colunaAceitaAprovacao(quadro4, 'p'), colunaAceitaAprovacao(quadro2, 'a2'), colunaAceitaAprovacao(quadro2, 'p2')].join(','), esperado: 'false,false,true,true,false,true' },
+  { porque: 'aprovadas no período: usa a data da aprovação (a do e1 está dentro; a do e5, de agosto, fora)', obtido: `${aprovadasNoPeriodo('q4', dadosEntregas, mes)}|${aprovadasNoPeriodo('q2', dadosEntregas, mes)}`, esperado: '1|0' },
   { porque: 'próximas entregas: só não prontas com prazo de hoje a +14 dias, da mais próxima à mais distante', obtido: ids(proximas), esperado: 'pe-hoje,pe-14' },
+  { porque: 'prazo da trilha: a data mais recente entre publicação e entrada, mais os dias', obtido: prazoDaPessoaNaTrilha({ publicadaEm: '2026-10-01', prazoDias: 7 }, { dataEntrada: '2026-10-05' }), esperado: '2026-10-12' },
+  { porque: 'prazo da trilha INDETERMINADO (0 dias): ninguém tem data limite', obtido: prazoDaPessoaNaTrilha({ publicadaEm: '2026-10-01', prazoDias: 0 }, { dataEntrada: '2026-10-05' }), esperado: null },
   { porque: 'últimos 7 dias contam hoje (02/10 a 08/10)', obtido: `${ultimosDias(7, '2026-10-08').de}|${ultimosDias(7, '2026-10-08').ate}`, esperado: '2026-10-02|2026-10-08' },
   { porque: 'este mês vai do dia 1 até hoje', obtido: esteMes('2026-10-08').de, esperado: '2026-10-01' },
   { porque: 'o filtro reconhece o atalho de um período da URL (30 dias) e o personalizado', obtido: `${atalhoDoPeriodo(mes, HOJE)}|${atalhoDoPeriodo({ de: '2026-01-01', ate: '2026-02-01' }, HOJE)}`, esperado: '30|personalizado' },

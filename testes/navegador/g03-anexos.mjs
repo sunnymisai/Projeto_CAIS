@@ -65,7 +65,7 @@ const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'
 const TAREFA = '/projetos/prj_portal?aba=tarefas&tarefa=';
 
 try {
-  await ev(`localStorage.removeItem('cais-dados-v5')`);
+  await ev(`localStorage.removeItem('cais-dados-v6')`);
 
   // --- Admin: lista do seed, anexar, limite, remover. ---
   await entrar(CONTAS.admin);
@@ -88,7 +88,7 @@ try {
   t = await dialogo();
   c('arquivo pequeno é anexado (contagem 3, nome e tamanho)', t.includes('Anexos · 3') && t.includes('ata-da-reuniao.txt') && /Documento · \d+ KB/.test(t));
   c('depois de anexar o erro anterior some', !(await dialogo()).includes('o limite é 10 MB'));
-  const salvo = await ev(`JSON.parse(localStorage.getItem('cais-dados-v5')).tarefas.find((x) => x.id === 'tar_1').anexos.at(-1)`);
+  const salvo = await ev(`JSON.parse(localStorage.getItem('cais-dados-v6')).tarefas.find((x) => x.id === 'tar_1').anexos.at(-1)`);
   c('só os metadados são guardados (nome, tipo, tamanho, autor, data; sem conteúdo)', !!salvo && Object.keys(salvo).sort().join(',') === 'autorId,data,id,nome,tamanho,tipo' && salvo.autorId === 'pes_admin', JSON.stringify(salvo));
 
   // Remover: a confirmação aparece na própria linha; Esc cancela SEM fechar o detalhe; Enter confirma.

@@ -129,7 +129,11 @@ export interface Trilha {
   pessoaIds: string[];
   /** Rascunho não aparece para ninguém além do admin. */
   status: 'rascunho' | 'publicada';
-  /** Prazo para concluir, em dias. */
+  /**
+   * Prazo para concluir, em dias, definido pelo administrador (em geral a pedido da empresa).
+   * 0 = prazo INDETERMINADO: a trilha não vence para ninguém. Tipo `number` (e não opcional) para
+   * dados antigos não quebrarem; o 0 é o "sem prazo".
+   */
   prazoDias: number;
   etapas: Etapa[];
   /**
@@ -264,6 +268,13 @@ export interface Tarefa {
   concluidaEm?: string;
   /** Arquivos anexados (G03, SIMULADO: só metadados). Opcional: dados antigos não têm. */
   anexos?: Anexo[];
+  /**
+   * Aprovação da entrega pela EMPRESA dona do projeto (AAAA-MM-DD). Só vale para tarefa em Revisão ou
+   * Pronto; sair dessas listas apaga a aprovação (lib/store.tsx → moverTarefa). Opcional.
+   */
+  aprovadaEm?: string;
+  /** id da pessoa (da empresa) que aprovou. */
+  aprovadaPorId?: string;
 }
 
 /**

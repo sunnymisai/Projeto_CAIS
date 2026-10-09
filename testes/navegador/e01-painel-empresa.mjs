@@ -1,8 +1,8 @@
 /* ============================================================================
    TESTES/NAVEGADOR/E01-PAINEL-EMPRESA.MJS
    O que é: conferência do painel da empresa (E01): cada empresa vê só o que é dela,
-     cabeçalho com nome fantasia e status, período no lugar das horas (privacidade),
-     entregas aprovadas × aguardando revisão por projeto, vazio de entregas da Aurora,
+     cabeçalho com nome fantasia e status, período E horas por semana no projeto dela,
+     entregas aprovadas × aguardando a aprovação da empresa por projeto, vazio de entregas da Aurora,
      os dois temas, 375 px sem rolagem lateral e nenhum erro no console.
    Onde é usado: rodado à mão: node testes/navegador/e01-painel-empresa.mjs
      (com o `npm run dev` aberto em http://localhost:3000).
@@ -38,7 +38,7 @@ const bloco = (titulo) => ev(`(() => { const h = [...document.querySelectorAll('
 
 try {
   // Parte do seed atual (o mesmo que "Restaurar dados de demonstração").
-  await ev(`localStorage.removeItem('cais-dados-v5')`);
+  await ev(`localStorage.removeItem('cais-dados-v6')`);
 
   // --- Marcos (Vértice) ---
   await entrar(CONTAS.marcos);
@@ -52,9 +52,11 @@ try {
   const time = await bloco('Quem está no time');
   // dataCurta escreve "27 ago": o período fica "27 ago a 22 nov".
   c('Marcos: time com período', /\d{1,2} [a-zç]{3} a \d{1,2} [a-zç]{3}/.test(time), time.slice(0, 120));
-  c('Marcos: time sem horas (privacidade)', !/h\/sem|\bh\b/.test(time));
+  // Decisão da PROGLOGIC (09/10/2026): a empresa aloca o time, então vê as horas por semana NO PROJETO DELA.
+  c('Marcos: time com as horas por semana de cada pessoa', /\d+ h\/sem/.test(time), time.slice(0, 100));
+  c('Marcos: nenhuma carga total nem semáforo no time (isso revelaria outros clientes)', !/Acima do limite|No limite|Com folga|Livre|%/.test(time));
   const ent = await bloco('Entregas');
-  c('Marcos: entregas por projeto com aprovadas e aguardando revisão', ent.includes('Aprovadas') && ent.includes('Aguardando revisão') && ent.includes('Portal de pedidos'), ent.slice(0, 160));
+  c('Marcos: entregas por projeto com aprovadas e aguardando revisão', ent.includes('Aprovadas') && ent.includes('Aguardando sua aprovação') && ent.includes('Portal de pedidos'), ent.slice(0, 160));
   c('Marcos: barras das entregas com resumo em texto', await ev(`[...document.querySelectorAll('main [role=img]')].every((b) => (b.getAttribute('aria-label') ?? '').length > 0)`));
   c('Marcos: trilha do time aparece', (await bloco('Trilha do time')).includes('Processos da Vértice'));
 

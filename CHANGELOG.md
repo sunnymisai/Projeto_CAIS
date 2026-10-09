@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Regras da PROGLOGIC de 09/10/2026 (branch `feat/regras-da-empresa`)
+- Criado: ação `aprovar_entrega` e `colunaAceitaAprovacao` (lib/permissoes.ts e lib/metricas.ts); `Tarefa.aprovadaEm` e `aprovadaPorId` (lib/tipos.ts); seção "Aprovação da entrega" no detalhe da tarefa e selo "Aprovada" no cartão; `LIMITE_TENTATIVAS` e `tentativasDoQuiz` (lib/quiz.ts); interruptor "Prazo indeterminado" no editor da trilha; teste `testes/navegador/e03-regras-da-empresa.mjs` (32 conferências) e 14 casos novos (permissões 77, quiz 34, métricas 36).
+- Modificado: `alocar` agora vale para a empresa nos projetos dela (lib/permissoes.ts; Equipe e a ficha do projeto); a empresa vê as horas por semana de cada pessoa no projeto dela (aba Equipe e painel), sem o semáforo nem as trilhas; `entregasDoProjeto` e `aprovadasNoPeriodo` passam a contar a aprovação da empresa (antes era "Pronto = aprovada"); `prazoDaPessoaNaTrilha` devolve null com `prazoDias` 0; o campo de tentativas do quiz vai de 1 a 10; `moverTarefa` apaga a aprovação ao sair de Revisão ou Pronto; seed (6 entregas aprovadas, 4 aguardando e a trilha de LGPD sem prazo); chave do navegador `cais-dados-v5` → `cais-dados-v6`; testes `e01` e `e02`; `SISTEMA.md` e `docs/ONDE-PARAMOS.md`.
+- Removido: a regra "a empresa não vê as horas" (E01 e E02), o "0 = sem limite" do quiz e o "Pronto = aprovada".
+
 ## Bloco G: lacunas do deck
 
 ### G03: anexos e aba Arquivos simulados (branch `feat/anexos`)

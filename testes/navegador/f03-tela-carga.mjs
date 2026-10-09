@@ -34,7 +34,7 @@ const botao = (texto) => ev(`[...document.querySelectorAll('main button, main [r
 const semRolagemLateral = `(() => { const m = document.querySelector('#conteudo'); return document.documentElement.scrollWidth <= innerWidth + 1 && m.scrollWidth <= m.clientWidth + 1; })()`;
 
 try {
-  await ev(`localStorage.removeItem('cais-dados-v5')`);
+  await ev(`localStorage.removeItem('cais-dados-v6')`);
 
   // Acesso: só o admin.
   await entrar(CONTAS.ana);

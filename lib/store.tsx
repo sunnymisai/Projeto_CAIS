@@ -2,7 +2,7 @@
    STORE (CAMADA DE DADOS)
    O que é: o "banco de dados" do protótipo — guarda empresas, pessoas, trilhas, projetos, alocações e tarefas e expõe ações para ler, salvar e apagar.
    Onde é usado: app/providers.tsx (monta o DadosProvider), lib/auth.tsx (lerPessoasSalvas, para o login saber quem existe) e, via useDados(), nas telas de app/(sistema)/ (painel, empresas, pessoas, projetos, projetos/[id], trilhas, trilhas/[id]) e nos componentes components/projetos/* (Quadro, CartaoTarefa, DetalheTarefa, Equipe, FormProjeto, Vistas) e components/shell/Topbar.tsx.
-   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO), lib/carga.ts (ocupacaoNoDia, para cargaDaPessoa), lib/tempoReal.ts (canal entre abas, G02), lib/auth.tsx (autor dos eventos) e o localStorage do navegador.
+   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO), lib/carga.ts (ocupacaoNoDia, para cargaDaPessoa), lib/tempoReal.ts (canal entre abas, G02), lib/metricas.ts (colunaAceitaAprovacao), lib/auth.tsx (autor dos eventos) e o localStorage do navegador.
    Contexto: §5 (Projetos, alocação e tarefas), §7 (back-end é da PROGLOGIC), §14 (no protótipo, "ligado à store"), §16 (semáforo de carga).
    ============================================================================ */
 
@@ -13,6 +13,7 @@ import type { Alocacao, Dados, Empresa, Pessoa, Projeto, Tarefa, Trilha } from '
 import { criarSeed } from './seed';
 import { hojeISO } from './utils';
 import { ocupacaoNoDia } from './carga';
+import { colunaAceitaAprovacao } from './metricas';
 import { canalTempoReal, type EventoTempoReal } from './tempoReal';
 // ⚠️ ATENÇÃO: lib/auth.tsx também importa daqui (lerPessoasSalvas). O import circular é seguro porque
 // useAuth só é chamado dentro do componente, nunca quando o arquivo carrega.
@@ -40,7 +41,9 @@ import { useAuth } from './auth';
 // e a Gabriela ganhou a Boas-vindas concluída. Os dados antigos do navegador (chave v3) são DESCARTADOS.
 // ⚠️ ATENÇÃO: v4 → v5 no G03 (bloco G). O seed ganhou anexos de exemplo em algumas tarefas
 // (`Tarefa.anexos`, só metadados). Os dados antigos do navegador (chave v4) são DESCARTADOS.
-const CHAVE = 'cais-dados-v5';
+// ⚠️ ATENÇÃO: v5 → v6 (09/10/2026, regras da PROGLOGIC). O seed ganhou as aprovações de entrega da empresa
+// (`Tarefa.aprovadaEm`) e uma trilha sem prazo (`prazoDias` 0). Os dados antigos do navegador (chave v5) são DESCARTADOS.
+const CHAVE = 'cais-dados-v6';
 
 /** As seis coleções que todo `Dados` precisa ter (usadas para conferir o que veio do navegador). */
 const COLECOES = ['empresas', 'pessoas', 'trilhas', 'projetos', 'alocacoes', 'tarefas'] as const;
@@ -305,7 +308,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
   }, [enfileirar]);
 
   /** Move uma tarefa para outra coluna/posição e renumera a ordem. */
-  // GRAVA: altera colunaId, ordem e concluidaEm das tarefas afetadas.
+  // GRAVA: altera colunaId, ordem, concluidaEm e (ao sair de Revisão/Pronto) a aprovação das tarefas afetadas.
   // TODO(API): virar fetch PATCH; com WebSocket (§5) os colegas veem o cartão mudar.
   const moverTarefa = useCallback((tarefaId: string, colunaId: string, indice: number) => {
     // GRAVA (tempo real): o movimento vira evento "tarefa_movida" (só se a tarefa existe).
@@ -324,6 +327,8 @@ export function DadosProvider({ children }: { children: ReactNode }) {
         ...alvo,
         colunaId,
         concluidaEm: colunaId === ultima ? alvo.concluidaEm ?? hojeISO() : undefined,
+        // A aprovação da empresa só vale em Revisão e Pronto: voltar para A fazer ou Fazendo a desfaz.
+        ...(colunaAceitaAprovacao(projeto, colunaId) ? {} : { aprovadaEm: undefined, aprovadaPorId: undefined }),
       };
       // Cartões que já estão na coluna de destino, em ordem, sem a tarefa movida.
       const destino = d.tarefas

@@ -9,7 +9,7 @@
    Como rodar: node --experimental-strip-types lib/quiz.casos.ts
    ============================================================================ */
 
-import { corrigirQuiz, resultadoDoQuiz, embaralhar, concluirEtapa, registrarTentativa, tentativasUsadas } from './quiz.ts';
+import { corrigirQuiz, resultadoDoQuiz, embaralhar, concluirEtapa, registrarTentativa, tentativasDoQuiz, tentativasUsadas } from './quiz.ts';
 import type { Pergunta, Trilha } from './tipos.ts';
 
 // Progresso mínimo para os casos de concluirEtapa/registrarTentativa: a Ana fez 2 etapas e tem nota 90 de um quiz anterior.
@@ -51,6 +51,11 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'mesma semente: mesma ordem (a tela não "pula" ao redesenhar)', obtido: JSON.stringify(embaralhar([0, 1, 2, 3, 4], 7)) === JSON.stringify(embaralhar([0, 1, 2, 3, 4], 7)), esperado: true },
   { porque: 'sementes diferentes mudam a ordem em pelo menos um de 5 casos', obtido: [1, 2, 3, 4, 5].some((s) => JSON.stringify(embaralhar([0, 1, 2, 3], s)) !== JSON.stringify(embaralhar([0, 1, 2, 3], s + 100))), esperado: true },
   // concluirEtapa (Ana está com 2 etapas feitas: a atual é a de índice 2)
+  { porque: 'tentativas: sem valor usa o padrão (3)', obtido: tentativasDoQuiz(undefined, 3), esperado: 3 },
+  { porque: 'tentativas: o antigo "0 = sem limite" vira o máximo (10)', obtido: tentativasDoQuiz(0, 3), esperado: 10 },
+  { porque: 'tentativas: acima de 10 cai para 10 (regra da PROGLOGIC)', obtido: tentativasDoQuiz(15, 3), esperado: 10 },
+  { porque: 'tentativas: valor negativo sobe para 1', obtido: tentativasDoQuiz(-2, 3), esperado: 1 },
+  { porque: 'tentativas: 10 é aceito (o limite é "até 10")', obtido: tentativasDoQuiz(10, 3), esperado: 10 },
   { porque: 'concluir a etapa atual avança 2 → 3', obtido: concluirEtapa(trilha, 'ana', 2).progresso.ana.concluidas, esperado: 3 },
   { porque: 'concluir a ÚLTIMA etapa grava a data de conclusão da trilha (G01)', obtido: concluirEtapa({ ...trilha, etapas: [{}, {}, {}] }, 'ana', 2, '2026-10-08').progresso.ana.concluidaEm, esperado: '2026-10-08' },
   { porque: 'concluir uma etapa do meio não grava data de conclusão', obtido: concluirEtapa({ ...trilha, etapas: [{}, {}, {}, {}] }, 'ana', 2, '2026-10-08').progresso.ana.concluidaEm, esperado: undefined },

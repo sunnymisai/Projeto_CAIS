@@ -11,7 +11,7 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
-**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `f03-tela-carga.mjs`, `f04-semaforo-alocacao.mjs`, `g01-filtros-periodo.mjs`, `g02-tempo-real.mjs` (usa duas abas), `g03-anexos.mjs`, `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
+**Testes de navegador** (com o `npm run dev` aberto): `node testes/navegador/<teste>.mjs`, por exemplo `d02-minhas-trilhas.mjs`, `d03-player-e-quiz.mjs`, `d04-minhas-tarefas.mjs`, `e01-painel-empresa.mjs`, `e02-empresa-projetos.mjs`, `f02-semaforo-painel.mjs`, `f03-tela-carga.mjs`, `f04-semaforo-alocacao.mjs`, `g01-filtros-periodo.mjs`, `g02-tempo-real.mjs` (usa duas abas), `g03-anexos.mjs`, `e03-regras-da-empresa.mjs`, `h01-varredura.mjs` (parte automática da revisão H01) ou `paineis-todos-perfis.mjs` (o painel de cada perfil). Eles abrem um Chrome sem janela, entram com as contas de demonstração e conferem a tela. O perfil temporário do Chrome fica em `testes/navegador/.perfis/`, que o git ignora.
 
 **Casos de lógica** (sem navegador): `node --experimental-strip-types lib/permissoes.casos.ts`, `lib/quiz.casos.ts`, `lib/metricas.casos.ts` e `lib/carga.casos.ts` (semáforo de carga) e `lib/anexos.casos.ts`.
 
@@ -36,11 +36,11 @@ npm run dev        # http://localhost:3000
 | `/login` | Login (redireciona para `?voltar=`, só caminho interno, ou `/painel`) |
 | `/recuperar-senha` | Recuperação de senha SIMULADA em 3 passos: e-mail → "link enviado" (botão de demonstração "Abrir o link recebido") → `?token=demo&email=...` com nova senha e regras em tempo real. A mensagem de sucesso é a mesma exista ou não o e-mail |
 | `/primeiro-acesso?convite=<pessoaId>` | Primeiro acesso por convite (SIMULADO): mostra nome e e-mail, pede senha com regras em tempo real e aceite dos termos/LGPD; ao salvar ativa a pessoa e entra no `/painel`. Convite inexistente, usado ou de pessoa inativa mostra erro com botão para o login. O link é copiado na ficha de pessoa (status "convidado") |
-| `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); profissional (minhas trilhas e a próxima etapa, as 5 próximas tarefas, carga da semana e histórico de entregas de 8 semanas); empresa (cabeçalho com nome fantasia e status da empresa; andamento dos projetos próprios com % pronto, atrasadas e entrega; quem está no time com papel, projeto e período, SEM as horas, por privacidade; entregas aprovadas × aguardando revisão por projeto; progresso da trilha do time) |
+| `/painel` | Painel que muda com o perfil: administrador (trilhas, prazos, projetos, carga); profissional (minhas trilhas e a próxima etapa, as 5 próximas tarefas, carga da semana e histórico de entregas de 8 semanas); empresa (cabeçalho com nome fantasia e status da empresa; andamento dos projetos próprios com % pronto, atrasadas e entrega; quem está no time com papel, projeto, período e as horas por semana no projeto dela (sem o semáforo nem os outros projetos da pessoa); entregas aprovadas pela empresa × aguardando a aprovação dela por projeto, com a lista do que espera aprovação; progresso da trilha do time) |
 | `/empresas` | Lista e ficha de empresa (CNPJ validado, CEP via ViaCEP) |
 | `/pessoas` | Lista e ficha de pessoa (campos por perfil, convite, inativar) |
-| `/trilhas` e `/trilhas/[id]` | Lista e editor de trilha (etapas, público, progresso). Cada etapa tem o painel "Conteúdo" (texto e endereço) e, no quiz, o editor de perguntas (alternativas, correta por radio, nota mínima e tentativas). Publicar exige quiz completo e grava `publicadaEm` só na primeira vez. As etapas reordenam por setas ou arrastando a alça |
-| `/projetos` e `/projetos/[id]` | Lista, ficha, equipe e tarefas (quadro, lista, cronograma). A Visão geral tem "Próximas entregas" (prazo nos próximos 14 dias). Para a Empresa: só os projetos dela, quadro sem arrastar e sem criar, detalhe da tarefa em leitura com comentário liberado e Equipe só com pessoa, papel e período (sem carga nem trilhas) |
+| `/trilhas` e `/trilhas/[id]` | Lista e editor de trilha (etapas, público, progresso). Cada etapa tem o painel "Conteúdo" (texto e endereço) e, no quiz, o editor de perguntas (alternativas, correta por radio, nota mínima e tentativas de 1 a 10). O prazo da trilha pode ser **indeterminado** (interruptor ligado, `prazoDias` 0) ou ter os dias definidos pelo admin. Publicar exige quiz completo e grava `publicadaEm` só na primeira vez. As etapas reordenam por setas ou arrastando a alça |
+| `/projetos` e `/projetos/[id]` | Lista, ficha, equipe e tarefas (quadro, lista, cronograma). A Visão geral tem "Próximas entregas" (prazo nos próximos 14 dias). Para a Empresa: só os projetos dela, quadro sem arrastar e sem criar, detalhe da tarefa com comentário liberado, **aprovação da entrega** (botão "Aprovar entrega" nas tarefas em Revisão ou Pronto, que ela pode desfazer) e Equipe com pessoa, papel, período e as horas por semana, onde ela **aloca o time** (sem semáforo nem trilhas) |
 | `/design-system` | Documentação viva dos componentes |
 | `/acessos` | Admin: tabela de contas (pessoa, e-mail/login, perfil, empresa, status, último acesso) com filtros e menu por linha (reenviar convite, redefinir senha para `Cais@2026`, mudar perfil com explicação do que ganha e perde, inativar/reativar) e o quadro "O que cada perfil pode fazer", gerado de `ROTAS_POR_PERFIL` e `podeFazer` |
 | `/carga` | Admin: **Carga da equipe**. Matriz profissionais ativos × semanas (4, 8 ou 12, com ← → e "Hoje"), cada célula com o nível da semana; nome e cabeçalho fixos e só a tabela rola. Cada linha abre a carga por projeto; cada célula (clique ou Enter) abre um painel lateral com os 5 dias úteis e as alocações, com link para a Equipe do projeto. Filtros de nome, área, projeto e "Só acima do limite", legenda e contagem no rodapé. No celular, cards com as próximas 4 semanas |
@@ -51,9 +51,16 @@ npm run dev        # http://localhost:3000
 | `/perfil` | Meu perfil, para os três perfis, com abas: **Dados** (nome, telefone e cargo editáveis; e-mail e perfil somente leitura; resumo de área, nível, carga e habilidades para o profissional), **Preferências** (tema claro/escuro/seguir o sistema e densidade das tabelas) e **Segurança** (trocar senha) |
 | `/sem-permissao` e 404 | Páginas de erro (a 404 tem link "Ir para a página inicial") |
 
+## Regras definidas pela PROGLOGIC (09/10/2026)
+
+- **Entregas:** a empresa **aprova** as entregas dos projetos dela, tarefa por tarefa (`Tarefa.aprovadaEm` e `aprovadaPorId`), no detalhe da tarefa. Só dá para aprovar tarefa em Revisão ou Pronto (`colunaAceitaAprovacao` em `lib/metricas.ts`); mover a tarefa para A fazer ou Fazendo apaga a aprovação. "Entregas aprovadas" do painel da empresa e do filtro por período contam só o que ela aprovou. O admin e o profissional veem o estado, mas não aprovam (ação `aprovar_entrega`).
+- **Alocação:** a empresa aloca o time nos projetos **dela** (ação `alocar` com o escopo do projeto), com o mesmo modal e a prévia do semáforo do admin. Ela vê as **horas por semana** de cada pessoa no projeto dela; não vê o semáforo da tabela, as trilhas nem os outros projetos. No modal ela vê, de cada profissional ativo, só o nível no período ("acima do limite no período"), sem nomes de outros projetos.
+- **Prazo da trilha:** indeterminado (`prazoDias` 0, selo "Prazo indeterminado") ou definido pelo admin em dias, em geral a pedido da empresa.
+- **Quiz:** de 1 a 10 tentativas (`LIMITE_TENTATIVAS` e `tentativasDoQuiz` em `lib/quiz.ts`). O antigo "0 = sem limite" não existe mais: dados antigos com 0 valem 10. Chave do navegador: `cais-dados-v6`.
+
 ## Anexos e aba Arquivos (G03, simulados)
 
-A tarefa tem a área **Anexos** no detalhe: botão "Escolher arquivo" (campo nativo, acionável pelo teclado) e arrastar e soltar. Cada arquivo tem até **10 MB**; acima disso a mensagem diz o tamanho e o limite. A lista mostra o ícone por tipo, o tamanho legível ("1,2 MB"), quem enviou e quando; remover pede confirmação na própria linha (Esc cancela). A aba **Arquivos** do projeto junta os anexos de todas as tarefas, com filtro por tipo e link para a tarefa de origem. **SIMULADO: guardamos só os metadados** (nome, tipo, tamanho, autor e data), nunca o conteúdo, porque o localStorage tem limite de poucos MB; o upload de verdade é do back-end (`TODO(API)` em `lib/tipos.ts` e `lib/anexos.ts`). Permissão `anexar_arquivo`: admin em qualquer tarefa, profissional só nas próprias, empresa só vê. Chave do navegador: `cais-dados-v5`.
+A tarefa tem a área **Anexos** no detalhe: botão "Escolher arquivo" (campo nativo, acionável pelo teclado) e arrastar e soltar. Cada arquivo tem até **10 MB**; acima disso a mensagem diz o tamanho e o limite. A lista mostra o ícone por tipo, o tamanho legível ("1,2 MB"), quem enviou e quando; remover pede confirmação na própria linha (Esc cancela). A aba **Arquivos** do projeto junta os anexos de todas as tarefas, com filtro por tipo e link para a tarefa de origem. **SIMULADO: guardamos só os metadados** (nome, tipo, tamanho, autor e data), nunca o conteúdo, porque o localStorage tem limite de poucos MB; o upload de verdade é do back-end (`TODO(API)` em `lib/tipos.ts` e `lib/anexos.ts`). Permissão `anexar_arquivo`: admin em qualquer tarefa, profissional só nas próprias, empresa só vê. Chave do navegador: `cais-dados-v6`.
 
 ## Quadro em tempo real (G02, simulado)
 
@@ -61,7 +68,7 @@ A tarefa tem a área **Anexos** no detalhe: botão "Escolher arquivo" (campo nat
 
 ## Filtros por período (G01)
 
-Os três painéis têm o filtro de período (`components/ui/FiltroPeriodo.tsx`): Últimos 7, 30 e 90 dias, Este mês e Personalizado (o fim não pode vir antes do início). O padrão é 30 dias. O período vai para a URL (`/painel?de=AAAA-MM-DD&ate=AAAA-MM-DD`), então o link reabre no mesmo período. O que ele muda: **admin**, o bloco "No período" (Turma: evolução ao longo do tempo, com as trilhas concluídas por semana, e as tarefas concluídas por empresa); **empresa**, as entregas aprovadas no período por projeto e as últimas entregas; **profissional**, o histórico de entregas. A conclusão de uma trilha agora tem data (`progresso.concluidaEm`, gravada quando a pessoa termina a última etapa). Chave do navegador: `cais-dados-v5`.
+Os três painéis têm o filtro de período (`components/ui/FiltroPeriodo.tsx`): Últimos 7, 30 e 90 dias, Este mês e Personalizado (o fim não pode vir antes do início). O padrão é 30 dias. O período vai para a URL (`/painel?de=AAAA-MM-DD&ate=AAAA-MM-DD`), então o link reabre no mesmo período. O que ele muda: **admin**, o bloco "No período" (Turma: evolução ao longo do tempo, com as trilhas concluídas por semana, e as tarefas concluídas por empresa); **empresa**, as entregas aprovadas no período por projeto e as últimas entregas; **profissional**, o histórico de entregas. A conclusão de uma trilha agora tem data (`progresso.concluidaEm`, gravada quando a pessoa termina a última etapa). Chave do navegador: `cais-dados-v6`.
 
 ## Semáforo de carga (bloco F)
 
@@ -90,10 +97,13 @@ As regras ficam em funções puras, sem React, e podem ser testadas com Node:
 
 | Ação em projetos | Admin | Empresa | Profissional |
 |---|---|---|---|
-| Criar projeto, editar projeto, alocar, criar/editar/excluir tarefa, criar/renomear/excluir lista | sim | não | não |
+| Criar projeto, editar projeto, criar/editar/excluir tarefa, criar/renomear/excluir lista | sim | não | não |
+| Alocar pessoas no projeto (e editar ou remover alocação) | sim, em qualquer projeto | sim, nos projetos dela | não |
+| Aprovar a entrega de uma tarefa (e desfazer) | não, só vê | sim, nos projetos dela | não |
 | Mover tarefa (arrastar ou "Status" no detalhe) | sim | não | só as próprias |
 | Comentar | sim | sim, no projeto dela (o comentário aparece com a etiqueta "Empresa") | sim, no projeto em que está |
-| Ver carga e trilhas das pessoas da equipe | sim | não (privacidade: são dados de outros clientes) | sim |
+| Ver as horas por semana de cada pessoa no projeto | sim | sim, nos projetos dela | sim |
+| Ver o semáforo e as trilhas das pessoas da equipe | sim | não (privacidade: somam outros clientes) | sim |
 
 Botões sem permissão são **escondidos** (não desabilitados); campos sem permissão viram **texto** somente leitura. Tudo isso é conveniência de interface: a segurança real é do back-end da PROGLOGIC (§7). Regras ambíguas estão marcadas `// TODO(PROGLOGIC): confirmar`.
 
@@ -114,7 +124,7 @@ A autenticação e os dados passam por dois arquivos:
 - **`lib/auth.tsx`**: troque o corpo de `autenticar()` pelo `fetch` do login e guarde o token.
 - **`lib/store.tsx`**: reescreva `salvar`, `remover` e `moverTarefa` com `fetch`. As telas usam só `useDados()` e não precisam mudar.
 
-Hoje os dados ficam no `localStorage` (chave `cais-dados-v5`). O menu do perfil tem a opção "Restaurar dados de demonstração".
+Hoje os dados ficam no `localStorage` (chave `cais-dados-v6`). O menu do perfil tem a opção "Restaurar dados de demonstração".
 
 ## Estrutura
 
@@ -148,6 +158,6 @@ lib/                  tipos, seed, store, auth, senha, convite, tema, preferenci
 - Público das trilhas: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`, com `TODO(PROGLOGIC)`). Por isso o Marcos e a Patrícia contam como "não iniciada" nos números do admin.
 - Redefinir senha na tela Acessos grava a senha temporária `Cais@2026` sem forçar a troca no próximo login (SIMULADO).
 - Permissão no servidor: as regras de perfil só existem no navegador.
-- Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v5`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).
+- Estado "com erro" só para dados danificados no navegador: o layout de `(sistema)` mostra o `EstadoErro` (com "Tentar de novo" e "Voltar aos dados de demonstração") quando a store não consegue ler `cais-dados-v6`. Erro de rede e de servidor só existirão com a API (`TODO(API)` em `lib/store.tsx`).
 - Revisão H01 do bloco C (pendências cosméticas que ficaram para depois): `dark:text-[#14161F]` em 5 componentes (virar token `--sobre-cor`), `#B9A7FF` no item ativo da barra lateral (virar token `--marca-clara`) e as paletas fixas de avatares (`components/ui/basicos.tsx`) e de capas de projeto (`components/projetos/cores.ts`), que hoje são exceção documentada.
-- Conteúdo das etapas é só texto e endereço: não há envio de arquivo (vídeo, PDF, áudio). O padrão de 3 tentativas no quiz e a regra do prazo da trilha (a data mais recente entre a publicação e a entrada da pessoa, mais os dias de prazo) esperam confirmação da PROGLOGIC (`TODO(PROGLOGIC)` em `lib/trilhas.ts` e `lib/metricas.ts`).
+- Conteúdo das etapas é só texto e endereço: não há envio de arquivo (vídeo, PDF, áudio). Ainda esperam confirmação da PROGLOGIC (`TODO(PROGLOGIC)`): o padrão de 3 tentativas quando a etapa não define (o máximo de 10 já está decidido) e de onde o prazo da trilha começa a contar (hoje, a data mais recente entre a publicação e a entrada da pessoa).

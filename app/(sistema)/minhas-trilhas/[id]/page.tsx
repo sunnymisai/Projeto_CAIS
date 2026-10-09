@@ -7,7 +7,7 @@
      "Ver etapas" de app/(sistema)/minhas-trilhas/page.tsx.
    Depende de: next/navigation (useParams, useRouter, useSearchParams para o ?bloqueada=),
      lib/auth.tsx (useAuth), lib/store.tsx (useDados), lib/metricas.ts (trilhasDaPessoaDetalhadas),
-     lib/trilhas.ts (ALCANCE, TIPOS_ETAPA, TENTATIVAS_PADRAO, hrefEtapa),
+     lib/trilhas.ts (ALCANCE, TIPOS_ETAPA, TENTATIVAS_PADRAO, hrefEtapa), lib/quiz.ts (tentativasDoQuiz),
      components/trilhas/PrazoTrilha.tsx, components/button.tsx (classesBotao),
      components/ui/basicos.tsx e components/shell/Pagina.tsx.
    Contexto: §4 (o profissional vê progresso, próximo passo em destaque, etapa
@@ -25,6 +25,7 @@ import { useAuth } from '@/lib/auth';
 import { useDados } from '@/lib/store';
 import { trilhasDaPessoaDetalhadas } from '@/lib/metricas';
 import { ALCANCE, TIPOS_ETAPA, TENTATIVAS_PADRAO, hrefEtapa } from '@/lib/trilhas';
+import { tentativasDoQuiz } from '@/lib/quiz';
 import { CabecalhoPagina } from '@/components/shell/Pagina';
 import { Card, Progresso, Esqueleto, Aviso } from '@/components/ui/basicos';
 import { classesBotao } from '@/components/button';
@@ -122,8 +123,8 @@ export default function DetalheMinhaTrilha() {
           const { icone: Icone, rotulo } = TIPOS_ETAPA[e.tipo];
           // As etapas são feitas EM ORDEM: antes da atual = concluída; a atual; depois = bloqueada.
           const estado = i < t.concluidas ? 'concluida' : i === t.concluidas ? 'atual' : 'bloqueada';
-          const tentativas = e.tentativasMax ?? TENTATIVAS_PADRAO;
-          const detalheQuiz = e.tipo === 'quiz' ? ` · Nota mínima ${e.notaMinima}% · ${tentativas === 0 ? 'tentativas sem limite' : `${tentativas} tentativa${tentativas > 1 ? 's' : ''}`}` : '';
+          const tentativas = tentativasDoQuiz(e.tentativasMax, TENTATIVAS_PADRAO);
+          const detalheQuiz = e.tipo === 'quiz' ? ` · Nota mínima ${e.notaMinima}% · ${tentativas} tentativa${tentativas > 1 ? 's' : ''}` : '';
           const conteudo = (
             <>
               {/* Número/ícone de estado à esquerda: ✓ concluída, número na atual, cadeado na bloqueada. */}

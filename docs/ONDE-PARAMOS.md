@@ -63,14 +63,14 @@ node testes/navegador/paineis-todos-perfis.mjs    # o painel de cada perfil, des
 - **Revisão H01 do bloco D**: ainda não rodada.
 - **Itens cosméticos da revisão H01 do bloco C** (não bloqueiam): `dark:text-[#14161F]` em 5 componentes (virar token `--sobre-cor`), `#B9A7FF` no item ativo da barra lateral (token `--marca-clara`), paletas fixas de avatares e capas de projeto.
 - **Liberar nova tentativa de quiz**: quem esgota as tentativas vê "Fale com a coordenação", mas o admin ainda não tem botão para liberar.
-- **"Entregas aprovadas"** (painel da empresa): não existe aprovação; hoje "Pronto" conta como aprovada e a penúltima coluna ("Revisão") como aguardando revisão (`entregasDoProjeto`). A empresa também não vê as horas de quem está no time (decisão de privacidade do E01, com `TODO(PROGLOGIC)`).
+- **Entregas aprovadas** (decidido em 09/10/2026): a empresa aprova tarefa por tarefa no detalhe (Revisão ou Pronto); só o aprovado conta. Mover a tarefa para A fazer apaga a aprovação.
 - **Semáforo de carga** (bloco F, completo): feriados ainda contam como dia útil e projeto pausado conta (`TODO(PROGLOGIC)` em `lib/carga.ts`). A data sugerida no modal de alocação mantém a duração em dias úteis e pode terminar depois da entrega do projeto. A chave do navegador agora é `cais-dados-v3`.
 
 ## Decisões tomadas pelo time (registradas com `TODO(PROGLOGIC)` no código)
 
 - **Público das trilhas**: a pessoa de perfil Empresa cumpre a trilha geral e a da sua empresa (`publicoDaTrilha` em `lib/metricas.ts`).
-- **Prazo da trilha**: conta da data mais recente entre a publicação (`publicadaEm`, gravada só na 1ª publicação) e a entrada da pessoa, mais os dias de prazo.
-- **Quiz**: 3 tentativas por padrão (0 = sem limite); tentativas e nota guardadas **por quiz** (`progresso.quizzes`); a resposta certa só aparece quando a pessoa passa ou esgota as tentativas; "Tentar de novo" embaralha as alternativas.
+- **Prazo da trilha**: indeterminado (`prazoDias` 0) ou definido pelo admin, a pedido da empresa (decidido em 09/10/2026). Com prazo, conta da data mais recente entre a publicação (`publicadaEm`, gravada só na 1ª publicação) e a entrada da pessoa (esse ponto de partida ainda espera a PROGLOGIC).
+- **Quiz**: de 1 a 10 tentativas (decidido em 09/10/2026), 3 por padrão quando a etapa não define; tentativas e nota guardadas **por quiz** (`progresso.quizzes`); a resposta certa só aparece quando a pessoa passa ou esgota as tentativas; "Tentar de novo" embaralha as alternativas.
 - **Trava da trilha obrigatória ligada** (`EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO = true`): profissional com etapa obrigatória pendente na trilha geral só abre o painel e Minhas trilhas. O primeiro acesso de profissional vai direto para `/minhas-trilhas`.
 
 ## Atenção na demonstração
