@@ -141,7 +141,7 @@ Hoje os dados ficam no `localStorage` (chave `cais-dados-v6`). O menu do perfil 
 ```
 app/(sistema)/        telas internas (layout protege a rota e monta o shell)
 components/home/      seções da homepage pública (Topo, Hero, Problema, Pilares, Perguntas, Formulário, Rodapé)
-components/marca/     TresPilares (diagrama usado no login e na homepage)
+components/marca/     TresPilares (diagrama usado no login e na homepage), OndasDeFundo (ondas animadas do fundo escuro)
 components/ui/        design system: basicos, form, Modal, Menu, Tabela, Graficos, RegrasSenha
 components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), CartaoAcesso, LoginForm, RecuperarSenhaForm, PrimeiroAcessoForm
 components/paineis/   PainelAdmin, PainelEmpresa, PainelProfissional (o /painel escolhe pelo perfil)

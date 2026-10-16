@@ -3,13 +3,14 @@
    O que é: a primeira dobra da página: o que é o CAIS em uma frase, os dois
    botões de ação e o diagrama dos três pilares.
    Onde é usado: app/page.tsx.
-   Depende de: next/link, ./LinkRolar, components/marca/TresPilares.tsx e das cores
+   Depende de: next/link, ./LinkRolar, components/marca/TresPilares.tsx, components/marca/OndasDeFundo.tsx e das cores
    --color-noite* e --color-pilar-* de app/globals.css.
    Contexto: §1 (produto e tagline) e §15 item 0 (homepage).
    ============================================================================ */
 import Link from "next/link";
 import LinkRolar from "./LinkRolar";
 import TresPilares from "@/components/marca/TresPilares";
+import OndasDeFundo from "@/components/marca/OndasDeFundo";
 
 /**
  * Hero da homepage. Server Component: texto, links e um SVG (o botão que rola é o LinkRolar, Client).
@@ -23,6 +24,8 @@ export default function Hero() {
   return (
     // pt-28: reserva espaço para o topo fixo (h-16) e ainda deixa respiro.
     <section className="relative overflow-hidden bg-noite pb-16 pt-28 text-white dark:bg-noite-alt sm:pb-24 sm:pt-32">
+      {/* Ondas animadas na "superfície", atrás de tudo. */}
+      <OndasDeFundo />
       {/* Brilho roxo desfocado ao fundo, só decoração. */}
       <div
         aria-hidden="true"

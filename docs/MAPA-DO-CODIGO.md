@@ -198,12 +198,12 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 4. A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam as cores fixas do painel de marca (noite e pilares) e as fontes (Space Grotesk nos títulos, Archivo no resto). _(linha 95)_
 5. O FUNDO, A COR DO TEXTO E A FONTE PADRÃO de todas as telas (pelos tokens), com a troca suave de tema (desligada para quem pede menos movimento). _(linha 131)_
 6. AS ANIMAÇÕES DA MARCA (cartão de acesso, linhas e pontos dos três pilares, balanço do erro). Todas se desligam em prefers-reduced-motion. _(linha 140)_
-7. A BARRA DE ROLAGEM FINA (classe .rolagem) das áreas que rolam: conteúdo das telas e colunas do quadro. _(linha 184)_
-8. O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). _(linha 193)_
-9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 201)_
-10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 216)_
-11. AS ANIMAÇÕES DE ENTRADA DA HOMEPAGE: itens sobem ao entrar na tela (components/home/Revelar.tsx), os passos de "Como funciona" aparecem um a um (círculo, depois a linha) e os cartões erguem no hover. Duração e distância ficam aqui. _(linha 220)_
-12. A IMPRESSÃO DO CERTIFICADO (components do app: /certificados/[trilhaId]): papel A4 deitado, sem menu nem topo nem botões (.nao-imprimir), a folha ocupa a página e as cores da marca saem como na tela. _(linha 261)_
+7. A BARRA DE ROLAGEM FINA (classe .rolagem) das áreas que rolam: conteúdo das telas e colunas do quadro. _(linha 190)_
+8. O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). _(linha 199)_
+9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 207)_
+10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 222)_
+11. AS ANIMAÇÕES DE ENTRADA DA HOMEPAGE: itens sobem ao entrar na tela (components/home/Revelar.tsx), os passos de "Como funciona" aparecem um a um (círculo, depois a linha) e os cartões erguem no hover. Duração e distância ficam aqui. _(linha 226)_
+12. A IMPRESSÃO DO CERTIFICADO (components do app: /certificados/[trilhaId]): papel A4 deitado, sem menu nem topo nem botões (.nao-imprimir), a folha ocupa a página e as cores da marca saem como na tela. _(linha 267)_
 
 ### `app/layout.tsx`
 *a "moldura" HTML de todas as páginas do CAIS (<html>, <head>, <body>).*
@@ -291,10 +291,10 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/BrandPanel.tsx`
 *o painel escuro do lado esquerdo do login (só em telas grandes), com o logo, a frase da marca e o desenho dos três pilares conectados.*
 
-1. O PAINEL DE MARCA das telas de acesso: sempre escuro nos dois temas e só aparece a partir de 1024 px (classe lg:flex). _(linha 25)_
-2. A MENSAGEM do painel de marca (título e frase abaixo dele). Mude aqui para trocar o texto de todas as telas de acesso. _(linha 45)_
-3. O desenho dos três pilares, o mesmo da homepage (components/marca/TresPilares.tsx). _(linha 54)_
-4. O rodapé de direitos do painel; o ano vem do relógio do navegador. _(linha 59)_
+1. O PAINEL DE MARCA das telas de acesso: sempre escuro nos dois temas e só aparece a partir de 1024 px (classe lg:flex). _(linha 26)_
+2. A MENSAGEM do painel de marca (título e frase abaixo dele). Mude aqui para trocar o texto de todas as telas de acesso. _(linha 51)_
+3. O desenho dos três pilares, o mesmo da homepage (components/marca/TresPilares.tsx). _(linha 60)_
+4. O rodapé de direitos do painel; o ano vem do relógio do navegador. _(linha 65)_
 
 ### `components/button.tsx`
 *botão com 4 variantes, 3 tamanhos e os estados repouso, hover, pressionado, foco, carregando e desabilitado; e classesBotao(), as mesmas classes para um <Link> que navega mas deve parecer botão.*
@@ -358,8 +358,8 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/home/Hero.tsx`
 *a primeira dobra da página: o que é o CAIS em uma frase, os dois botões de ação e o diagrama dos três pilares.*
 
-1. A CHAMADA PRINCIPAL da homepage (o único h1) e o texto de apoio logo abaixo. Mude aqui para trocar a mensagem de abertura. _(linha 36)_
-2. OS DOIS BOTÕES da abertura: "Quero trazer minha empresa" rola até #participar (FormularioInteresse) e "Já tenho acesso" vai para /login. _(linha 46)_
+1. A CHAMADA PRINCIPAL da homepage (o único h1) e o texto de apoio logo abaixo. Mude aqui para trocar a mensagem de abertura. _(linha 39)_
+2. OS DOIS BOTÕES da abertura: "Quero trazer minha empresa" rola até #participar (FormularioInteresse) e "Já tenho acesso" vai para /login. _(linha 49)_
 
 ### `components/home/LinkRolar.tsx`
 *um link de âncora (#secao) que rola até a seção TODA vez que é clicado, inclusive quando a URL já termina na mesma âncora.*
@@ -446,6 +446,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 6. O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx. _(linha 156)_
 7. A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui. _(linha 202)_
 8. A mensagem de falha de rede ou servidor (diferente de senha errada). _(linha 207)_
+
+### `components/marca/OndasDeFundo.tsx`
+*três camadas de ondas roxas que correm devagar no topo de uma área escura e esmaecem até sumir, como a "superfície da água" de onde o CAIS (o cais) se vê.*
+
+1. AS TRÊS CAMADAS: quanto de roxo (mistura com a noite), a opacidade, o deslocamento vertical e a duração da volta (menor = mais rápido). Mude aqui para deixar as ondas mais fortes, mais claras ou mais calmas. _(linha 18)_
+2. A ALTURA e o ESMAECIMENTO da faixa: h-[260px] é a altura; a máscara deixa o roxo cheio até 22% e some até 74% (antes de a última camada acabar, para não aparecer linha dura). Mude para as ondas descerem mais ou menos. _(linha 39)_
 
 ### `components/marca/TresPilares.tsx`
 *o desenho em SVG que liga Onboarding → Projetos → Dashboards, com as linhas sendo "desenhadas" ao abrir a página.*
@@ -1094,4 +1100,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-126 arquivos mapeados, 568 pontos vitais.
+127 arquivos mapeados, 570 pontos vitais.

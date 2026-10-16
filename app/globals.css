@@ -174,8 +174,14 @@ body {
 }
 .animate-erro { animation: erro-balanca 240ms ease-in-out 2; }
 
+/* Ondas do fundo escuro (components/marca/OndasDeFundo.tsx): cada camada é uma faixa com o dobro da
+   largura de uma onda; deslocar uma onda inteira (1600 px) deixa a emenda invisível, então o laço não dá salto. */
+@keyframes ondas-correm { to { transform: translateX(-1600px); } }
+.onda-camada { animation: ondas-correm linear infinite; will-change: transform; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-card-in, .animate-erro { animation: none; }
+  .onda-camada { animation: none; }
   .trilha-linha { animation: none; stroke-dashoffset: 0; }
   .pilar-no { animation: none; opacity: 1; }
   body { transition: none; }

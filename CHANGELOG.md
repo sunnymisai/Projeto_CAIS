@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Ondas animadas no fundo escuro (16/10/2026)
+- Criado: `components/marca/OndasDeFundo.tsx` (três camadas de ondas roxas em SVG que correm devagar e esmaecem; cores só por token, misturando `--color-pilar-roxo` com `--color-noite`). Ideia do site de um colega (ProjetoCais), refeita no padrão do projeto.
+- Modificado: a abertura da homepage (`Hero.tsx`) e o painel do login (`BrandPanel.tsx`) usam as ondas; `app/globals.css` ganhou a animação `ondas-correm` (desligada em prefers-reduced-motion).
+- Removido: nada.
+
 ## Busca do topo e projetos diferenciados (14/10/2026)
 - Criado: `lib/busca.ts` (`buscarGlobal`, `placeholderDaBusca`: escopo por perfil, trava da trilha obrigatória, vagas por tipo, busca sem acento por nome, CNPJ, empresa do projeto e palavras em qualquer ordem) com 30 casos em `lib/busca.casos.ts`; `testes/navegador/i01-busca.mjs` (119 conferências: perfis, telas, teclado, celular, modal aberto). Para a visão geral de tarefas: `components/projetos/LegendaProjetos.tsx` (chip por projeto com cor, nome e contagem; clicar filtra), `MarcadorProjeto.tsx` (marcador de cor + nome do projeto), cor por projeto em `cores.ts` e `testes/navegador/i02-projetos-diferenciados.mjs`.
 - Modificado: a busca do topo (`components/shell/Topbar.tsx`) agora acha também tarefas, trilhas e projetos (por perfil) e o placeholder só promete o que o perfil consegue abrir; não sugere mais link que leve a /sem-permissao (profissional com trilha obrigatória pendente); reparte as 8 vagas entre os tipos; funciona com a lista no celular e com estados de carregando e erro; Ctrl+K e "/" não focam a busca por trás de uma janela aberta. Na visão geral de tarefas (quadro, lista e cronograma) cada projeto ganhou cor e marcador com o nome, e uma legenda filtra por projeto.
