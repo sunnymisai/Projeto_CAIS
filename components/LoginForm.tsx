@@ -6,22 +6,23 @@
    Onde é usado: app/login/page.tsx (tela de login, ao lado do BrandPanel).
    Depende de: lib/auth (useAuth, CONTAS_DEMO, SENHA_DEMO), lib/utils (EMAIL_REGEX, mascaraEmail), lib/tipos (Perfil), next/navigation (useRouter,
    useSearchParams), lucide-react e dos componentes ./input, ./button,
-   ./checkbox e ./CaisLogo.
+   ./checkbox, ./BotaoEntrar (o botão animado) e ./CaisLogo.
    Contexto: §15 (organograma: Login → Shell; Esqueci a senha; Primeiro
    acesso), §11 (erro mostrado ao sair do campo) e §13 (acessível).
    ============================================================================ */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, ArrowRight, CircleAlert, ShieldCheck, GraduationCap, Building2 } from "lucide-react";
+import { Mail, Lock, CircleAlert, ShieldCheck, GraduationCap, Building2 } from "lucide-react";
 import { useAuth, CONTAS_DEMO, SENHA_DEMO } from "@/lib/auth";
 import { EMAIL_REGEX, mascaraEmail } from "@/lib/utils";
 import type { Perfil } from "@/lib/tipos";
 
 import Input from "./input";
 import Button from "./button";
+import BotaoEntrar from "./BotaoEntrar";
 import Checkbox from "./checkbox";
 import { CaisMark } from "./CaisLogo";
 
@@ -116,6 +117,12 @@ export const LoginForm = () => {
   const [authError, setAuthError] = useState("");
   // Contador de erros: muda a cada erro para tocar de novo a animação de "balançar".
   const [shakeKey, setShakeKey] = useState(0);
+  // Login em andamento: o botão animado está tocando e a sessão já pode existir. Enquanto for true, o
+  // efeito "já está logado" abaixo NÃO navega (cortaria a animação); quem navega é irParaODestino().
+  const emAndamento = useRef(false);
+  // A navegação só acontece quando as DUAS coisas já ocorreram: o login foi aceito e a animação terminou.
+  const loginAceito = useRef(false);
+  const animacaoTerminou = useRef(false);
   const { entrar, sessao, pronto } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
@@ -138,8 +145,20 @@ export const LoginForm = () => {
   // Roda quando a sessão termina de carregar (pronto) ou muda; não há o que limpar.
   // NAVEGA: replace (e não push) para a tela de login não ficar no histórico do "voltar".
   useEffect(() => {
-    if (pronto && sessao) router.replace(destino);
+    if (pronto && sessao && !emAndamento.current) router.replace(destino);
   }, [pronto, sessao, router, destino]);
+
+  // NAVEGA: vai para o destino, mas só quando o login foi aceito E a animação do botão acabou (a que chegar por último dispara).
+  // Chamada por handleLogin (login aceito) e pelo botão (animação terminou).
+  const irParaODestino = useCallback(() => {
+    if (loginAceito.current && animacaoTerminou.current) router.replace(destino);
+  }, [router, destino]);
+
+  // Chamado pelo botão quando a animação chega ao fim; se o login ainda não voltou, espera (o botão fica no quadro final).
+  const aoTerminarAnimacao = useCallback(() => {
+    animacaoTerminou.current = true;
+    irParaODestino();
+  }, [irParaODestino]);
 
   // Estado "sucesso" (borda verde) só depois de tocado e com formato válido.
   const emailValido = tocado.email && !erros.email && EMAIL_REGEX.test(email.trim());
@@ -177,6 +196,8 @@ export const LoginForm = () => {
   const handleLogin = async (e: React.FormEvent) => {
     // Impede o recarregamento da página (comportamento padrão de um <form>).
     e.preventDefault();
+    // Já está entrando (animação tocando): ignora cliques e Enter repetidos.
+    if (emAndamento.current) return;
     // Limpa o erro anterior e marca os dois campos como tocados, para exibir todos os erros de uma vez.
     setAuthError("");
     setTocado({ email: true, password: true });
@@ -189,15 +210,19 @@ export const LoginForm = () => {
       return;
     }
 
-    // Mostra o spinner e trava os campos durante a tentativa.
+    // Liga a animação do botão e trava os campos durante a tentativa.
+    emAndamento.current = true;
+    loginAceito.current = false;
+    animacaoTerminou.current = false;
     setLoading(true);
     try {
       // A autenticação fica em lib/auth.tsx — é lá que entra a API real.
       const r = await entrar(email, password, remember);
-      // NAVEGA: login aceito → vai para o destino (?voltar= ou /painel).
+      // NAVEGA: login aceito → vai para o destino (?voltar= ou /painel), quando a animação do botão terminar.
       if (r.ok) {
-        router.replace(destino);
-        return; // mantém o botão carregando até a troca de página
+        loginAceito.current = true;
+        irParaODestino();
+        return; // mantém o botão animando até a troca de página
       }
       // [PV-7] A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui.
       // Login recusado: cada motivo tem a sua mensagem (senha errada, conta inativa ou convite pendente).
@@ -209,7 +234,8 @@ export const LoginForm = () => {
       setAuthError("Não foi possível conectar. Verifique sua internet e tente de novo.");
       setShakeKey((k) => k + 1);
     }
-    // Só chega aqui quando deu erro: libera o botão para tentar de novo.
+    // Só chega aqui quando deu erro: volta o botão ao início e libera os campos para tentar de novo.
+    emAndamento.current = false;
     setLoading(false);
   };
 
@@ -314,14 +340,13 @@ export const LoginForm = () => {
           </Link>
         </div>
 
-        {/* isLoading troca o texto por "Entrando…" com spinner e desabilita o botão (evita envio duplo). */}
-        <Button type="submit" tamanho="lg" larguraTotal isLoading={loading} loadingText={COPY.submitting} className="mt-1">
-          {COPY.submit}
-          <ArrowRight
-            aria-hidden="true"
-            className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
-          />
-        </Button>
+        {/* [PV-9] O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. */}
+        {/* executando = login em andamento (campos válidos): o barquinho navega até o logo; recusado, volta ao início. */}
+        <div className="mt-1">
+          <BotaoEntrar executando={loading} aoTerminar={aoTerminarAnimacao} textoExecutando={COPY.submitting}>
+            {COPY.submit}
+          </BotaoEntrar>
+        </div>
       </form>
 
       {/* SIMULADO: botões "Entrar como" com as contas fictícias de lib/auth (CONTAS_DEMO).

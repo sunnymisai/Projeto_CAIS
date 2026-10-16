@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Botão "Entrar" animado no login (16/10/2026)
+- Criado: `components/BotaoEntrar.tsx` (botão de envio com a animação do barquinho que atraca no "C" do logo, vinda da pasta `botao_novo`, refeita com tokens, `prefers-reduced-motion` e leitor de tela) e o teste `testes/navegador/j01-botao-entrar.mjs`.
+- Modificado: `components/LoginForm.tsx` usa o `BotaoEntrar`: a animação só liga com os campos válidos, volta ao início se o login for recusado e a navegação só ocorre quando o login foi aceito E a animação terminou (o efeito "já está logado" não corta mais a animação).
+- Removido: o botão `Button` com spinner "Entrando…" do envio do login (o `Button` segue nos demais lugares).
+
 ## Ondas animadas no fundo escuro (16/10/2026)
 - Criado: `components/marca/OndasDeFundo.tsx` (três camadas de ondas roxas em SVG que correm devagar e esmaecem; cores só por token, misturando `--color-pilar-roxo` com `--color-noite`). Ideia do site de um colega (ProjetoCais), refeita no padrão do projeto.
 - Modificado: a abertura da homepage (`Hero.tsx`) e o painel do login (`BrandPanel.tsx`) usam as ondas; `app/globals.css` ganhou a animação `ondas-correm` (desligada em prefers-reduced-motion).

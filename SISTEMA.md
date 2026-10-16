@@ -143,7 +143,7 @@ app/(sistema)/        telas internas (layout protege a rota e monta o shell)
 components/home/      seções da homepage pública (Topo, Hero, Problema, Pilares, Perguntas, Formulário, Rodapé)
 components/marca/     TresPilares (diagrama usado no login e na homepage), OndasDeFundo (ondas animadas do fundo escuro)
 components/ui/        design system: basicos, form, Modal, Menu, Tabela, Graficos, RegrasSenha
-components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), CartaoAcesso, LoginForm, RecuperarSenhaForm, PrimeiroAcessoForm
+components/           AcessoLayout (duas colunas de login, recuperar senha e primeiro acesso), CartaoAcesso, LoginForm, BotaoEntrar (botão animado do login), RecuperarSenhaForm, PrimeiroAcessoForm
 components/paineis/   PainelAdmin, PainelEmpresa, PainelProfissional (o /painel escolhe pelo perfil)
 components/shell/     Sidebar (menu filtrado por perfil), Topbar (busca Ctrl+K e avisos com escopo, perfil), Pagina, EmConstrucao
 components/acessos/   ModalMudarPerfil, MatrizDePermissoes, PessoasDaEmpresa (tela /acessos e aba Pessoas da empresa)

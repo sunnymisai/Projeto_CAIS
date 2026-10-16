@@ -288,6 +288,13 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 3. QUEM PODE SER VINCULADA à empresa: nem administrador (perderia o acesso total), nem pessoa inativa, nem quem já está nela. _(linha 61)_
 4. O VÍNCULO: a pessoa passa a ter perfil Empresa e esta empresa (§11); os dados de profissional ficam guardados. TODO(API): PATCH no usuário. _(linha 67)_
 
+### `components/BotaoEntrar.tsx`
+*o botão de envio do login. Em repouso mostra "Entrar →"; quando o login começa, o texto some, a seta vira um barquinho que navega até o "C" do logo e atraca, e o símbolo desliza ao centro.*
+
+1. A LINHA DO TEMPO da animação, em milissegundos: quando o texto some, o barco nasce, navega, atraca e o símbolo vai ao centro. TOTAL é a duração toda (o login só segue depois dela). Mude aqui para deixar mais rápida ou mais lenta. _(linha 17)_
+2. O TAMANHO do símbolo dentro do botão (ESCALA) e as medidas do casco do barquinho e da barra do logo. O botão tem 56 px de altura (h-14); se mudar a altura, ajuste ESCALA na mesma proporção. _(linha 31)_
+3. A APARÊNCIA do botão: cor de fundo (bg-botao e bg-botao-hover, tokens), altura h-14 (56 px; ligada à ESCALA do símbolo), canto rounded-xl e anel de foco. active:scale dá o "afundar" ao clicar. _(linha 267)_
+
 ### `components/BrandPanel.tsx`
 *o painel escuro do lado esquerdo do login (só em telas grandes), com o logo, a frase da marca e o desenho dos três pilares conectados.*
 
@@ -438,14 +445,15 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `components/LoginForm.tsx`
 *o cartão de login (e-mail, senha, "Lembrar-me"), com validação ao sair do campo, mensagens de erro claras e três botões "Entrar como" que preenchem e-mail e senha de uma conta de demonstração de cada perfil.*
 
-1. OS TEXTOS DA TELA DE LOGIN: título, rótulos, mensagens de erro (senha errada, conta inativa, convite pendente) e o texto dos botões de demonstração. Troque o texto aqui, não no meio do JSX. _(linha 28)_
-2. OS LINKS da tela: "Esqueceu a senha?" vai para /recuperar-senha; "Criar conta" ainda é "#" porque o cadastro só existe por convite (/primeiro-acesso). TODO(API). _(linha 58)_
-3. OS BOTÕES "ENTRAR COMO" (só no protótipo): um por perfil, usando a primeira conta daquele perfil em CONTAS_DEMO (lib/auth.tsx). Apagar quando a API real entrar. _(linha 68)_
-4. AS REGRAS DO FORMULÁRIO de login: e-mail obrigatório e no formato certo (EMAIL_REGEX), senha obrigatória. _(linha 81)_
-5. PARA ONDE O LOGIN LEVA: o endereço de ?voltar= (só caminho interno, nunca "//" nem /login, para não abrir outro site nem entrar em laço) ou /painel. _(linha 128)_
-6. O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx. _(linha 156)_
-7. A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui. _(linha 202)_
-8. A mensagem de falha de rede ou servidor (diferente de senha errada). _(linha 207)_
+1. OS TEXTOS DA TELA DE LOGIN: título, rótulos, mensagens de erro (senha errada, conta inativa, convite pendente) e o texto dos botões de demonstração. Troque o texto aqui, não no meio do JSX. _(linha 29)_
+2. OS LINKS da tela: "Esqueceu a senha?" vai para /recuperar-senha; "Criar conta" ainda é "#" porque o cadastro só existe por convite (/primeiro-acesso). TODO(API). _(linha 59)_
+3. OS BOTÕES "ENTRAR COMO" (só no protótipo): um por perfil, usando a primeira conta daquele perfil em CONTAS_DEMO (lib/auth.tsx). Apagar quando a API real entrar. _(linha 69)_
+4. AS REGRAS DO FORMULÁRIO de login: e-mail obrigatório e no formato certo (EMAIL_REGEX), senha obrigatória. _(linha 82)_
+5. PARA ONDE O LOGIN LEVA: o endereço de ?voltar= (só caminho interno, nunca "//" nem /login, para não abrir outro site nem entrar em laço) ou /painel. _(linha 135)_
+6. O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx. _(linha 175)_
+7. A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui. _(linha 227)_
+8. A mensagem de falha de rede ou servidor (diferente de senha errada). _(linha 232)_
+9. O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. _(linha 343)_
 
 ### `components/marca/OndasDeFundo.tsx`
 *três camadas de ondas roxas que correm devagar no topo de uma área escura e esmaecem até sumir, como a "superfície da água" de onde o CAIS (o cais) se vê.*
@@ -1100,4 +1108,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-127 arquivos mapeados, 570 pontos vitais.
+128 arquivos mapeados, 574 pontos vitais.
