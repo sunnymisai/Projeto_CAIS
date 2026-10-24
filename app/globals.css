@@ -1,5 +1,6 @@
 /* ============================================================================
    ESTILOS GLOBAIS + TOKENS DE MARCA (CAIS) — com DARK MODE
+   Alinhado ao "CAIS · Sistema de Design" (PROGLOGIC, setembro de 2026)
    ============================================================================
    Como funciona:
    1) Os valores reais das cores ficam em variáveis CSS no :root (tema claro)
@@ -10,8 +11,24 @@
       Tailwind: --color-fundo vira bg-fundo, text-fundo, border-fundo...
       Como a classe aponta para a variável, ela troca de cor sozinha quando
       o tema muda — quase não precisamos escrever "dark:" nos componentes.
+   3) NENHUM valor de cor fica dentro do @theme: ele só aponta para variáveis.
 
    >>> PARA REBRANDEAR, EDITE SÓ OS VALORES EM :root E .dark <<<
+
+   Mapa entre o PDF do design system e os tokens daqui:
+     primary         → --marca (#7C5CFF) / --primaria (texto) / --botao
+     primary-strong  → --primaria-forte / --botao-hover (#5B3FD4)
+     success         → --sucesso-base (#10B981) / --sucesso (texto)
+     warning         → --aviso-base   (#F59E0B) / --aviso   (texto)
+     danger          → --erro-base    (#EF4444) / --erro    (texto)
+     ink             → --tinta (claro) e --fundo (escuro)  (#14161F)
+     mist            → --fundo (claro)                     (#F6F7FB)
+
+   Por que cada cor semântica tem duas versões ("-base" e a de texto)?
+   O PDF define a cor de marca, mas #7C5CFF, #10B981, #F59E0B e #EF4444
+   não atingem contraste 4,5:1 como TEXTO sobre branco. Então:
+     • "-base"  = a cor exata do PDF, para preenchimentos, ícones, gráficos.
+     • sem sufixo = versão ajustada que passa no contraste AA para texto.
    ============================================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
@@ -22,26 +39,50 @@
 
 /* [PV-1] AS CORES DO TEMA CLARO (marca, estados, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. */
 :root {
-  /* Marca (iguais nos dois temas, exceto a primária, que clareia no escuro) */
-  --marca: #7C5CFF;             /* Roxo Maré — só no símbolo e em ilustrações */
-  --primaria: #7052F2;          /* Roxo Maré ajustado p/ texto: 5,0:1 no branco */
-  --primaria-forte: #5B3FD4;    /* Roxo Fundo — hover/ativo */
-  --primaria-suave: #EEEAFF;    /* fundo de destaque leve */
-  --botao: #7052F2;             /* fundo do botão primário (5,0:1 c/ branco) */
+  /* Marca */
+  --marca: #7C5CFF;             /* Roxo maré (PDF) — símbolo, ilustrações, preenchimentos */
+  --primaria: #7052F2;          /* Roxo maré ajustado p/ texto e links: 5,0:1 no branco */
+  --primaria-forte: #5B3FD4;    /* Roxo fundo (PDF) — hover/pressionado */
+  --primaria-suave: #F4F2FF;    /* fundo de destaque leve (texto primário sobre ele: 4,6:1) */
+  --botao: #7052F2;             /* fundo do botão primário (5,0:1 c/ texto branco) */
   --botao-hover: #5B3FD4;
-  --sucesso: #047857;           /* Verde Atracado escurecido: 5,5:1, serve p/ texto */
-  --aviso: #B45309;             /* Atenção: 5,0:1, serve p/ texto */
-  --erro: #DC3545;              /* Erro */
+  --botao-texto: #FFFFFF;
+  --foco: #7052F2;              /* anel de foco do teclado */
+
+  /* Estados — versão de TEXTO (passa AA no branco) */
+  --sucesso: #047857;           /* 5,5:1 */
+  --aviso: #B45309;             /* 5,0:1 */
+  --erro: #C81E1E;              /* 5,7:1 (ajuste do #EF4444 do PDF, que dá só 3,8:1) */
+
+  /* Estados — cor EXATA do PDF (preenchimento, ícone, gráfico, borda) */
+  --sucesso-base: #10B981;
+  --aviso-base: #F59E0B;
+  --erro-base: #EF4444;
+  /* Fundos suaves p/ etiquetas (Concluída, Atrasada, Bloqueada...) */
+  --sucesso-suave: rgba(16, 185, 129, 0.12);
+  --aviso-suave: rgba(245, 158, 11, 0.10);
+  --erro-suave: rgba(239, 68, 68, 0.12);
+
+  /* Cor por perfil (PDF, "Aplicação"): administrador, empresa, profissional */
+  --perfil-admin: #7C5CFF;
+  --perfil-empresa: #10B981;
+  --perfil-profissional: #F59E0B;
 
   /* Superfícies e texto — tema claro */
-  --fundo: #F6F7FB;             /* Névoa */
+  --fundo: #F6F7FB;             /* Névoa (mist) */
   --superficie: #FFFFFF;
   --superficie-alt: #F1F2F8;
-  --tinta: #14161F;             /* texto principal */
+  --tinta: #14161F;             /* Tinta (ink): texto principal */
   --tinta-suave: #5B6075;       /* texto secundário (contraste AA) */
   --tinta-fraca: #8A8FA3;       /* placeholders e ícones */
-  --borda: #E1E3EC;
+  --borda: #E2E1F0;             /* divisórias e cards (levemente lavanda) */
+  --borda-forte: #8A8FA3;       /* contorno de campos e botões "outline" (3,2:1) */
+  --brilho-fundo: none;         /* no claro não há brilho de fundo */
+
+  /* Sombras (PDF: shadow-card e shadow-modal) */
   --sombra-card: 0 1px 2px rgba(20, 22, 31, 0.04), 0 12px 40px -12px rgba(60, 40, 160, 0.18);
+  --sombra-card-hover: 0 1px 2px rgba(20, 22, 31, 0.06), 0 18px 48px -12px rgba(60, 40, 160, 0.28);
+  --sombra-modal: 0 24px 64px -16px rgba(20, 22, 31, 0.28), 0 0 0 1px rgba(20, 22, 31, 0.04);
 
   /* [PV-2] AS CORES DOS GRÁFICOS no tema claro (concluída, andamento, revisão, a fazer, não iniciada, extras). Lidas por COR_GRAFICO em components/ui/Graficos.tsx. */
   /* Gráficos (status de trilha e colunas do quadro). Tons de DADO, não de texto:
@@ -49,11 +90,20 @@
    * Usados via COR_GRAFICO (components/ui/Graficos.tsx). */
   --grafico-concluida: #10B981;     /* verde: concluída / Pronto */
   --grafico-andamento: #7052F2;     /* roxo: em andamento / Fazendo */
-  --grafico-revisao: #F5A524;       /* âmbar: Revisão */
+  --grafico-revisao: #F59E0B;       /* âmbar: Revisão */
   --grafico-a-fazer: #9CA0B3;       /* cinza médio: A fazer */
   --grafico-nao-iniciada: #C9CCD8;  /* cinza claro: não iniciada */
   --grafico-extra: #2563EB;         /* azul: 5ª coluna em diante */
   --grafico-extra-2: #BE185D;       /* rosa: reserva */
+
+  /* Cores fixas do painel de marca (iguais nos dois temas) */
+  --noite: #14161F;
+  --noite-alt: #1B1D2A;
+  --marca-clara: #B9A7FF;       /* lilás do destaque do menu lateral e do logo sobre fundo escuro */
+  --veu: #0B0C12;               /* fundo escurecido atrás do modal (aparece com 55% de opacidade) */
+  --pilar-roxo: #7C5CFF;
+  --pilar-verde: #10B981;
+  --pilar-ambar: #F5A524;
 
   color-scheme: light;
 }
@@ -61,23 +111,62 @@
 /* [PV-3] AS CORES DO TEMA ESCURO: os mesmos nomes do :root com valores para fundo escuro (a classe "dark" no <html> liga). Mudou um nome lá, mude aqui. */
 .dark {
   --marca: #8F74FF;
-  --primaria: #8F74FF;
-  --primaria-forte: #A48FFF;
-  --primaria-suave: rgba(143, 116, 255, 0.14);
-  --botao: #7052F2;             /* mantém contraste com texto branco */
-  --botao-hover: #6A4AF0;
+  --primaria: #A48FFF;          /* texto/links: 6,4:1 na superfície escura */
+  --primaria-forte: #BCAEFF;    /* hover no escuro CLAREIA (mais destaque) */
+  --primaria-suave: rgba(143, 116, 255, 0.16);
+  --botao: #7052F2;             /* mantém contraste 5,0:1 com texto branco */
+  --botao-hover: #6A4AF0;       /* 5,5:1 c/ texto branco */
+  --botao-texto: #FFFFFF;
+  --foco: #B9A7FF;
+
   --sucesso: #34D399;
   --aviso: #FBBF24;
   --erro: #F87171;
 
+  --sucesso-base: #10B981;
+  --aviso-base: #F59E0B;
+  --erro-base: #EF4444;
+  --sucesso-suave: rgba(52, 211, 153, 0.14);
+  --aviso-suave: rgba(251, 191, 36, 0.14);
+  --erro-suave: rgba(248, 113, 113, 0.14);
+
+  --perfil-admin: #8F74FF;
+  --perfil-empresa: #34D399;
+  --perfil-profissional: #FBBF24;
+
+  /* Superfícies com um toque de roxo: o fundo é a Tinta do PDF (#14161F) e as
+   * camadas sobem em tons arroxeados, para o tema escuro ter identidade. */
   --fundo: #14161F;
-  --superficie: #1C1F2B;
-  --superficie-alt: #242838;
+  --superficie: #1B1D2A;
+  --superficie-alt: #252842;
   --tinta: #ECEDF3;
-  --tinta-suave: #A3A8BC;
-  --tinta-fraca: #6E7389;
-  --borda: #2E3244;
-  --sombra-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+  --tinta-suave: #AEB3CC;       /* 8,0:1 na superfície */
+  --tinta-fraca: #858BA8;       /* 4,9:1 (antes #6E7389, só 3,4:1) */
+
+  /* BORDAS ROXAS: era aqui que o escuro ficava "sem graça". A borda comum
+   * agora é um roxo translúcido (visível, sem pesar) e a forte, usada em
+   * campos e botões outline, passa 3:1 contra a superfície. */
+  --borda: rgba(143, 116, 255, 0.30);
+  --borda-forte: #7461D8;
+  --brilho-fundo:
+    radial-gradient(56rem 36rem at 85% -8%, rgba(124, 92, 255, 0.16), transparent 60%),
+    radial-gradient(44rem 30rem at -5% 105%, rgba(91, 63, 212, 0.14), transparent 60%);
+
+  /* Sombras no escuro: anel roxo fino + sombra profunda + leve brilho roxo. */
+  --sombra-card:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 0 0 1px rgba(143, 116, 255, 0.12),
+    0 24px 60px -20px rgba(0, 0, 0, 0.6),
+    0 0 48px -18px rgba(124, 92, 255, 0.30);
+  --sombra-card-hover:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 0 0 1px rgba(164, 143, 255, 0.45),
+    0 28px 64px -20px rgba(0, 0, 0, 0.7),
+    0 0 56px -12px rgba(124, 92, 255, 0.45);
+  --sombra-modal:
+    0 32px 80px -20px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(164, 143, 255, 0.40),
+    0 0 72px -14px rgba(124, 92, 255, 0.40);
 
   /* Gráficos no escuro: um pouco mais claros para destacar do fundo, e o cinza
    * de "não iniciada" escurece (o claro brilharia mais que os dados de verdade). */
@@ -92,7 +181,7 @@
   color-scheme: dark;
 }
 
-/* [PV-4] A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam as cores fixas do painel de marca (noite e pilares) e as fontes (Space Grotesk nos títulos, Archivo no resto). */
+/* [PV-4] A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui NÃO há cor literal: tudo aponta para :root/.dark. Também ficam as fontes, o raio, a escala de texto e as sombras do PDF. */
 @theme inline {
   --color-marca: var(--marca);
   --color-primaria: var(--primaria);
@@ -100,9 +189,22 @@
   --color-primaria-suave: var(--primaria-suave);
   --color-botao: var(--botao);
   --color-botao-hover: var(--botao-hover);
+  --color-botao-texto: var(--botao-texto);
+  --color-foco: var(--foco);
+
   --color-sucesso: var(--sucesso);
   --color-aviso: var(--aviso);
   --color-erro: var(--erro);
+  --color-sucesso-base: var(--sucesso-base);
+  --color-aviso-base: var(--aviso-base);
+  --color-erro-base: var(--erro-base);
+  --color-sucesso-suave: var(--sucesso-suave);
+  --color-aviso-suave: var(--aviso-suave);
+  --color-erro-suave: var(--erro-suave);
+
+  --color-perfil-admin: var(--perfil-admin);
+  --color-perfil-empresa: var(--perfil-empresa);
+  --color-perfil-profissional: var(--perfil-profissional);
 
   --color-fundo: var(--fundo);
   --color-superficie: var(--superficie);
@@ -111,30 +213,67 @@
   --color-tinta-suave: var(--tinta-suave);
   --color-tinta-fraca: var(--tinta-fraca);
   --color-borda: var(--borda);
+  --color-borda-forte: var(--borda-forte);
 
+  /* Sombras do PDF: shadow-card e shadow-modal */
   --shadow-card: var(--sombra-card);
+  --shadow-card-hover: var(--sombra-card-hover);
+  --shadow-modal: var(--sombra-modal);
 
   /* Cores fixas do painel de marca (sempre escuro, nos dois temas) */
-  --color-noite: #14161F;
-  --color-noite-alt: #1B1D2A;
-  --color-marca-clara: #B9A7FF;   /* lilás do destaque do menu lateral e do logo sobre fundo escuro */
-  --color-veu: #0B0C12;           /* fundo escurecido atrás do modal (aparece com 55% de opacidade) */
-  --color-pilar-roxo: #7C5CFF;
-  --color-pilar-verde: #10B981;
-  --color-pilar-ambar: #F5A524;
+  --color-noite: var(--noite);
+  --color-noite-alt: var(--noite-alt);
+  --color-marca-clara: var(--marca-clara);
+  --color-veu: var(--veu);
+  --color-pilar-roxo: var(--pilar-roxo);
+  --color-pilar-verde: var(--pilar-verde);
+  --color-pilar-ambar: var(--pilar-ambar);
 
   /* Tipografia: título em Space Grotesk, corpo em Archivo */
   --font-space: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-archivo: "Archivo", ui-sans-serif, system-ui, sans-serif;
+
+  /* Raio (PDF): sm 6px campo/tag · md 10px botão · lg 16px card.
+   * ATENÇÃO: isto redefine rounded-sm, rounded-md e rounded-lg do Tailwind. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* Espaçamento (PDF): escala de 4px. space-1=4px, 2=8px, 4=16px, 6=24px... */
+  --spacing: 0.25rem;
+
+  /* Escala tipográfica (PDF): classes text-titulo-1, text-titulo-2... */
+  --text-titulo-1: 2.25rem;
+  --text-titulo-1--line-height: 1.15;
+  --text-titulo-2: 1.75rem;
+  --text-titulo-2--line-height: 1.2;
+  --text-titulo-3: 1.375rem;
+  --text-titulo-3--line-height: 1.3;
+  --text-corpo: 1rem;
+  --text-corpo--line-height: 1.6;
+  --text-pequeno: 0.875rem;
+  --text-pequeno--line-height: 1.5;
+  --text-minimo: 0.75rem;
+  --text-minimo--line-height: 1.4;
 }
 
 /* [PV-5] O FUNDO, A COR DO TEXTO E A FONTE PADRÃO de todas as telas (pelos tokens), com a troca suave de tema (desligada para quem pede menos movimento). */
 body {
   background-color: var(--fundo);
+  background-image: var(--brilho-fundo);
+  background-attachment: fixed;
   color: var(--tinta);
   font-family: var(--font-archivo);
   -webkit-font-smoothing: antialiased;
   transition: background-color 250ms ease, color 250ms ease;
+}
+
+/* Base: títulos em Space Grotesk (PDF) e anel de foco visível por teclado.
+ * Fica em @layer base: qualquer classe do Tailwind nos componentes vence. */
+@layer base {
+  h1, h2, h3 { font-family: var(--font-space); }
+  :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+  ::selection { background: var(--primaria-suave); color: var(--tinta); }
 }
 
 /* [PV-6] AS ANIMAÇÕES DA MARCA (cartão de acesso, linhas e pontos dos três pilares, balanço do erro). Todas se desligam em prefers-reduced-motion. */
@@ -174,14 +313,8 @@ body {
 }
 .animate-erro { animation: erro-balanca 240ms ease-in-out 2; }
 
-/* Ondas do fundo escuro (components/marca/OndasDeFundo.tsx): cada camada é uma faixa com o dobro da
-   largura de uma onda; deslocar uma onda inteira (1600 px) deixa a emenda invisível, então o laço não dá salto. */
-@keyframes ondas-correm { to { transform: translateX(-1600px); } }
-.onda-camada { animation: ondas-correm linear infinite; will-change: transform; }
-
 @media (prefers-reduced-motion: reduce) {
   .animate-card-in, .animate-erro { animation: none; }
-  .onda-camada { animation: none; }
   .trilha-linha { animation: none; stroke-dashoffset: 0; }
   .pilar-no { animation: none; opacity: 1; }
   body { transition: none; }
@@ -268,12 +401,12 @@ body {
 @media print {
   @page { size: A4 landscape; margin: 10mm; }
   aside, header, nav, .nao-imprimir { display: none !important; }
-  html, body, .raiz-shell, .raiz-shell main { display: block !important; height: auto !important; overflow: visible !important; background: #fff !important; }
+  html, body, .raiz-shell, .raiz-shell main { display: block !important; height: auto !important; overflow: visible !important; background: #fff !important; background-image: none !important; }
   .certificado-folha { width: 100% !important; max-width: none !important; border-radius: 0 !important; box-shadow: none !important; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
-/* Cartões da homepage erguem um pouco ao passar o mouse. */
+/* Cartões da homepage erguem um pouco ao passar o mouse (a sombra vem do token). */
 .cartao-erguido { transition: transform 200ms ease-out, box-shadow 200ms ease-out; }
-.cartao-erguido:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14); }
+.cartao-erguido:hover { transform: translateY(-4px); box-shadow: var(--sombra-card-hover); }
 @media (prefers-reduced-motion: reduce) {
   [data-revelar] { opacity: 1 !important; transform: none !important; transition: none !important; }
   [data-revelar] .passo-numero { opacity: 1 !important; transform: none !important; transition: none !important; }
