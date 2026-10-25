@@ -45,7 +45,7 @@ export default function Checkbox({ label, id, className = "", ...rest }: Checkbo
         <Check
           aria-hidden="true"
           strokeWidth={3}
-          className="pointer-events-none absolute inset-0 m-auto h-3.5 w-3.5 scale-50 text-white opacity-0 transition-all peer-checked:scale-100 peer-checked:opacity-100"
+          className="pointer-events-none absolute inset-0 m-auto h-3.5 w-3.5 scale-50 text-sobre-cor opacity-0 transition-all peer-checked:scale-100 peer-checked:opacity-100"
         />
       </span>
       <span className="text-sm text-tinta-suave">{label}</span>

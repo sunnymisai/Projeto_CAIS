@@ -139,7 +139,7 @@ export default function DetalheMinhaTrilha() {
             <>
               {/* Número/ícone de estado à esquerda: ✓ concluída, número na atual, cadeado na bloqueada. */}
               <span className={cx('flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold',
-                estado === 'concluida' ? 'bg-sucesso/12 text-sucesso' : estado === 'atual' ? 'bg-primaria text-white' : 'bg-superficie-alt text-tinta-fraca')} aria-hidden>
+                estado === 'concluida' ? 'bg-sucesso/12 text-sucesso' : estado === 'atual' ? 'bg-primaria text-sobre-cor' : 'bg-superficie-alt text-tinta-fraca')} aria-hidden>
                 {estado === 'concluida' ? <CircleCheck className="h-5 w-5" /> : estado === 'bloqueada' ? <Lock className="h-4 w-4" /> : i + 1}
               </span>
               <div className="min-w-0 flex-1">

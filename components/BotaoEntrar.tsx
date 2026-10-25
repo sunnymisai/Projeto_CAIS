@@ -266,8 +266,8 @@ export default function BotaoEntrar({ executando, aoTerminar, children, textoExe
       aria-busy={executando}
       // [PV-3] A APARÊNCIA do botão: cor de fundo (bg-botao e bg-botao-hover, tokens), altura h-14 (56 px; ligada à ESCALA do símbolo), canto rounded-xl e anel de foco. active:scale dá o "afundar" ao clicar.
       className={cx(
-        "relative inline-flex h-14 w-full select-none items-center justify-center overflow-hidden rounded-xl bg-botao text-base font-semibold text-white",
-        "shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_6px_16px_-8px_rgba(112,82,242,0.8)] transition-[background-color,transform] duration-200",
+        "relative inline-flex h-14 w-full select-none items-center justify-center overflow-hidden rounded-xl bg-botao text-base font-semibold text-sobre-cor",
+        "shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_6px_16px_-8px_color-mix(in_srgb,var(--botao)_80%,transparent)] transition-[background-color,transform] duration-200",
         "hover:bg-botao-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie",
         executando && "cursor-default",
       )}
@@ -285,7 +285,7 @@ export default function BotaoEntrar({ executando, aoTerminar, children, textoExe
         </g>
         <g ref={gBarco} opacity="0">
           <path ref={vela} className="fill-white" />
-          <path ref={casco} className="fill-white/75" />
+          <path ref={casco} className="fill-sobre-cor/75" />
         </g>
       </svg>
 

@@ -2,8 +2,8 @@
    APP/PROVIDERS.TSX
    O que é: junta os "provedores" (contextos React) que todas as telas usam.
    Onde é usado: app/layout.tsx, que envolve todas as páginas com <Providers>.
-   Depende de: lib/auth.tsx (sessão: useAuth), lib/store.tsx (dados: useDados)
-     e lib/toast.tsx (avisos: useToast).
+   Depende de: lib/auth.tsx (sessão: useAuth), lib/store.tsx (dados: useDados),
+     lib/temaAtivo.tsx (tema de cores: useTemaAtivo) e lib/toast.tsx (avisos: useToast).
    Contexto: §7 (front é do time; dados vêm da API, no protótipo da store) e
      docs/notas-next16.md §1 (Providers são Client Components e envolvem só
      o {children}).
@@ -16,14 +16,15 @@
 import { ReactNode } from 'react';
 import { AuthProvider } from '@/lib/auth';
 import { DadosProvider } from '@/lib/store';
+import { TemaProvider } from '@/lib/temaAtivo';
 import { ToastProvider } from '@/lib/toast';
 
-// [PV-1] A ORDEM DOS PROVEDORES: sessão (lib/auth.tsx), dados (lib/store.tsx) e avisos (lib/toast.tsx), de fora para dentro. Provedor novo entra aqui, e quem usa precisa ficar dentro dele.
+// [PV-1] A ORDEM DOS PROVEDORES: sessão (lib/auth.tsx), dados (lib/store.tsx), tema (lib/temaAtivo.tsx) e avisos (lib/toast.tsx), de fora para dentro. Provedor novo entra aqui, e quem usa precisa ficar dentro dele.
 /**
- * Envolve a aplicação com sessão, dados e avisos, nesta ordem.
+ * Envolve a aplicação com sessão, dados, tema e avisos, nesta ordem.
  *
  * @param props.children as páginas do sistema (vêm do app/layout.tsx).
- * @returns os três provedores aninhados em volta das páginas.
+ * @returns os quatro provedores aninhados em volta das páginas.
  *
  * @example
  * // Qualquer página dentro deles pode chamar:
@@ -38,7 +39,10 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <DadosProvider>
-        <ToastProvider>{children}</ToastProvider>
+        {/* O tema precisa da sessão (perfil) e dos dados (tema por empresa), por isso fica dentro dos dois. */}
+        <TemaProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </TemaProvider>
       </DadosProvider>
     </AuthProvider>
   );

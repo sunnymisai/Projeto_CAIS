@@ -3,11 +3,13 @@
    O que é: o painel escuro do lado esquerdo do login (só em telas grandes),
    com o logo, a frase da marca e o desenho dos três pilares conectados.
    Onde é usado: components/AcessoLayout.tsx (login, recuperar senha e primeiro acesso).
-   Depende de: ./CaisLogo, ./marca/TresPilares (o desenho dos pilares), ./marca/OndasDeFundo e das
+   Depende de: ./marca/LogoDaMarca (marca do tema), ./marca/SeloCais (selo fixo do CAIS),
+   ./marca/TresPilares (o desenho dos pilares), ./marca/OndasDeFundo e das
    cores --color-noite e --color-pilar-* de app/globals.css.
    Contexto: §1 (os três pilares e suas cores) e §9 (marca).
    ============================================================================ */
-import CaisLogo from "./CaisLogo";
+import LogoDaMarca from "./marca/LogoDaMarca";
+import SeloCais from "./marca/SeloCais";
 import TresPilares from "./marca/TresPilares";
 import OndasDeFundo from "./marca/OndasDeFundo";
 
@@ -38,13 +40,13 @@ export default function BrandPanel() {
       {/* Brilho roxo desfocado (blur) ao fundo, só decoração. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-pilar-roxo/25 blur-[120px]"
+        className="pointer-events-none absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-onda/25 blur-[120px]"
       />
 
-      {/* Versão negativa (tone="claro") porque o painel é sempre escuro. */}
+      {/* Marca da empresa do tema (ou o CAIS); fundo="escuro" porque o painel é sempre escuro. */}
       {/* relative: elemento sem posição é pintado ATRÁS dos absolutos (as ondas); com relative o logo fica por cima delas. */}
       <div className="relative">
-        <CaisLogo size={40} tone="claro" />
+        <LogoDaMarca fundo="escuro" tamanho={40} />
       </div>
 
       <div className="relative max-w-md">
@@ -62,10 +64,13 @@ export default function BrandPanel() {
         <TresPilares className="mt-10" />
       </div>
 
-      {/* [PV-4] O rodapé de direitos do painel; o ano vem do relógio do navegador. */}
-      <p className="relative text-sm text-white/40">
-        © {new Date().getFullYear()} Projeto CAIS
-      </p>
+      {/* [PV-4] O rodapé do painel: direitos (o ano vem do relógio do navegador) e o selo fixo do CAIS, que não depende do tema. No celular o selo fica em components/AcessoLayout.tsx, porque este painel some abaixo de 1024 px. */}
+      <div className="relative flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-white/40">
+          © {new Date().getFullYear()} Projeto CAIS
+        </p>
+        <SeloCais fundo="escuro" />
+      </div>
     </aside>
   );
 }

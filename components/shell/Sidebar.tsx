@@ -5,7 +5,8 @@
    do perfil da sessão.
    Onde é usado: app/(sistema)/layout.tsx (em todas as telas logadas).
    Depende de: next/link, next/navigation (usePathname), lucide-react,
-   components/CaisLogo, ./navegacao (lista de itens), lib/auth (useAuth) e lib/utils (cx).
+   components/marca/LogoDaMarca (marca do tema), components/marca/SeloCais (selo fixo do CAIS),
+   ./navegacao (lista de itens), lib/auth (useAuth) e lib/utils (cx).
    Contexto: §10 (anatomia: menu sempre no mesmo lugar, marca onde você está)
    e §15 (organograma: shell da aplicação).
    ============================================================================ */
@@ -14,7 +15,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import CaisLogo from '@/components/CaisLogo';
+import LogoDaMarca, { useNomeDaMarca } from '@/components/marca/LogoDaMarca';
+import SeloCais from '@/components/marca/SeloCais';
 import { NAVEGACAO } from './navegacao';
 import { useAuth } from '@/lib/auth';
 import { cx } from '@/lib/utils';
@@ -36,6 +38,8 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
   // Endereço atual (ex.: "/projetos/p1"), usado para destacar o item ativo.
   const caminho = usePathname();
   const { sessao } = useAuth();
+  // Nome da marca do tema (ou "CAIS"), para o leitor de tela anunciar o link do logo.
+  const nomeMarca = useNomeDaMarca();
   // [PV-2] O filtro do menu por perfil: tira os itens que o perfil não vê e os grupos que ficaram vazios. É o que faz cada perfil ter o seu menu.
   // Filtra o menu pelo perfil: tira os itens que o perfil não enxerga e os grupos que ficaram vazios.
   // Sem sessão (só por um instante, antes do layout redirecionar) o menu fica vazio.
@@ -51,9 +55,11 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
       <div className="flex h-16 items-center justify-between px-5">
         {/* [PV-4] O logo do topo do menu leva ao painel (a tela inicial do sistema). Se a tela inicial mudar, troque este endereço. */}
         {/* NAVEGA: o logo leva ao painel (home do sistema).
-          * aria-label: o logo é só desenho (SVG); sem ele, o leitor de tela anunciaria apenas "link". */}
-        <Link href="/painel" aria-label="CAIS, ir para o painel" className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" onClick={onFechar}>
-          <CaisLogo size={30} tone="claro" />
+          * aria-label: o logo é só desenho; sem ele, o leitor de tela anunciaria apenas "link".
+          * O logo é o da empresa do tema (ou o CAIS); o CAIS continua visível no SeloCais do rodapé.
+          * min-w-0: deixa o nome da empresa encolher ao lado do botão × do celular. */}
+        <Link href="/painel" aria-label={`${nomeMarca}, ir para o painel`} className="min-w-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50" onClick={onFechar}>
+          <LogoDaMarca fundo="escuro" tamanho={30} />
         </Link>
         {/* Botão × só existe no celular (lg:hidden): no desktop o menu não fecha.
           * focus-visible: o mesmo anel claro do logo, visível sobre o fundo escuro do menu. */}
@@ -93,10 +99,14 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
         ))}
       </div>
 
-      {/* Perfil da sessão no rodapé (vem de lib/auth). */}
-      <div className="border-t border-white/[0.07] px-5 py-4 text-[12px] leading-relaxed text-white/40">
-        <p className="font-semibold text-white/60">Perfil {sessao ? NOME_PERFIL[sessao.perfil] : ''}</p>
-        <p>Versão de demonstração · dados fictícios</p>
+      {/* [PV-6] O SELO FIXO do CAIS no rodapé do menu (e da gaveta do celular): fica aqui para o CAIS continuar visível mesmo com a marca da empresa no topo. Não depende do tema. */}
+      {/* Perfil da sessão e selo do CAIS no rodapé (o perfil vem de lib/auth). */}
+      <div className="space-y-3 border-t border-white/[0.07] px-5 py-4 text-[12px] leading-relaxed text-white/40">
+        <SeloCais fundo="escuro" />
+        <div>
+          <p className="font-semibold text-white/60">Perfil {sessao ? NOME_PERFIL[sessao.perfil] : ''}</p>
+          <p>Versão de demonstração · dados fictícios</p>
+        </div>
       </div>
     </nav>
   );
@@ -109,7 +119,7 @@ export default function Sidebar({ abertoMobile, onFechar }: { abertoMobile: bool
        * z-[60] fica acima da página e abaixo dos modais (z-[70]). */}
       {abertoMobile && (
         <div className="fixed inset-0 z-[60] lg:hidden">
-          <div className="animate-fade-in absolute inset-0 bg-black/50" onClick={onFechar} aria-hidden />
+          <div className="animate-fade-in absolute inset-0 bg-veu/50" onClick={onFechar} aria-hidden />
           <aside className="animate-card-in absolute inset-y-0 left-0 w-72 shadow-2xl">{conteudo}</aside>
         </div>
       )}

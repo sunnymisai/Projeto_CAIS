@@ -4,7 +4,7 @@
    de tema e botão "Entrar" (ou "Ir para o sistema" se já houver sessão).
    No celular as âncoras viram um menu que abre e fecha.
    Onde é usado: app/page.tsx.
-   Depende de: next/link, lucide-react, components/CaisLogo.tsx,
+   Depende de: next/link, lucide-react, components/marca/LogoDaMarca.tsx (marca do tema),
    components/ThemeToggle.tsx, lib/auth.tsx (useAuth), ./secoes.
    Contexto: §15 item 0 (homepage) e §13 (teclado e foco visível).
    ============================================================================ */
@@ -13,7 +13,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import CaisLogo from "@/components/CaisLogo";
+import LogoDaMarca, { useNomeDaMarca } from "@/components/marca/LogoDaMarca";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/auth";
 import { SECOES_NAV } from "./secoes";
@@ -21,7 +21,7 @@ import { SECOES_NAV } from "./secoes";
 // [PV-1] O VISUAL do botão "Entrar" do topo da homepage (um link com cara de botão primário).
 // Classes do botão de entrada (um link com cara de botão primário).
 const BOTAO_ENTRAR =
-  "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-xl bg-botao px-4 text-sm font-semibold text-white transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie";
+  "inline-flex h-10 items-center justify-center whitespace-nowrap rounded-xl bg-botao px-4 text-sm font-semibold text-sobre-cor transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60 focus-visible:ring-offset-2 focus-visible:ring-offset-superficie";
 
 // [PV-2] O VISUAL dos links de seção do topo (desktop e menu do celular).
 // Classes dos links de âncora (desktop e menu do celular).
@@ -40,6 +40,8 @@ const LINK_ANCORA =
  */
 export default function TopoHome() {
   const { sessao, pronto } = useAuth();
+  // Nome da marca do tema (ou "CAIS"), para o leitor de tela anunciar o link do logo.
+  const nomeMarca = useNomeDaMarca();
   // Menu do celular aberto ou fechado.
   const [aberto, setAberto] = useState(false);
   // Referência do botão do menu: devolvemos o foco a ele ao fechar.
@@ -83,19 +85,21 @@ export default function TopoHome() {
       {/* Link para pular direto ao conteúdo: aparece só quando recebe foco do teclado. */}
       <a
         href="#conteudo"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:rounded-lg focus:bg-botao focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:rounded-lg focus:bg-botao focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-sobre-cor"
       >
         Pular para o conteúdo
       </a>
 
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        {/* NAVEGA: para o início da própria página. */}
+        {/* NAVEGA: para o início da própria página.
+          * min-w-0: o nome da empresa do tema encolhe (vira "…") para não empurrar os botões em 375 px.
+          * fundo="auto": o topo é claro ou escuro conforme o botão de tema, então o logo segue o modo. */}
         <Link
           href="/"
-          aria-label="CAIS, página inicial"
-          className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50"
+          aria-label={`${nomeMarca}, página inicial`}
+          className="min-w-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50"
         >
-          <CaisLogo size={28} />
+          <LogoDaMarca fundo="auto" tamanho={28} />
         </Link>
 
         {/* [PV-5] Os links de seção no desktop (a partir de 768 px); no celular viram o menu que abre e fecha logo abaixo. A lista vem de ./secoes. */}
@@ -108,7 +112,8 @@ export default function TopoHome() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        {/* shrink-0: os botões nunca encolhem; quem cede espaço é o nome da marca. */}
+        <div className="flex shrink-0 items-center gap-2">
           <ThemeToggle />
           {/* NAVEGA: para o login ou, com sessão, para o painel. */}
           <Link href={destino} className={BOTAO_ENTRAR}>

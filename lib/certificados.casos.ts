@@ -29,6 +29,7 @@ const empresa = (id: string, nomeFantasia: string) => ({
 });
 
 const dados: Dados = {
+  temas: { personalizados: [], padraoId: 'cais', porEmpresa: {} },
   empresas: [empresa('emp_v', 'Vértice')],
   pessoas: [pessoa('ana', 'profissional'), pessoa('bia', 'profissional'), pessoa('caio', 'profissional'), pessoa('marcos', 'empresa', 'emp_v'), pessoa('dani', 'profissional', '', 'inativo')],
   trilhas: [

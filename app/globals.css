@@ -20,7 +20,7 @@
    sistema operacional), permitindo o botão de alternar tema. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* [PV-1] AS CORES DO TEMA CLARO (marca, estados, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. */
+/* [PV-1] AS CORES DO TEMA CLARO (marca, estados, painéis noite, fundo da home, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. */
 :root {
   /* Marca (iguais nos dois temas, exceto a primária, que clareia no escuro) */
   --marca: #7C5CFF;             /* Roxo Maré — só no símbolo e em ilustrações */
@@ -32,6 +32,19 @@
   --sucesso: #047857;           /* Verde Atracado escurecido: 5,5:1, serve p/ texto */
   --aviso: #B45309;             /* Atenção: 5,0:1, serve p/ texto */
   --erro: #DC3545;              /* Erro */
+
+  /* Tokens do módulo de temas (tema claro): painéis escuros (lateral, painel de marca, hero e rodapé da home),
+   fundo da home, lilás do item ativo do menu, véu do modal e texto sobre botão/estado. O tema só troca estes
+   valores (lib/tema.tsx); o :root e o .dark guardam o visual padrão "CAIS". */
+  --noite: #14161F;             /* painéis sempre escuros: lateral, painel de marca, hero e rodapé da home */
+  --noite-alt: #1B1D2A;         /* o mesmo painel no tema escuro (um tom acima do fundo) */
+  --fundo-home: #F6F7FB;        /* fundo das seções da página pública "/" (hoje igual ao --fundo) */
+  /* AS CORES QUE ACOMPANHAM O TEMA SEM ENTRAR NA TELA DE EDIÇÃO (ponto vital: mudar aqui muda menu e ondas): derivadas de --primaria (a cor de destaque do tema). Mudaram a primária, mudam o item ativo do menu e as ondas/brilhos do início e do login. Para fixar uma cor, troque o color-mix por um hex. Valem no claro e no escuro porque o .dark só troca --primaria. */
+  --marca-clara: color-mix(in srgb, var(--primaria) 45%, white);  /* tom claro do item ativo do menu lateral, sobre fundo escuro */
+  --onda: color-mix(in srgb, var(--primaria) 88%, white);         /* ondas animadas e brilho desfocado do hero e do painel de marca do login */
+  --veu: #0B0C12;               /* fundo escurecido atrás do modal (entra com 55% de opacidade) */
+  --sobre-cor: #FFFFFF;         /* texto sobre --botao e --primaria (5,0:1 no botão padrão) */
+  --sobre-estado: #FFFFFF;      /* texto sobre selos de --erro, --sucesso e cores de dado no claro */
 
   /* Superfícies e texto — tema claro */
   --fundo: #F6F7FB;             /* Névoa */
@@ -70,6 +83,13 @@
   --aviso: #FBBF24;
   --erro: #F87171;
 
+  --noite: #14161F;
+  --noite-alt: #1B1D2A;
+  --fundo-home: #14161F;
+  --veu: #0B0C12;
+  --sobre-cor: #FFFFFF;
+  --sobre-estado: #14161F;      /* no escuro os estados clareiam: o texto sobre eles escurece */
+
   --fundo: #14161F;
   --superficie: #1C1F2B;
   --superficie-alt: #242838;
@@ -92,7 +112,7 @@
   color-scheme: dark;
 }
 
-/* [PV-4] A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam as cores fixas do painel de marca (noite e pilares) e as fontes (Space Grotesk nos títulos, Archivo no resto). */
+/* [PV-4] A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam os painéis noite e os tokens de texto sobre botão (ligados às variáveis), as cores fixas dos pilares e as fontes (Space Grotesk nos títulos, Archivo no resto). */
 @theme inline {
   --color-marca: var(--marca);
   --color-primaria: var(--primaria);
@@ -114,11 +134,17 @@
 
   --shadow-card: var(--sombra-card);
 
-  /* Cores fixas do painel de marca (sempre escuro, nos dois temas) */
-  --color-noite: #14161F;
-  --color-noite-alt: #1B1D2A;
-  --color-marca-clara: #B9A7FF;   /* lilás do destaque do menu lateral e do logo sobre fundo escuro */
-  --color-veu: #0B0C12;           /* fundo escurecido atrás do modal (aparece com 55% de opacidade) */
+  /* Painéis escuros e outros tokens do módulo de temas (valores no :root e no .dark acima) */
+  --color-noite: var(--noite);
+  --color-noite-alt: var(--noite-alt);
+  --color-fundo-home: var(--fundo-home);
+  --color-marca-clara: var(--marca-clara);   /* destaque do menu lateral (deriva da primária do tema) */
+  --color-onda: var(--onda);                 /* ondas e brilho do hero e do login (deriva da primária do tema) */
+  --color-veu: var(--veu);                   /* fundo escurecido atrás do modal (aparece com 55% de opacidade) */
+  --color-sobre-cor: var(--sobre-cor);
+  --color-sobre-estado: var(--sobre-estado);
+
+  /* Cores de identidade (não mudam com o tema): os três pilares */
   --color-pilar-roxo: #7C5CFF;
   --color-pilar-verde: #10B981;
   --color-pilar-ambar: #F5A524;

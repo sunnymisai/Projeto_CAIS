@@ -149,7 +149,10 @@ export default function LayoutSistema({ children }: { children: ReactNode }) {
   return (
     // h-screen + overflow-hidden: a casca tem exatamente a altura da janela e
     // não rola. Assim o menu e o topo ficam sempre no lugar (§10).
-    <div className="raiz-shell flex h-screen overflow-hidden bg-fundo">
+    // relative: sem isso, elemento `absolute` sem pai posicionado (o sr-only dos leitores de tela, por
+    // exemplo) usa a PÁGINA como referência, escapa do overflow-hidden e estica o documento, criando uma
+    // rolagem extra com uma faixa vazia no fim. Com relative a casca vira a referência e recorta tudo.
+    <div className="raiz-shell relative flex h-screen overflow-hidden bg-fundo">
       {/* Link "pular para o conteúdo": invisível (sr-only) até receber foco
         * pelo Tab; aí aparece no canto (focus:not-sr-only). Ajuda quem navega
         * só pelo teclado a não passar por todo o menu (§13). */}

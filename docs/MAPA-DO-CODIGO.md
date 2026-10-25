@@ -1025,6 +1025,15 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 2. Como o tema escuro é ligado: a classe .dark no <html>. As cores de cada tema ficam em app/globals.css. _(linha 54)_
 3. Troca de tema: grava a escolha (ou apaga, no modo "seguir o sistema") e aplica na hora. É o ÚNICO lugar que escreve a chave do tema. _(linha 63)_
 
+### `lib/temas.ts`
+*o catálogo de temas do CAIS (CAIS, Paleta quente, Carvão, Oceano, Floresta e Ameixa) e as funções puras que escolhem, validam, duplicam e atualizam temas. Não usa React nem navegador.*
+
+1. OS GRUPOS DE COR que o tema controla (rótulo na tela do administrador + variável CSS de cada seletor). Variável nova entra aqui E em cada paleta de TEMAS_BASE (e precisa existir em app/globals.css). _(linha 68)_
+2. OS TEMAS-BASE (seis) e os valores de cada cor (claro e escuro). Para ajustar uma cor de um tema-base, mude o hex aqui; o contraste AA (4,5:1) é conferido por validarTema e por lib/temas.casos.ts. _(linha 109)_
+3. O TEMA INICIAL do sistema: 'cais' como padrão e nenhuma empresa com tema próprio. Troque o id para outro tema-base se quiser que o sistema abra com outra aparência. _(linha 258)_
+4. AS REGRAS DE AVISO DE CONTRASTE: qual cor é conferida sobre qual fundo e o mínimo (4,5:1 = AA). Regra nova é só mais uma linha em CONFERENCIAS; para mudar o mínimo, mude MINIMO_AA. _(linha 315)_
+5. OS LIMITES DO LOGO DA EMPRESA: tamanho máximo do arquivo (LOGO_MAX_BYTES), formatos aceitos (LOGO_TIPOS) e tamanho do nome (NOME_EMPRESA_MAX). O logo vira texto (data URL) dentro do localStorage, que tem cerca de 5 MB para o sistema inteiro: por isso o teto é baixo. Para aceitar logo maior, suba LOGO_MAX_BYTES (e confira o espaço do navegador). _(linha 368)_
+
 ### `lib/tempoReal.ts`
 *a camada de "tempo real" do quadro (§5: "tempo real via WebSocket quando um colega move um cartão"). Define o contrato CanalTempoReal e uma implementação SIMULADA que conversa entre abas do MESMO navegador.*
 
@@ -1112,4 +1121,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-128 arquivos mapeados, 578 pontos vitais.
+129 arquivos mapeados, 583 pontos vitais.

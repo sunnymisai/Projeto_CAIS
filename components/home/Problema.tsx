@@ -32,7 +32,7 @@ const COM_CAIS = [
 // [PV-3] A seção "O programa" (id programa): título, descrição e as duas colunas. O id é o destino do link de secoes.ts.
 /**
  * Seção "O programa". Server Component.
- * Fundo bg-fundo (a seção seguinte usa bg-superficie, para alternar).
+ * Fundo bg-fundo-home (a seção seguinte usa bg-superficie, para alternar).
  * No celular as duas colunas empilham; a partir de md ficam lado a lado.
  *
  * @returns a <section id="programa">.
@@ -40,7 +40,7 @@ const COM_CAIS = [
 export default function Problema() {
   return (
     // scroll-mt-20: ao rolar até a âncora, deixa espaço para o topo fixo (h-16).
-    <section id="programa" aria-labelledby="titulo-programa" className="scroll-mt-20 bg-fundo py-16 sm:py-24">
+    <section id="programa" aria-labelledby="titulo-programa" className="scroll-mt-20 bg-fundo-home py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <CabecalhoSecao
           rotulo="O programa"

@@ -1,9 +1,9 @@
 /* ============================================================================
    ONDASDEFUNDO.TSX — ONDAS ANIMADAS DO FUNDO ESCURO
-   O que é: três camadas de ondas roxas que correm devagar no topo de uma área escura
+   O que é: três camadas de ondas, na cor de destaque do tema, que correm devagar no topo de uma área escura
    e esmaecem até sumir, como a "superfície da água" de onde o CAIS (o cais) se vê.
    Onde é usado: components/home/Hero.tsx (abertura da homepage) e components/BrandPanel.tsx (login).
-   Depende de: as cores --color-pilar-roxo e --color-noite de app/globals.css e da animação
+   Depende de: as cores --color-onda (deriva da primária do tema) e --color-noite de app/globals.css e da animação
    `.onda-camada` (keyframes `ondas-correm`) do mesmo arquivo.
    Contexto: §9 (marca); ideia vinda do projeto de um colega (ProjetoCais), refeita só com tokens.
    ============================================================================ */
@@ -15,8 +15,8 @@ const ALTURA_ONDA = 198;
 /** Contorno de uma onda: começa e termina na mesma altura (y=121), por isso duas ondas lado a lado emendam sem costura. */
 const CONTORNO = 'M0 121C311 121 410-.25 811 0c400 0 500 121 789 121v77H0z';
 
-// [PV-1] AS TRÊS CAMADAS: quanto de roxo (mistura com a noite), a opacidade, o deslocamento vertical e a duração da volta (menor = mais rápido). Mude aqui para deixar as ondas mais fortes, mais claras ou mais calmas.
-/** As três camadas, da mais ao fundo para a mais à frente. `mistura` é a % de roxo-pilar misturada com a cor da noite. */
+// [PV-1] AS TRÊS CAMADAS: quanto da cor do tema (mistura com a noite), a opacidade, o deslocamento vertical e a duração da volta (menor = mais rápido). Mude aqui para deixar as ondas mais fortes, mais claras ou mais calmas.
+/** As três camadas, da mais ao fundo para a mais à frente. `mistura` é a % da cor das ondas (--onda, do tema) misturada com a cor da noite. */
 const CAMADAS = [
   { mistura: 38, opacidade: 0.9, topo: 40, duracao: 40 },
   { mistura: 62, opacidade: 0.75, topo: 20, duracao: 28 },
@@ -57,8 +57,8 @@ export default function OndasDeFundo({ className = '' }: { className?: string })
           <defs>
             {/* Degradê vertical: transparente no topo da onda, cor cheia embaixo. A cor é um token misturado com a noite (sem hex solto). */}
             <linearGradient id={`onda-${i}`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" style={{ stopColor: `color-mix(in srgb, var(--color-pilar-roxo) ${c.mistura}%, var(--color-noite))`, stopOpacity: 0.25 }} />
-              <stop offset="1" style={{ stopColor: `color-mix(in srgb, var(--color-pilar-roxo) ${c.mistura}%, var(--color-noite))`, stopOpacity: c.opacidade }} />
+              <stop offset="0" style={{ stopColor: `color-mix(in srgb, var(--color-onda) ${c.mistura}%, var(--color-noite))`, stopOpacity: 0.25 }} />
+              <stop offset="1" style={{ stopColor: `color-mix(in srgb, var(--color-onda) ${c.mistura}%, var(--color-noite))`, stopOpacity: c.opacidade }} />
             </linearGradient>
           </defs>
           {[0, 1, 2, 3].map((n) => (

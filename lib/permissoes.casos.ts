@@ -41,6 +41,7 @@ const aloc = (id: string, projetoId: string, pessoaId: string) => ({
 });
 
 const dados: Dados = {
+  temas: { personalizados: [], padraoId: 'cais', porEmpresa: {} },
   empresas: [empresa('emp_vertice'), empresa('emp_aurora')],
   pessoas: [
     pessoa('pes_admin', 'admin'), pessoa('pes_ana', 'profissional'), pessoa('pes_bruno', 'profissional'),
@@ -114,6 +115,9 @@ const casos: { porque: string; obtido: unknown; esperado: unknown }[] = [
   { porque: 'admin NÃO abre /minhas-tarefas (é só do profissional)', obtido: podeAcessar('admin', '/minhas-tarefas'), esperado: false },
   { porque: 'rota não listada vale só para admin (profissional)', obtido: podeAcessar('profissional', '/qualquer-coisa'), esperado: false },
   { porque: 'rota não listada vale só para admin (admin)', obtido: podeAcessar('admin', '/qualquer-coisa'), esperado: true },
+  { porque: 'admin abre /temas (personalizar o tema é do admin)', obtido: podeAcessar('admin', '/temas'), esperado: true },
+  { porque: 'empresa NÃO abre /temas', obtido: podeAcessar('empresa', '/temas'), esperado: false },
+  { porque: 'profissional NÃO abre /temas', obtido: podeAcessar('profissional', '/temas'), esperado: false },
   { porque: '"/projetosx" não casa com o prefixo "/projetos" (fronteira de segmento)', obtido: podeAcessar('empresa', '/projetosx'), esperado: false },
   { porque: '?voltar= e #âncora são ignorados', obtido: podeAcessar('profissional', '/projetos?x=1#a'), esperado: true },
   { porque: 'profissional NÃO cria tarefa', obtido: podeFazer('profissional', 'criar_tarefa'), esperado: false },

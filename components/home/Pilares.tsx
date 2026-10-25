@@ -65,7 +65,7 @@ const PILARES: Pilar[] = [
 
 /**
  * Seção dos três pilares. Server Component.
- * Fundo bg-superficie (alterna com a seção anterior, que usa bg-fundo).
+ * Fundo bg-superficie (alterna com a seção anterior, que usa bg-fundo-home).
  *
  * @returns a <section> com os três cards.
  */
@@ -84,7 +84,7 @@ export default function Pilares() {
           {PILARES.map(({ titulo, barra, icone, Icone, itens }, i) => (
             // border-l-4 + cor do pilar: a barra lateral é o acento. O resto da borda é neutro.
             // Revelar: o cartão sobe ao entrar na tela, um depois do outro (150 ms).
-            <Revelar como="article" atraso={i * 150} key={titulo} className={`cartao-erguido rounded-2xl border border-l-4 border-borda bg-fundo p-6 ${barra}`}>
+            <Revelar como="article" atraso={i * 150} key={titulo} className={`cartao-erguido rounded-2xl border border-l-4 border-borda bg-fundo-home p-6 ${barra}`}>
               <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${icone}`}>
                 <Icone className="h-5 w-5" aria-hidden="true" />
               </span>

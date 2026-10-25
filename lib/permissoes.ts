@@ -35,6 +35,8 @@ export const ROTAS_POR_PERFIL: Record<string, readonly Perfil[]> = {
   // A empresa cria e acompanha as trilhas do time dela (só as dela: lib/escopo.ts, trilhasVisiveis).
   '/trilhas': ['admin', 'empresa'],
   '/design-system': ['admin'],
+  // Temas do sistema: só o Administrador escolhe, personaliza e atribui temas às empresas.
+  '/temas': ['admin'],
   '/carga': ['admin'],
   '/acessos': ['admin'],
   // §3: Empresa cumpre a trilha dela e Profissional cumpre as atribuídas.
@@ -249,6 +251,7 @@ export const ROTULO_DAS_ROTAS: Record<string, string> = {
   '/pessoas': 'Pessoas',
   '/trilhas': 'Trilhas (editor)',
   '/design-system': 'Design System',
+  '/temas': 'Temas',
   '/carga': 'Carga da equipe',
   '/acessos': 'Acessos',
   '/minhas-trilhas': 'Minhas trilhas',

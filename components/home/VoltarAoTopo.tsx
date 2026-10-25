@@ -64,7 +64,7 @@ export default function VoltarAoTopo() {
       aria-label="Voltar ao topo"
       tabIndex={visivel ? 0 : -1}
       aria-hidden={!visivel}
-      className={`fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-botao text-white shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria focus-visible:ring-offset-2 focus-visible:ring-offset-fundo sm:bottom-6 sm:right-6 ${
+      className={`fixed bottom-4 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-botao text-sobre-cor shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria focus-visible:ring-offset-2 focus-visible:ring-offset-fundo sm:bottom-6 sm:right-6 ${
         visivel ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
       }`}
     >

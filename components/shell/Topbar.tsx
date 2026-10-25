@@ -237,9 +237,9 @@ export default function Topbar({ onAbrirMenu }: { onAbrirMenu: () => void }) {
             aria-label={avisos.length ? `Avisos: ${avisos.length} novos` : 'Avisos'}
             className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-borda bg-superficie text-tinta-suave hover:text-tinta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50">
             <Bell className="h-[18px] w-[18px]" />
-            {/* Selo vermelho com a quantidade; dark:text-noite mantém o contraste no tema escuro. */}
+            {/* Selo vermelho com a quantidade; text-sobre-estado mantém o contraste nos dois temas. */}
             {avisos.length > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-erro px-1 text-[10px] font-bold text-white ring-2 ring-superficie dark:text-noite">{avisos.length}</span>
+              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-erro px-1 text-[10px] font-bold text-sobre-estado ring-2 ring-superficie">{avisos.length}</span>
             )}
           </button>
         )}>

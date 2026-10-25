@@ -9,6 +9,7 @@
 import type { Dados, Coluna } from './tipos';
 import { hojeISO, somaDias } from './utils';
 import { segundaDaSemana } from './carga';
+import { temasIniciais } from './temas';
 
 /*
  * As datas são geradas a partir de hoje, para que prazos, atrasos e
@@ -217,5 +218,7 @@ export function criarSeed(): Dados {
       { id: 'tar_11', projetoId: 'prj_estoque', colunaId: 'col_fazendo', titulo: 'Filtro por período', descricao: '', responsavelId: 'pes_bruno', prazo: d(-1), prioridade: 'alta', etiquetas: ['Front'], checklist: [{ id: 'x1', texto: 'Seletor de datas', feito: true }, { id: 'x2', texto: 'Aplicar na API', feito: false }], comentarios: [], ordem: 0 },
       { id: 'tar_12', projetoId: 'prj_estoque', colunaId: 'col_pronto', titulo: 'Protótipo navegável', descricao: '', responsavelId: 'pes_elisa', prazo: d(-3), prioridade: 'media', etiquetas: ['UX'], checklist: [], comentarios: [], ordem: 0, concluidaEm: d(-4) },
     ],
+    // Temas: começa no CAIS, sem tema personalizado e sem tema por empresa (lib/temas.ts).
+    temas: temasIniciais(),
   };
 }

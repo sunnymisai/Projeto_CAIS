@@ -3,11 +3,12 @@
    O que é: faixa escura no fim da página com a logo, o nome do programa,
    os links das seções e o link "Entrar".
    Onde é usado: app/page.tsx.
-   Depende de: next/link, components/CaisLogo.tsx e ./secoes.
+   Depende de: next/link, components/CaisLogo.tsx, components/marca/SeloCais.tsx e ./secoes.
    Contexto: §15 item 0 (homepage) e §9 (marca: versão negativa do logo).
    ============================================================================ */
 import Link from "next/link";
 import CaisLogo from "@/components/CaisLogo";
+import SeloCais from "@/components/marca/SeloCais";
 import { SECOES_NAV } from "./secoes";
 
 // [PV-1] O VISUAL dos links do rodapé da homepage (sobre fundo escuro, com foco visível).
@@ -53,10 +54,14 @@ export default function RodapeHome() {
         </nav>
       </div>
 
+      {/* [PV-4] A faixa final do rodapé: direitos (o ano vem do relógio do navegador) e o selo fixo do CAIS, que não depende do tema. */}
       <div className="border-t border-white/10">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-center text-sm text-white/60 sm:px-6">
-          © {new Date().getFullYear()} Projeto CAIS
-        </p>
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row sm:px-6">
+          <p className="text-sm text-white/60">
+            © {new Date().getFullYear()} Projeto CAIS
+          </p>
+          <SeloCais fundo="escuro" />
+        </div>
       </div>
     </footer>
   );

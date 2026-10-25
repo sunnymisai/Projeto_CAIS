@@ -145,7 +145,7 @@ export default function FormularioInteresse() {
 
   return (
     // [PV-5] A seção "Participar" (id participar), destino do botão da abertura da homepage.
-    <section id="participar" aria-labelledby="titulo-participar" className="scroll-mt-20 bg-fundo py-16 sm:py-24">
+    <section id="participar" aria-labelledby="titulo-participar" className="scroll-mt-20 bg-fundo-home py-16 sm:py-24">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
         <div>
           <CabecalhoSecao

@@ -29,7 +29,7 @@ export default function Hero() {
       {/* Brilho roxo desfocado ao fundo, só decoração. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full bg-pilar-roxo/25 blur-[120px]"
+        className="pointer-events-none absolute -left-32 top-10 h-96 w-96 rounded-full bg-onda/25 blur-[120px]"
       />
 
       {/* Duas colunas a partir de lg; abaixo disso o diagrama fica embaixo do texto. */}
@@ -50,7 +50,7 @@ export default function Hero() {
             {/* NAVEGA: rola até o formulário de interesse (#participar), TODA vez que clicar (LinkRolar; o Link do Next não rola de novo na mesma âncora). */}
             <LinkRolar
               alvo="participar"
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-botao px-5 text-[15px] font-semibold text-white transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-noite"
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-botao px-5 text-[15px] font-semibold text-sobre-cor transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-noite"
             >
               Quero trazer minha empresa
             </LinkRolar>

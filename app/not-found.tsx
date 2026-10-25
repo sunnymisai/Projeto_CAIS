@@ -31,7 +31,7 @@ export default function NaoEncontrado() {
       {/* NAVEGA: para /painel. Se a pessoa não estiver logada, o layout de
         * app/(sistema) a manda para /login?voltar=%2Fpainel e, depois de
         * entrar, de volta ao painel. */}
-      <Link href="/painel" className="mt-6 inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-white hover:bg-botao-hover">Ir para o painel</Link>
+      <Link href="/painel" className="mt-6 inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-sobre-cor hover:bg-botao-hover">Ir para o painel</Link>
       {/* NAVEGA: para a homepage pública "/". Útil para quem chegou de fora
         * (ex.: link quebrado) e nem tem conta no sistema. */}
       <Link href="/" className="mt-3 text-sm font-medium text-primaria hover:underline">Ir para a página inicial</Link>

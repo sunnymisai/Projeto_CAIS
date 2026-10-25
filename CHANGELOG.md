@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Módulo de temas: tela do admin, cobertura do sistema e identidade da empresa (24/10/2026)
+- Criado: a rota `/temas` (só admin) com `components/temas/*` (`CampoCor`, `CampoLogo`, `CartaoTema`, `EditorTema`, `PreviaTema`, `TemaPorEmpresa`); `lib/temaAtivo.tsx` (`TemaProvider`, `useTemaAtivo`, anti-piscada); `components/marca/LogoDaMarca.tsx` e `SeloCais.tsx`; o teste `testes/navegador/k01-logo-da-marca.mjs`.
+- Modificado: `lib/store.tsx`, `lib/tipos.ts` e `lib/seed.ts` (dados `temas` e as ações `salvarTema`, `removerTema`, `definirTemaPadrao`, `definirTemaEmpresa`); `app/globals.css` (tokens `--fundo-home`, `--noite`, `--noite-alt`, `--veu`, `--sobre-cor`, `--sobre-estado` e os derivados do tema `--marca-clara` e `--onda`); home, login, lateral, botões e painéis passam a usar tokens, e as ondas e o brilho do início e do login seguem a cor do tema; `app/(sistema)/layout.tsx` (a casca ganhou `relative`: elemento `sr-only` escapava do `overflow-hidden` e criava rolagem extra com faixa vazia no fim); `lib/permissoes.ts`, `components/shell/navegacao.ts` e `/design-system`.
+- Removido: nada. O botão "restaurar dados de demonstração" agora também apaga os temas personalizados (o seed passa a incluir `temas`).
+
 ## Três novos temas-base: Oceano, Floresta e Ameixa (24/10/2026)
 - Criado: em `lib/temas.ts`, os temas-base `oceano` (azul-petróleo), `floresta` (verde-musgo) e `ameixa` (vinho e rosado), cada um com paleta clara e escura. Entram no fim de `TEMAS_BASE`, então os índices 0 a 2 (usados pelo `/design-system` e pelos testes) não mudaram.
 - Modificado: `lib/temas.casos.ts` (lista de ids passa a ter seis temas e há um caso de ids únicos); `docs/temas-contrato.md` (tabela dos temas-base); comentários de `lib/temas.ts` e `lib/tipos.ts` que diziam "três temas-base"; `docs/MAPA-DO-CODIGO.md` regenerado.

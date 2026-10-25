@@ -4,8 +4,9 @@
    Onde é usado: pelo próprio Next.js, automaticamente, em TODAS as rotas
      (homepage "/", login "/login", área interna "(sistema)", "/sem-permissao" e página 404).
    Depende de: app/globals.css (cores, fontes e tema), app/providers.tsx
-     (sessão, dados e avisos) e o localStorage "cais-tema", gravado por lib/tema.ts
-     (usado por components/ThemeToggle.tsx e pela aba Preferências de /perfil).
+     (sessão, dados, tema e avisos), o localStorage "cais-tema", gravado por lib/tema.ts
+     (usado por components/ThemeToggle.tsx e pela aba Preferências de /perfil), e o
+     "cais-tema-aplicado", gravado por lib/temaAtivo.tsx (cores do tema, anti-piscada).
    Contexto: §9 (design system e marca: cores Tinta e Névoa) e
      docs/notas-next16.md §1 (é Server Component) e §5 (metadados).
    ============================================================================ */
@@ -48,7 +49,7 @@ export const viewport: Viewport = {
   ],
 };
 
-// [PV-3] O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar. A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts: mude os dois juntos. Não escreva comentários dentro do texto.
+// [PV-3] O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar (modo escuro e cores do tema). A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts, e "cais-tema-aplicado" repete a de lib/temaAtivo.tsx: mude os dois lados juntos. Não escreva comentários dentro do texto.
 /*
   Script de tema — roda ANTES da página aparecer, para evitar o "piscar"
   branco quando o usuário usa o modo escuro.
@@ -75,6 +76,13 @@ export const viewport: Viewport = {
  * <head>, executado antes do React), por isso a repetição é intencional. Se mudar
  * só de um lado, o tema escolhido deixa de ser lembrado. Não escreva comentários DENTRO do texto
  * abaixo: eles virariam parte do código executado no navegador.
+ *
+ * TEMA DE CORES (anti-piscada): depois do modo escuro, o script reaplica o último conjunto de variáveis
+ * CSS que lib/temaAtivo.tsx guardou em localStorage['cais-tema-aplicado'] (formato { escuro, mapa }).
+ * Só reaplica se o modo guardado for o mesmo que vale agora (o sistema pode ter trocado de claro para
+ * escuro desde a última visita); senão o TemaProvider aplica o certo logo após carregar os dados.
+ * O segundo try/catch é separado para um erro nesse trecho nunca impedir o modo escuro de ligar.
+ * ⚠️ ATENÇÃO: a chave 'cais-tema-aplicado' repete CHAVE_TEMA_APLICADO de lib/temaAtivo.tsx: mude as duas juntas.
  */
 const themeScript = `
 (function () {
@@ -83,6 +91,14 @@ const themeScript = `
     var escuro = salvo ? salvo === 'escuro'
       : window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (escuro) document.documentElement.classList.add('dark');
+    try {
+      var guardado = JSON.parse(localStorage.getItem('cais-tema-aplicado') || 'null');
+      if (guardado && guardado.mapa && guardado.escuro === escuro) {
+        for (var chave in guardado.mapa) {
+          if (chave.indexOf('--') === 0) document.documentElement.style.setProperty(chave, guardado.mapa[chave]);
+        }
+      }
+    } catch (e2) {}
   } catch (e) {}
 })();
 `;

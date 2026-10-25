@@ -65,13 +65,13 @@ const PERFIS: Perfil[] = [
 
 /**
  * Seção de perfis. Server Component.
- * Fundo bg-fundo (a anterior usa bg-superficie).
+ * Fundo bg-fundo-home (a anterior usa bg-superficie).
  *
  * @returns a <section> com os três cards de perfil.
  */
 export default function Perfis() {
   return (
-    <section aria-labelledby="titulo-perfis" className="scroll-mt-20 bg-fundo py-16 sm:py-24">
+    <section aria-labelledby="titulo-perfis" className="scroll-mt-20 bg-fundo-home py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <CabecalhoSecao
           rotulo="Quem usa"

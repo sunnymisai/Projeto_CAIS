@@ -2,9 +2,11 @@
    TIPOS DO DOMÍNIO CAIS
    O que é: as "formas" (interfaces TypeScript) de cada dado do sistema: empresa, pessoa, trilha, projeto, alocação, tarefa.
    Onde é usado: lib/store.tsx, lib/seed.ts, lib/auth.tsx, lib/metricas.ts, lib/trilhas.ts e as telas app/(sistema)/pessoas, trilhas e trilhas/[id] (as demais telas recebem os tipos reexportados por lib/store.tsx).
-   Depende de: nada (só TypeScript).
+   Depende de: lib/temas.ts (só o tipo DadosTemas, por `import type`).
    Contexto: §4 (Trilhas), §5 (Empresa → Projeto → Alocação → Tarefa), §11 (Regras de cadastro).
    ============================================================================ */
+
+import type { DadosTemas } from './temas';
 
 /*
  * Espelham o modelo descrito no deck: Empresa → Projeto → Alocação → Tarefa,
@@ -311,4 +313,9 @@ export interface Dados {
   projetos: Projeto[];
   alocacoes: Alocacao[];
   tarefas: Tarefa[];
+  /**
+   * Temas do sistema (módulo de temas): temas criados pelo administrador, o padrão e o tema por empresa.
+   * Os temas-base não ficam aqui (vivem em lib/temas.ts). Leitura antiga sem este campo recebe o valor inicial.
+   */
+  temas: DadosTemas;
 }

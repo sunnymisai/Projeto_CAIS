@@ -46,13 +46,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 // (brilho interno em cima + sombra roxa embaixo).
 const VARIANTES = {
   primario:
-    "bg-botao text-white hover:bg-botao-hover shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_6px_16px_-8px_rgba(112,82,242,0.8)]",
+    "bg-botao text-sobre-cor hover:bg-botao-hover shadow-[0_1px_0_rgba(255,255,255,0.22)_inset,0_6px_16px_-8px_color-mix(in_srgb,var(--botao)_80%,transparent)]",
   secundario:
     "border border-borda bg-superficie text-tinta hover:bg-superficie-alt",
   fantasma:
     "text-tinta-suave hover:bg-superficie-alt hover:text-tinta",
   perigo:
-    "bg-erro text-white hover:brightness-110 dark:text-noite",
+    "bg-erro text-sobre-estado hover:brightness-110",
 };
 
 // [PV-2] AS ALTURAS DO BOTÃO: sm 32 px, md 40 px e lg 48 px, com o espaçamento e a fonte de cada uma.

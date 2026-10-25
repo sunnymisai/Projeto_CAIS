@@ -53,7 +53,8 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     // .home-raiz liga a rolagem suave só nesta página (veja app/globals.css).
-    <div className="home-raiz">
+    // bg-fundo-home: a home usa o próprio token de fundo (tema pode diferenciá-lo do fundo do sistema).
+    <div className="home-raiz bg-fundo-home">
       <TopoHome />
       {/* [PV-2] A ORDEM DAS SEÇÕES DA HOMEPAGE: Hero, Problema (O programa), Pilares, Como funciona, Para sua empresa, Perfis, Perguntas e o formulário de interesse. Reordenar ou tirar uma seção exige conferir components/home/secoes.ts. */}
       {/* id="conteudo": destino do link "Pular para o conteúdo" do topo. */}

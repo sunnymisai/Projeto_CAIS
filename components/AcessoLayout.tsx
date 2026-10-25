@@ -2,13 +2,14 @@
    ACESSOLAYOUT.TSX — MOLDURA DAS TELAS DE ACESSO
    O que é: o layout de duas colunas (painel de marca + cartão) compartilhado pelas telas públicas de acesso: login, recuperar senha e primeiro acesso.
    Onde é usado: app/login/page.tsx, app/recuperar-senha/page.tsx e app/primeiro-acesso/page.tsx.
-   Depende de: components/BrandPanel.tsx, components/CaisLogo.tsx e components/ThemeToggle.tsx.
+   Depende de: components/BrandPanel.tsx, components/marca/LogoDaMarca.tsx, components/marca/SeloCais.tsx e components/ThemeToggle.tsx.
    Contexto: §15 item 1 (Login, Esqueci a senha e Primeiro acesso) e §13 (celular e teclado).
    ============================================================================ */
 
 import type { ReactNode } from 'react';
 import BrandPanel from '@/components/BrandPanel';
-import CaisLogo from '@/components/CaisLogo';
+import LogoDaMarca from '@/components/marca/LogoDaMarca';
+import SeloCais from '@/components/marca/SeloCais';
 import ThemeToggle from '@/components/ThemeToggle';
 
 /**
@@ -39,14 +40,20 @@ export default function AcessoLayout({ children }: { children: ReactNode }) {
         {/* No celular: logo à esquerda e botão de tema à direita.
           * No desktop (lg): o logo some (já aparece no BrandPanel) e o botão
           * de tema vai para a direita (lg:justify-end). */}
-        <header className="relative flex items-center justify-between p-5 sm:p-8 lg:justify-end">
-          <CaisLogo size={30} className="lg:hidden" />
+        <header className="relative flex items-center justify-between gap-3 p-5 sm:p-8 lg:justify-end">
+          {/* fundo="auto": este fundo acompanha o botão claro/escuro, então o logo da empresa segue o modo. */}
+          <LogoDaMarca fundo="auto" tamanho={30} className="lg:hidden" />
           <ThemeToggle />
         </header>
 
         <div className="relative flex flex-1 items-center justify-center px-4 pb-12 sm:px-8">
           {children}
         </div>
+
+        {/* [PV-3] O SELO FIXO do CAIS no rodapé das telas de acesso, só no celular/tablet (lg:hidden): a partir de 1024 px ele já aparece no rodapé do BrandPanel. Não depende do tema. */}
+        <footer className="relative flex justify-center px-4 pb-6 lg:hidden">
+          <SeloCais fundo="claro" />
+        </footer>
       </section>
     </main>
   );

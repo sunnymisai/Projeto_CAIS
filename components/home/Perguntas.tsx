@@ -30,7 +30,7 @@ interface PerguntaProps {
 function Pergunta({ pergunta, children }: PerguntaProps) {
   return (
     // group: deixa a seta girar quando o <details> está aberto (group-open:).
-    <details className="group rounded-xl border border-borda bg-fundo">
+    <details className="group rounded-xl border border-borda bg-fundo-home">
       {/* list-none e o seletor do webkit escondem o triângulo padrão do navegador (usamos a nossa seta). */}
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-xl px-5 py-4 font-space text-base font-semibold text-tinta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/60 [&::-webkit-details-marker]:hidden">
         {pergunta}
@@ -44,7 +44,7 @@ function Pergunta({ pergunta, children }: PerguntaProps) {
 // [PV-1] AS PERGUNTAS FREQUENTES (id perguntas): cada <Pergunta> é uma pergunta e a resposta dela. As respostas com TODO(PROGLOGIC) são provisórias até a confirmação.
 /**
  * Seção de perguntas frequentes. Server Component.
- * Fundo bg-superficie (alterna com a seção anterior, que usa bg-fundo).
+ * Fundo bg-superficie (alterna com a seção anterior, que usa bg-fundo-home).
  * As respostas que dependem de confirmação da PROGLOGIC têm um comentário
  * TODO(PROGLOGIC): o texto aqui é provisório e não promete nada além do contexto.
  *

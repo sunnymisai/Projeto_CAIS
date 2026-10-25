@@ -30,7 +30,7 @@ const PASSOS = [
  */
 export default function ComoFunciona() {
   return (
-    <section id="como-funciona" aria-labelledby="titulo-como-funciona" className="scroll-mt-20 bg-fundo py-16 sm:py-24">
+    <section id="como-funciona" aria-labelledby="titulo-como-funciona" className="scroll-mt-20 bg-fundo-home py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <CabecalhoSecao
           rotulo="Como funciona"
@@ -57,7 +57,7 @@ export default function ComoFunciona() {
               {/* Número do passo. Posição: à esquerda no celular, acima no desktop. */}
               <span
                 aria-hidden="true"
-                className="passo-numero absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-botao font-space text-base font-semibold text-white"
+                className="passo-numero absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-botao font-space text-base font-semibold text-sobre-cor"
               >
                 {i + 1}
               </span>

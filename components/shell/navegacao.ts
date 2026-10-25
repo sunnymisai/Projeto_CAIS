@@ -7,7 +7,7 @@
    Contexto: §3 (perfis), §10 (anatomia: menu sempre no mesmo lugar) e §8/§15
    (mapa e organograma de telas).
    ============================================================================ */
-import { LayoutDashboard, Building2, Users, GraduationCap, FolderKanban, Palette, Gauge, KeyRound, BookOpenCheck, ListChecks, Award } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, GraduationCap, FolderKanban, Palette, Gauge, KeyRound, BookOpenCheck, ListChecks, Award, Paintbrush } from 'lucide-react';
 import type { Perfil } from '@/lib/tipos';
 
 // [PV-1] O MENU LATERAL: grupos, rótulos, ícones, endereços e quais perfis veem cada item. Tela nova precisa ser registrada aqui (e em lib/permissoes.ts, que é quem barra o acesso).
@@ -57,5 +57,7 @@ export const NAVEGACAO: {
   ] },
   { grupo: 'Produto', itens: [
     { href: '/design-system', rotulo: 'Design System', icone: Palette, perfis: ['admin'] },
+    // Tela do administrador para escolher, personalizar e atribuir temas (components/temas).
+    { href: '/temas', rotulo: 'Temas', icone: Paintbrush, perfis: ['admin'] },
   ] },
 ];

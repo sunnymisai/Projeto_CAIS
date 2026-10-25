@@ -2,7 +2,7 @@
    STORE (CAMADA DE DADOS)
    O que é: o "banco de dados" do protótipo — guarda empresas, pessoas, trilhas, projetos, alocações e tarefas e expõe ações para ler, salvar e apagar.
    Onde é usado: app/providers.tsx (monta o DadosProvider), lib/auth.tsx (lerPessoasSalvas, para o login saber quem existe) e, via useDados(), nas telas de app/(sistema)/ (painel, empresas, pessoas, projetos, projetos/[id], trilhas, trilhas/[id]) e nos componentes components/projetos/* (Quadro, CartaoTarefa, DetalheTarefa, Equipe, FormProjeto, Vistas) e components/shell/Topbar.tsx.
-   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO), lib/carga.ts (ocupacaoNoDia, para cargaDaPessoa), lib/tempoReal.ts (canal entre abas, G02), lib/metricas.ts (colunaAceitaAprovacao), lib/auth.tsx (autor dos eventos) e o localStorage do navegador.
+   Depende de: React (Context, useState, useEffect, useMemo, useRef, useCallback), lib/tipos.ts, lib/seed.ts (dados de demonstração), lib/utils.ts (hojeISO), lib/carga.ts (ocupacaoNoDia, para cargaDaPessoa), lib/tempoReal.ts (canal entre abas, G02), lib/metricas.ts (colunaAceitaAprovacao), lib/auth.tsx (autor dos eventos), lib/temas.ts (regras dos temas) e o localStorage do navegador.
    Contexto: §5 (Projetos, alocação e tarefas), §7 (back-end é da PROGLOGIC), §14 (no protótipo, "ligado à store"), §16 (semáforo de carga).
    ============================================================================ */
 
@@ -15,6 +15,8 @@ import { hojeISO } from './utils';
 import { ocupacaoNoDia, primeiroDiaUtil } from './carga';
 import { colunaAceitaAprovacao } from './metricas';
 import { canalTempoReal, type EventoTempoReal } from './tempoReal';
+import type { Tema } from './temas';
+import { definirDaEmpresaNosTemas, definirPadraoNosTemas, normalizarTemas, removerDosTemas, salvarNosTemas } from './temas';
 // ⚠️ ATENÇÃO: lib/auth.tsx também importa daqui (lerPessoasSalvas). O import circular é seguro porque
 // useAuth só é chamado dentro do componente, nunca quando o arquivo carrega.
 import { useAuth } from './auth';
@@ -132,8 +134,25 @@ interface DadosCtx extends Dados {
    * @example d.moverTarefa('tar_1', 'col_pronto', 0)
    */
   moverTarefa: (tarefaId: string, colunaId: string, indice: number) => void;
-  /** Joga fora tudo o que foi editado e volta aos dados de demonstração. */
+  /** Joga fora tudo o que foi editado e volta aos dados de demonstração (inclusive os temas personalizados). */
   restaurarDemonstracao: () => void;
+  /**
+   * Cria ou edita um tema personalizado (pelo `id`). Tema-base é ignorado: só se duplica.
+   * @example d.salvarTema({ ...duplicarTema(base, 'custom-1', 'Meu tema') })
+   */
+  salvarTema: (tema: Tema) => void;
+  /**
+   * Apaga um tema personalizado. Se era o padrão do sistema, o padrão volta a 'cais'; empresas que o usavam voltam ao padrão.
+   * @example d.removerTema('custom-1')
+   */
+  removerTema: (id: string) => void;
+  /** Define o tema do sistema inteiro (id de tema-base ou personalizado; id que não existe é ignorado). */
+  definirTemaPadrao: (id: string) => void;
+  /**
+   * Define o tema de uma empresa; `null` devolve a empresa ao padrão do sistema.
+   * @example d.definirTemaEmpresa('emp_vertice', 'quente')
+   */
+  definirTemaEmpresa: (empresaId: string, id: string | null) => void;
   /** Busca uma empresa pelo id (undefined se não existir). */
   empresa: (id: string) => Empresa | undefined;
   /** Busca uma pessoa pelo id (undefined se não existir). */
@@ -201,7 +220,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
       const bruto = localStorage.getItem(CHAVE);
       const lido: unknown = bruto ? JSON.parse(bruto) : null;
       // GRAVA: troca os dados desta aba pelos que a outra aba acabou de gravar.
-      if (formatoValido(lido)) setDados(lido);
+      if (formatoValido(lido)) setDados({ ...lido, temas: normalizarTemas(lido.temas) });
     } catch { /* dado danificado: fica com o que tem; a próxima leitura completa mostra o erro */ }
     setEventoExterno({ ...evento, recebidoEm: Date.now() });
   }), []);
@@ -221,7 +240,8 @@ export function DadosProvider({ children }: { children: ReactNode }) {
           const lido: unknown = JSON.parse(bruto);
           // JSON válido mas sem as seis coleções também é dado danificado.
           if (!formatoValido(lido)) throw new Error('formato');
-          setDados(lido);
+          // Dado gravado antes do módulo de temas não tem `temas`: normalizarTemas põe o valor inicial (sem trocar a CHAVE).
+          setDados({ ...lido, temas: normalizarTemas(lido.temas) });
         }
         setErro(null);
         // Libera o efeito de salvar (abaixo) somente depois de uma leitura que deu certo.
@@ -359,13 +379,38 @@ export function DadosProvider({ children }: { children: ReactNode }) {
 
   // [PV-10] O botão "Restaurar dados de demonstração": volta ao seed e também é a saída da tela de erro de dados danificados. APAGA o que foi editado.
   // GRAVA: substitui tudo pela demonstração (o efeito de persistir grava no localStorage).
-  // APAGA: tudo o que foi criado ou editado no navegador se perde.
+  // APAGA: tudo o que foi criado ou editado no navegador se perde (inclusive os temas personalizados).
   // Também é a saída do estado de erro: libera a gravação (carregou) e limpa o erro,
   // para a demonstração substituir os dados danificados.
   const restaurarDemonstracao = useCallback(() => {
     carregou.current = true;
     setErro(null);
     setDados(criarSeed());
+  }, []);
+
+  // [PV-11] TEMAS: as quatro ações abaixo só chamam as funções puras de lib/temas.ts (as regras de "tema em uso", base protegida etc. vivem lá). TODO(API): virar POST/PUT/DELETE dos temas.
+  /** Cria ou edita um tema personalizado (tema-base é ignorado). */
+  // GRAVA: altera `dados.temas.personalizados` (e, pelo efeito de persistir, o localStorage).
+  const salvarTema = useCallback((tema: Tema) => {
+    setDados((d) => ({ ...d, temas: salvarNosTemas(d.temas, tema) }));
+  }, []);
+
+  /** Apaga um tema personalizado e acerta quem o usava. */
+  // APAGA: remove o tema; em cascata, o padrão do sistema volta a 'cais' e as empresas que usavam o tema voltam ao padrão.
+  const removerTema = useCallback((id: string) => {
+    setDados((d) => ({ ...d, temas: removerDosTemas(d.temas, id) }));
+  }, []);
+
+  /** Escolhe o tema do sistema inteiro. */
+  // GRAVA: altera `dados.temas.padraoId`.
+  const definirTemaPadrao = useCallback((id: string) => {
+    setDados((d) => ({ ...d, temas: definirPadraoNosTemas(d.temas, id) }));
+  }, []);
+
+  /** Escolhe o tema de uma empresa (`null` = usar o padrão do sistema). */
+  // GRAVA: altera `dados.temas.porEmpresa`.
+  const definirTemaEmpresa = useCallback((empresaId: string, id: string | null) => {
+    setDados((d) => ({ ...d, temas: definirDaEmpresaNosTemas(d.temas, empresaId, id) }));
   }, []);
 
   // useMemo: só cria um novo objeto quando algo da lista de dependências muda,
@@ -380,10 +425,14 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     remover,
     moverTarefa,
     restaurarDemonstracao,
+    salvarTema,
+    removerTema,
+    definirTemaPadrao,
+    definirTemaEmpresa,
     empresa: (id) => dados.empresas.find((e) => e.id === id),
     pessoa: (id) => dados.pessoas.find((p) => p.id === id),
     projeto: (id) => dados.projetos.find((p) => p.id === id),
-    // [PV-11] As horas ATIVAS HOJE de uma pessoa (usadas em /pessoas e no aviso do topo). Em fim de semana dá 0, porque não é dia útil. Para semanas e períodos use lib/carga.ts.
+    // [PV-12] As horas ATIVAS HOJE de uma pessoa (usadas em /pessoas e no aviso do topo). Em fim de semana dá 0, porque não é dia útil. Para semanas e períodos use lib/carga.ts.
     // Horas semanais ATIVAS HOJE (lib/carga.ts → ocupacaoNoDia).
     // MUDANÇA DE COMPORTAMENTO (F02): antes somava TODAS as alocações que terminavam a partir
     // de hoje, mesmo as que nunca se cruzam no tempo (uma que acaba em 7 dias e outra que só
@@ -397,7 +446,7 @@ export function DadosProvider({ children }: { children: ReactNode }) {
       // Sábado e domingo olham a segunda-feira seguinte; senão a carga "de hoje" zeraria no fim de semana.
       return p ? ocupacaoNoDia(p, primeiroDiaUtil(hojeISO()), dados, ignorar).horas : 0;
     },
-  }), [dados, pronto, erro, tentarDeNovo, eventoExterno, salvar, remover, moverTarefa, restaurarDemonstracao]);
+  }), [dados, pronto, erro, tentarDeNovo, eventoExterno, salvar, remover, moverTarefa, restaurarDemonstracao, salvarTema, removerTema, definirTemaPadrao, definirTemaEmpresa]);
 
   return <Ctx.Provider value={valor}>{children}</Ctx.Provider>;
 }

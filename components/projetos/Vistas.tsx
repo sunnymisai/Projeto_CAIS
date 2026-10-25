@@ -201,14 +201,14 @@ export function VistaCronograma({ projeto, tarefas, onAbrir, mostrarProjeto = fa
               {/* Linha vermelha de "hoje", só se hoje cair dentro da janela. */}
               {hoje >= inicio && hoje <= fim && (
                 <span className="absolute inset-y-0 w-0.5 bg-erro/70" style={{ left: `${x(hoje)}%` }}>
-                  <span className="absolute -top-0.5 left-1 rounded bg-erro px-1 text-[10px] font-bold text-white dark:text-noite">hoje</span>
+                  <span className="absolute -top-0.5 left-1 rounded bg-erro px-1 text-[10px] font-bold text-sobre-estado">hoje</span>
                 </span>
               )}
               {/* [PV-7] A LINHA DE ENTREGA: roxa na ficha de um projeto; na visão geral cada projeto ganha a sua, na cor dele, com uma etiqueta "Entrega" + nome (cor nunca sozinha). */}
               {projetos.map((p) => mostrarProjeto ? (
                 <span key={p.id} className={cx(CLASSE_COR_PROJETO, 'absolute inset-y-0 w-0.5 bg-(--cor-vis)')} style={{ left: `${x(p.entrega)}%`, ...estiloProjeto(p.cor) }} title={`Entrega prevista de ${p.nome}`}>
                   {/* Etiqueta à esquerda da linha, no pé do gráfico; texto escuro sobre a cor clareada no tema escuro (como o "hoje"). */}
-                  <span className="absolute bottom-0.5 right-1 max-w-[9rem] truncate whitespace-nowrap rounded bg-(--cor-vis) px-1 text-[10px] font-bold text-white dark:text-noite">Entrega · {p.nome}</span>
+                  <span className="absolute bottom-0.5 right-1 max-w-[9rem] truncate whitespace-nowrap rounded bg-(--cor-vis) px-1 text-[10px] font-bold text-sobre-estado">Entrega · {p.nome}</span>
                 </span>
               ) : (
                 <span key={p.id} className="absolute inset-y-0 w-0.5 bg-primaria/60" style={{ left: `${x(p.entrega)}%` }} title="Entrega prevista" />

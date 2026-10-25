@@ -38,6 +38,7 @@ const trilha = (id: string, titulo: string, alcance: Trilha['alcance'], empresaI
 });
 
 const dados: Dados = {
+  temas: { personalizados: [], padraoId: 'cais', porEmpresa: {} },
   empresas: [empresa('emp_v', 'Vértice Logística', '11.222.333/0001-81'), empresa('emp_a', 'Aurora Saúde', '45.678.901/0001-75')],
   pessoas: [
     pessoa('adm', 'Administrador CAIS', 'admin'),

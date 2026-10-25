@@ -131,7 +131,7 @@ export default function QuadroGeral({ projetos, tarefas, onAbrir, ordem, direcao
       <div className="rolagem flex gap-1.5 overflow-x-auto p-3 md:hidden" role="tablist" aria-label="Listas do quadro">
         {colunas.map((c) => (
           <button key={c.chave} role="tab" aria-selected={ativaMobile === c.chave} onClick={() => setColunaMobile(c.chave)}
-            className={cx('shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors', ativaMobile === c.chave ? 'bg-botao text-white' : 'bg-superficie text-tinta-suave hover:text-tinta')}>
+            className={cx('shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors', ativaMobile === c.chave ? 'bg-botao text-sobre-cor' : 'bg-superficie text-tinta-suave hover:text-tinta')}>
             {c.titulo} <span className="opacity-70">{daColuna(c.chave).length}</span>
           </button>
         ))}

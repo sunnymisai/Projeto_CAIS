@@ -49,7 +49,7 @@ export default function SemPermissao() {
         * APAGA: o segundo botão chama sair(), que remove a sessão salva, e depois leva ao
         * login ("/login"; a raiz "/" é a homepage pública) para entrar com outra conta. */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <Link href="/painel" className="inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-white hover:bg-botao-hover">Voltar ao painel</Link>
+        <Link href="/painel" className="inline-flex h-10 items-center rounded-xl bg-botao px-4 text-sm font-semibold text-sobre-cor hover:bg-botao-hover">Voltar ao painel</Link>
         <Link href="/login" onClick={sair} className="inline-flex h-10 items-center rounded-xl border border-borda px-4 text-sm font-semibold text-tinta hover:bg-superficie-alt">Entrar com outra conta</Link>
       </div>
     </main>

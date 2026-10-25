@@ -2,7 +2,7 @@
    APP/(SISTEMA)/DESIGN-SYSTEM/PAGE.TSX
    O que é: a documentação viva do design system do CAIS: cada componente aparece funcionando, com todos os seus estados.
    Onde é usado: rota /design-system (protegida). Linkada pelo menu lateral (components/shell/navegacao.ts). Regra do time (CLAUDE.md): todo componente novo de components/ui deve ganhar uma seção aqui.
-   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal, RegrasSenha, Semaforo, FiltroPeriodo), lib/metricas (ultimosDias), components/button, components/input, components/checkbox, components/CaisLogo, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
+   Depende de: componentes de components/ui (form, basicos, Graficos, Tabela, Modal, RegrasSenha, Semaforo, FiltroPeriodo), lib/metricas (ultimosDias), components/button, components/input, components/checkbox, components/CaisLogo, components/temas (CampoCor, PreviaTema, CartaoTema), lib/temas, CabecalhoPagina (components/shell/Pagina), useToast (lib/toast.tsx) e lucide-react.
    Contexto: docs/contexto-cais.md §9 (Design system e marca: "documentado ao vivo"), §10 (Anatomia de toda tela) e §13 (Qualidade: os quatro estados).
    ============================================================================ */
 // "use client": as demonstrações usam estado (abas, modal, interruptor) e toast,
@@ -24,6 +24,10 @@ import Modal from '@/components/ui/Modal';
 import RegrasSenha from '@/components/ui/RegrasSenha';
 import { IndicadorCarga, LinhaDeSemanas, LegendaSemaforo } from '@/components/ui/Semaforo';
 import FiltroPeriodo from '@/components/ui/FiltroPeriodo';
+import CampoCor from '@/components/temas/CampoCor';
+import PreviaTema from '@/components/temas/PreviaTema';
+import CartaoTema from '@/components/temas/CartaoTema';
+import { TEMAS_BASE, paletaDoTema } from '@/lib/temas';
 import { ultimosDias } from '@/lib/metricas';
 import { useToast } from '@/lib/toast';
 
@@ -53,7 +57,7 @@ const CORES = [
 // ⚠️ ATENÇÃO: o id precisa ser igual ao id de uma <Secao>; se não for, o link âncora não rola para lugar nenhum.
 const SECOES = [
   ['tokens', 'Tokens'], ['tipografia', 'Tipografia'], ['botoes', 'Botões'], ['campos', 'Campos'], ['selecao', 'Seleção'],
-  ['etiquetas', 'Etiquetas e avatar'], ['feedback', 'Avisos e estados'], ['navegacao', 'Abas e paginação'], ['dados', 'Tabela e gráficos'], ['semaforo', 'Semáforo de carga'], ['periodo', 'Filtro de período'], ['modal', 'Modal'],
+  ['etiquetas', 'Etiquetas e avatar'], ['feedback', 'Avisos e estados'], ['navegacao', 'Abas e paginação'], ['dados', 'Tabela e gráficos'], ['semaforo', 'Semáforo de carga'], ['periodo', 'Filtro de período'], ['modal', 'Modal'], ['temas', 'Temas'],
 ] as const;
 
 // [PV-3] O BLOCO PADRÃO de cada seção da documentação. Componente novo do design system entra como nova <Secao> e ganha um atalho em SECOES.
@@ -106,6 +110,8 @@ export default function DesignSystem() {
   const [carregando, setCarregando] = useState(false);
   // Senha digitada na demonstração das regras de senha (não é gravada em lugar nenhum).
   const [senhaDemo, setSenhaDemo] = useState('');
+  // Cor da demonstração do CampoCor (não é gravada em lugar nenhum).
+  const [corDemo, setCorDemo] = useState('#4A3323');
 
   return (
     // max-w-[1200px] e respiro crescente (p-4 → lg:p-8) iguais às outras telas.
@@ -349,6 +355,32 @@ export default function DesignSystem() {
               <Aviso tipo="aviso">A carga total passa de 40 h por semana. Dá para confirmar mesmo assim.</Aviso>
             </div>
           </Modal>
+        </Secao>
+
+        {/* Temas (components/temas): campo de cor, prévia isolada e cartão de tema. A tela real é /temas (só do Administrador). */}
+        <Secao id="temas" titulo="Temas" descricao="Peças da tela /temas. A prévia aplica as variáveis de cor só dentro dela; o sistema não muda até o tema ser salvo.">
+          <div className="space-y-6">
+            <div>
+              <Rot>Campo de cor (seletor + hexadecimal; o erro de formato aparece ao sair do campo)</Rot>
+              <div className="max-w-sm"><CampoCor rotulo="Botão primário" valor={corDemo} onChange={setCorDemo} /></div>
+            </div>
+            <div>
+              <Rot>Prévia isolada (normal e compacta)</Rot>
+              <div className="grid items-start gap-4 md:grid-cols-2">
+                <PreviaTema paleta={paletaDoTema(TEMAS_BASE[1], 'claro')} nome={TEMAS_BASE[1].nome} modo="claro" />
+                <PreviaTema compacta paleta={paletaDoTema(TEMAS_BASE[2], 'escuro')} nome={TEMAS_BASE[2].nome} modo="escuro" />
+              </div>
+            </div>
+            <div>
+              <Rot>Cartão de tema (padrão, tema-base e personalizado)</Rot>
+              {/* Ações de demonstração: as funções vazias de propósito, nada é gravado. */}
+              <ul className="grid gap-4 md:grid-cols-2">
+                <CartaoTema tema={TEMAS_BASE[0]} modo="claro" padrao empresasUsando={0} onUsarComoPadrao={() => {}} onDuplicar={() => avisar('Demonstração: nada foi duplicado.')} />
+                <CartaoTema tema={{ ...TEMAS_BASE[1], id: 'custom-demo', nome: 'Tema próprio', base: false }} modo="claro" padrao={false} empresasUsando={2}
+                  onUsarComoPadrao={() => avisar('Demonstração: nada foi alterado.')} onDuplicar={() => {}} onEditar={() => {}} onApagar={() => {}} />
+              </ul>
+            </div>
+          </div>
         </Secao>
       </div>
     </div>

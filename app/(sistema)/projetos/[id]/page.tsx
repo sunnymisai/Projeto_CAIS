@@ -255,7 +255,7 @@ function FichaProjeto() {
                 {([['quadro', 'Quadro', LayoutGrid], ['lista', 'Lista', List], ['cronograma', 'Cronograma', GanttChart]] as const).map(([v, r, I]) => (
                   <button key={v} role="radio" aria-checked={vista === v} onClick={() => setVista(v)}
                     className={cx('inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50',
-                      vista === v ? 'bg-botao text-white shadow-sm' : 'text-tinta-suave hover:text-tinta')}>
+                      vista === v ? 'bg-botao text-sobre-cor shadow-sm' : 'text-tinta-suave hover:text-tinta')}>
                     <I className="h-4 w-4" aria-hidden />{r}
                   </button>
                 ))}
