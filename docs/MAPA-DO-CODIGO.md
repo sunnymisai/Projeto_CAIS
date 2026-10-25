@@ -53,9 +53,9 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/(sistema)/design-system/page.tsx`
 *a documentação viva do design system do CAIS: cada componente aparece funcionando, com todos os seus estados.*
 
-1. A TABELA DE TOKENS da documentação: os hex são só para exibir; a cor real vem de app/globals.css e os dois precisam ser atualizados juntos. Hoje o tema escuro de Erro e de Névoa aqui difere do globals.css: confira. _(linha 33)_
-2. OS ATALHOS DO TOPO da página: cada id precisa existir como id de uma <Secao>, senão o link não rola. _(linha 51)_
-3. O BLOCO PADRÃO de cada seção da documentação. Componente novo do design system entra como nova <Secao> e ganha um atalho em SECOES. _(linha 59)_
+1. A TABELA DE TOKENS da documentação: os hex são só para exibir; a cor real vem de app/globals.css e os dois precisam ser atualizados juntos. Hoje o tema escuro de Erro e de Névoa aqui difere do globals.css: confira. _(linha 37)_
+2. OS ATALHOS DO TOPO da página: cada id precisa existir como id de uma <Secao>, senão o link não rola. _(linha 55)_
+3. O BLOCO PADRÃO de cada seção da documentação. Componente novo do design system entra como nova <Secao> e ganha um atalho em SECOES. _(linha 63)_
 
 ### `app/(sistema)/empresas/page.tsx`
 *tela de cadastro de empresas parceiras (lista com filtros + ficha em modal).*
@@ -81,7 +81,7 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 3. O PORTEIRO DAS ROTAS: sem sessão vai para /login?voltar=<tela pedida> (ou ?aviso=inativa); perfil sem permissão (podeAcessar) vai para /sem-permissao. _(linha 96)_
 4. A TELA "VERIFICANDO ACESSO": enquanto a sessão carrega ou o redirecionamento não acontece, nunca aparece a casca. A condição precisa bater com a do porteiro acima. _(linha 124)_
 5. A TRAVA DA TRILHA OBRIGATÓRIA (§12): profissional com trilha pendente só abre /painel e /minhas-trilhas. Liga e desliga em EXIGIR_TRILHA_NO_PRIMEIRO_ACESSO (lib/permissoes.ts). _(linha 139)_
-6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 169)_
+6. O ESTADO DE ERRO DE TODAS AS TELAS: se a store não leu os dados, mostra o erro no lugar da página, com "Tentar de novo" e "Voltar aos dados de demonstração" (este APAGA o que estava salvo). A trilha pendente também bloqueia aqui. _(linha 172)_
 
 ### `app/(sistema)/minhas-tarefas/page.tsx`
 *as tarefas em que a pessoa logada é responsável, de todos os projetos, agrupadas por prazo (Atrasadas, Hoje, Esta semana, Depois) e as concluídas recentemente (recolhidas), com filtros de projeto e prioridade. Clicar abre o detalhe da tarefa por cima da lista (?tarefa= na URL, como no quadro).*
@@ -192,25 +192,25 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 ### `app/globals.css`
 
-1. AS CORES DO TEMA CLARO (marca, estados, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. _(linha 23)_
-2. AS CORES DOS GRÁFICOS no tema claro (concluída, andamento, revisão, a fazer, não iniciada, extras). Lidas por COR_GRAFICO em components/ui/Graficos.tsx. _(linha 46)_
-3. AS CORES DO TEMA ESCURO: os mesmos nomes do :root com valores para fundo escuro (a classe "dark" no <html> liga). Mudou um nome lá, mude aqui. _(linha 61)_
-4. A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam as cores fixas do painel de marca (noite e pilares) e as fontes (Space Grotesk nos títulos, Archivo no resto). _(linha 95)_
-5. O FUNDO, A COR DO TEXTO E A FONTE PADRÃO de todas as telas (pelos tokens), com a troca suave de tema (desligada para quem pede menos movimento). _(linha 131)_
-6. AS ANIMAÇÕES DA MARCA (cartão de acesso, linhas e pontos dos três pilares, balanço do erro). Todas se desligam em prefers-reduced-motion. _(linha 140)_
-7. A BARRA DE ROLAGEM FINA (classe .rolagem) das áreas que rolam: conteúdo das telas e colunas do quadro. _(linha 190)_
-8. O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). _(linha 199)_
-9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 207)_
-10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 222)_
-11. AS ANIMAÇÕES DE ENTRADA DA HOMEPAGE: itens sobem ao entrar na tela (components/home/Revelar.tsx), os passos de "Como funciona" aparecem um a um (círculo, depois a linha) e os cartões erguem no hover. Duração e distância ficam aqui. _(linha 226)_
-12. A IMPRESSÃO DO CERTIFICADO (components do app: /certificados/[trilhaId]): papel A4 deitado, sem menu nem topo nem botões (.nao-imprimir), a folha ocupa a página e as cores da marca saem como na tela. _(linha 267)_
+1. AS CORES DO TEMA CLARO (marca, estados, painéis noite, fundo da home, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. _(linha 23)_
+2. AS CORES DOS GRÁFICOS no tema claro (concluída, andamento, revisão, a fazer, não iniciada, extras). Lidas por COR_GRAFICO em components/ui/Graficos.tsx. _(linha 59)_
+3. AS CORES DO TEMA ESCURO: os mesmos nomes do :root com valores para fundo escuro (a classe "dark" no <html> liga). Mudou um nome lá, mude aqui. _(linha 74)_
+4. A PONTE PARA O TAILWIND: cada --color-x vira as classes bg-x, text-x e border-x e troca com o tema. Aqui também ficam os painéis noite e os tokens de texto sobre botão (ligados às variáveis), as cores fixas dos pilares e as fontes (Space Grotesk nos títulos, Archivo no resto). _(linha 115)_
+5. O FUNDO, A COR DO TEXTO E A FONTE PADRÃO de todas as telas (pelos tokens), com a troca suave de tema (desligada para quem pede menos movimento). _(linha 157)_
+6. AS ANIMAÇÕES DA MARCA (cartão de acesso, linhas e pontos dos três pilares, balanço do erro). Todas se desligam em prefers-reduced-motion. _(linha 166)_
+7. A BARRA DE ROLAGEM FINA (classe .rolagem) das áreas que rolam: conteúdo das telas e colunas do quadro. _(linha 216)_
+8. O BLOCO CINZA ANIMADO do estado "carregando" (classe .esqueleto, usada por components/ui/basicos.tsx). _(linha 225)_
+9. AS ANIMAÇÕES DO MODAL (entrada) e do fundo escurecido (fade). Desligadas para quem pede menos movimento. _(linha 233)_
+10. A ROLAGEM SUAVE das âncoras fica só na homepage (a que tem a classe .home-raiz) e só para quem não pediu menos movimento. _(linha 248)_
+11. AS ANIMAÇÕES DE ENTRADA DA HOMEPAGE: itens sobem ao entrar na tela (components/home/Revelar.tsx), os passos de "Como funciona" aparecem um a um (círculo, depois a linha) e os cartões erguem no hover. Duração e distância ficam aqui. _(linha 252)_
+12. A IMPRESSÃO DO CERTIFICADO (components do app: /certificados/[trilhaId]): papel A4 deitado, sem menu nem topo nem botões (.nao-imprimir), a folha ocupa a página e as cores da marca saem como na tela. _(linha 293)_
 
 ### `app/layout.tsx`
 *a "moldura" HTML de todas as páginas do CAIS (<html>, <head>, <body>).*
 
-1. O TÍTULO E A DESCRIÇÃO PADRÃO da aba do navegador. O modelo "%s · CAIS" monta o título das outras páginas (ex.: "Projetos · CAIS"). _(linha 19)_
-2. A COR DA BARRA DO NAVEGADOR NO CELULAR (Névoa no tema claro, Tinta no escuro) e o viewportFit "cover", que libera a área segura do iPhone para as barras fixas. _(linha 31)_
-3. O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar. A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts: mude os dois juntos. Não escreva comentários dentro do texto. _(linha 51)_
+1. O TÍTULO E A DESCRIÇÃO PADRÃO da aba do navegador. O modelo "%s · CAIS" monta o título das outras páginas (ex.: "Projetos · CAIS"). _(linha 20)_
+2. A COR DA BARRA DO NAVEGADOR NO CELULAR (Névoa no tema claro, Tinta no escuro) e o viewportFit "cover", que libera a área segura do iPhone para as barras fixas. _(linha 32)_
+3. O SCRIPT DO TEMA: roda antes da página aparecer para evitar o piscar (modo escuro e cores do tema). A chave "cais-tema" e os valores "escuro" e "claro" repetem os de lib/tema.ts, e "cais-tema-aplicado" repete a de lib/temaAtivo.tsx: mude os dois lados juntos. Não escreva comentários dentro do texto. _(linha 52)_
 
 ### `app/login/page.tsx`
 *a página da rota "/login" — tela de entrada no sistema.*
@@ -226,7 +226,7 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 *a página pública da raiz "/", que apresenta o CAIS para uma empresa que avalia participar do programa.*
 
 1. O TÍTULO E A DESCRIÇÃO da homepage; o título é absoluto (ignora o modelo "· CAIS" do layout raiz). _(linha 36)_
-2. A ORDEM DAS SEÇÕES DA HOMEPAGE: Hero, Problema (O programa), Pilares, Como funciona, Para sua empresa, Perfis, Perguntas e o formulário de interesse. Reordenar ou tirar uma seção exige conferir components/home/secoes.ts. _(linha 58)_
+2. A ORDEM DAS SEÇÕES DA HOMEPAGE: Hero, Problema (O programa), Pilares, Como funciona, Para sua empresa, Perfis, Perguntas e o formulário de interesse. Reordenar ou tirar uma seção exige conferir components/home/secoes.ts. _(linha 59)_
 
 ### `app/primeiro-acesso/page.tsx`
 *a página da rota "/primeiro-acesso?convite=<pessoaId>" (pública, fora do grupo protegido).*
@@ -237,7 +237,7 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `app/providers.tsx`
 *junta os "provedores" (contextos React) que todas as telas usam.*
 
-1. A ORDEM DOS PROVEDORES: sessão (lib/auth.tsx), dados (lib/store.tsx) e avisos (lib/toast.tsx), de fora para dentro. Provedor novo entra aqui, e quem usa precisa ficar dentro dele. _(linha 21)_
+1. A ORDEM DOS PROVEDORES: sessão (lib/auth.tsx), dados (lib/store.tsx), tema (lib/temaAtivo.tsx) e avisos (lib/toast.tsx), de fora para dentro. Provedor novo entra aqui, e quem usa precisa ficar dentro dele. _(linha 22)_
 
 ### `app/recuperar-senha/page.tsx`
 *a página da rota "/recuperar-senha" (pública, fora do grupo protegido).*
@@ -261,8 +261,9 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/AcessoLayout.tsx`
 *o layout de duas colunas (painel de marca + cartão) compartilhado pelas telas públicas de acesso: login, recuperar senha e primeiro acesso.*
 
-1. A DIVISÃO DAS TELAS DE ACESSO: duas colunas a partir de 1024 px (marca à esquerda, cartão à direita) e uma só abaixo disso. O ponto de quebra e a proporção estão na classe lg:grid-cols-[1.05fr_1fr]. _(linha 24)_
-2. O topo da coluna do cartão: o logo (só no celular) e o botão de tema. Item novo que deva aparecer em todas as telas de acesso entra aqui. _(linha 38)_
+1. A DIVISÃO DAS TELAS DE ACESSO: duas colunas a partir de 1024 px (marca à esquerda, cartão à direita) e uma só abaixo disso. O ponto de quebra e a proporção estão na classe lg:grid-cols-[1.05fr_1fr]. _(linha 25)_
+2. O topo da coluna do cartão: o logo (só no celular) e o botão de tema. Item novo que deva aparecer em todas as telas de acesso entra aqui. _(linha 39)_
+3. O SELO FIXO do CAIS no rodapé das telas de acesso, só no celular/tablet (lg:hidden): a partir de 1024 px ele já aparece no rodapé do BrandPanel. Não depende do tema. _(linha 53)_
 
 ### `components/acessos/MatrizDePermissoes.tsx`
 *duas tabelas somente leitura (telas e ações por perfil), geradas direto das regras de lib/permissoes.ts, para o time e a PROGLOGIC validarem.*
@@ -298,10 +299,10 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 ### `components/BrandPanel.tsx`
 *o painel escuro do lado esquerdo do login (só em telas grandes), com o logo, a frase da marca e o desenho dos três pilares conectados.*
 
-1. O PAINEL DE MARCA das telas de acesso: sempre escuro nos dois temas e só aparece a partir de 1024 px (classe lg:flex). _(linha 26)_
-2. A MENSAGEM do painel de marca (título e frase abaixo dele). Mude aqui para trocar o texto de todas as telas de acesso. _(linha 51)_
-3. O desenho dos três pilares, o mesmo da homepage (components/marca/TresPilares.tsx). _(linha 60)_
-4. O rodapé de direitos do painel; o ano vem do relógio do navegador. _(linha 65)_
+1. O PAINEL DE MARCA das telas de acesso: sempre escuro nos dois temas e só aparece a partir de 1024 px (classe lg:flex). _(linha 28)_
+2. A MENSAGEM do painel de marca (título e frase abaixo dele). Mude aqui para trocar o texto de todas as telas de acesso. _(linha 53)_
+3. O desenho dos três pilares, o mesmo da homepage (components/marca/TresPilares.tsx). _(linha 62)_
+4. O rodapé do painel: direitos (o ano vem do relógio do navegador) e o selo fixo do CAIS, que não depende do tema. No celular o selo fica em components/AcessoLayout.tsx, porque este painel some abaixo de 1024 px. _(linha 67)_
 
 ### `components/button.tsx`
 *botão com 4 variantes, 3 tamanhos e os estados repouso, hover, pressionado, foco, carregando e desabilitado; e classesBotao(), as mesmas classes para um <Link> que navega mas deve parecer botão.*
@@ -410,9 +411,10 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `components/home/RodapeHome.tsx`
 *faixa escura no fim da página com a logo, o nome do programa, os links das seções e o link "Entrar".*
 
-1. O VISUAL dos links do rodapé da homepage (sobre fundo escuro, com foco visível). _(linha 13)_
-2. O NOME DO PROGRAMA no rodapé, ao lado da logo (PROGLOGIC · Residência Técnica). O traço vertical é só separador visual. _(linha 31)_
-3. Os links do rodapé: os mesmos de secoes.ts mais o "Entrar" (/login), que fica por último. _(linha 38)_
+1. O VISUAL dos links do rodapé da homepage (sobre fundo escuro, com foco visível). _(linha 14)_
+2. O NOME DO PROGRAMA no rodapé, ao lado da logo (PROGLOGIC · Residência Técnica). O traço vertical é só separador visual. _(linha 32)_
+3. Os links do rodapé: os mesmos de secoes.ts mais o "Entrar" (/login), que fica por último. _(linha 39)_
+4. A faixa final do rodapé: direitos (o ano vem do relógio do navegador) e o selo fixo do CAIS, que não depende do tema. _(linha 57)_
 
 ### `components/home/secoes.ts`
 *a lista (id + rótulo) das seções que o topo e o rodapé linkam.*
@@ -424,9 +426,9 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 1. O VISUAL do botão "Entrar" do topo da homepage (um link com cara de botão primário). _(linha 21)_
 2. O VISUAL dos links de seção do topo (desktop e menu do celular). _(linha 26)_
-3. O BOTÃO DO TOPO: sem sessão mostra "Entrar" e leva a /login; com sessão mostra "Ir para o sistema" e leva a /painel. A home não redireciona quem já está logado. _(linha 51)_
-4. O menu do celular fecha com Esc (e devolve o foco ao botão que o abriu). _(linha 64)_
-5. Os links de seção no desktop (a partir de 768 px); no celular viram o menu que abre e fecha logo abaixo. A lista vem de ./secoes. _(linha 101)_
+3. O BOTÃO DO TOPO: sem sessão mostra "Entrar" e leva a /login; com sessão mostra "Ir para o sistema" e leva a /painel. A home não redireciona quem já está logado. _(linha 53)_
+4. O menu do celular fecha com Esc (e devolve o foco ao botão que o abriu). _(linha 66)_
+5. Os links de seção no desktop (a partir de 768 px); no celular viram o menu que abre e fecha logo abaixo. A lista vem de ./secoes. _(linha 105)_
 
 ### `components/home/VoltarAoTopo.tsx`
 *botão redondo fixo no canto inferior direito que aparece depois de descer a página, com um anel que mostra quanto da página já foi lida, e leva de volta ao início.*
@@ -456,9 +458,9 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 9. O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. _(linha 343)_
 
 ### `components/marca/OndasDeFundo.tsx`
-*três camadas de ondas roxas que correm devagar no topo de uma área escura e esmaecem até sumir, como a "superfície da água" de onde o CAIS (o cais) se vê.*
+*três camadas de ondas, na cor de destaque do tema, que correm devagar no topo de uma área escura e esmaecem até sumir, como a "superfície da água" de onde o CAIS (o cais) se vê.*
 
-1. AS TRÊS CAMADAS: quanto de roxo (mistura com a noite), a opacidade, o deslocamento vertical e a duração da volta (menor = mais rápido). Mude aqui para deixar as ondas mais fortes, mais claras ou mais calmas. _(linha 18)_
+1. AS TRÊS CAMADAS: quanto da cor do tema (mistura com a noite), a opacidade, o deslocamento vertical e a duração da volta (menor = mais rápido). Mude aqui para deixar as ondas mais fortes, mais claras ou mais calmas. _(linha 18)_
 2. A ALTURA e o ESMAECIMENTO da faixa: h-[260px] é a altura; a máscara deixa o roxo cheio até 22% e some até 74% (antes de a última camada acabar, para não aparecer linha dura). Mude para as ondas descerem mais ou menos. _(linha 39)_
 
 ### `components/marca/TresPilares.tsx`
@@ -687,11 +689,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `components/shell/Sidebar.tsx`
 *o menu de navegação à esquerda, que marca a tela atual; no celular vira uma gaveta que abre por cima do conteúdo. Mostra só os itens do perfil da sessão.*
 
-1. O nome de cada perfil mostrado no menu lateral (a mesma lista existe no Topbar e em lib/metricas.ts: ROTULO_PERFIL). _(linha 22)_
-2. O filtro do menu por perfil: tira os itens que o perfil não vê e os grupos que ficaram vazios. É o que faz cada perfil ter o seu menu. _(linha 39)_
-3. O conteúdo do menu é montado uma vez e usado nas duas versões: fixa no desktop (a partir de 1024 px) e gaveta no celular. _(linha 46)_
-4. O logo do topo do menu leva ao painel (a tela inicial do sistema). Se a tela inicial mudar, troque este endereço. _(linha 52)_
-5. Como o item ativo do menu é marcado: o endereço atual é o do item ou uma subpágina dele (/projetos/x mantém "Projetos" destacado). _(linha 72)_
+1. O nome de cada perfil mostrado no menu lateral (a mesma lista existe no Topbar e em lib/metricas.ts: ROTULO_PERFIL). _(linha 24)_
+2. O filtro do menu por perfil: tira os itens que o perfil não vê e os grupos que ficaram vazios. É o que faz cada perfil ter o seu menu. _(linha 43)_
+3. O conteúdo do menu é montado uma vez e usado nas duas versões: fixa no desktop (a partir de 1024 px) e gaveta no celular. _(linha 50)_
+4. O logo do topo do menu leva ao painel (a tela inicial do sistema). Se a tela inicial mudar, troque este endereço. _(linha 56)_
+5. Como o item ativo do menu é marcado: o endereço atual é o do item ou uma subpágina dele (/projetos/x mantém "Projetos" destacado). _(linha 78)_
+6. O SELO FIXO do CAIS no rodapé do menu (e da gaveta do celular): fica aqui para o CAIS continuar visível mesmo com a marca da empresa no topo. Não depende do tema. _(linha 102)_
 
 ### `components/shell/Topbar.tsx`
 *a faixa no alto de toda tela logada, com busca global (Ctrl+K ou /), avisos (atrasos e sobrecarga), troca de tema e menu do perfil. Busca e avisos só mostram o que o perfil da sessão pode ver (lib/escopo.ts e lib/permissoes.ts); a regra da busca mora em lib/busca.ts (projetos, tarefas, arquivos, empresas, pessoas e trilhas). No perfil Empresa, o nome da empresa aparece ao lado do avatar.*
@@ -942,21 +945,21 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 *funções puras que dizem quais rotas cada perfil abre (podeAcessar) e quais ações cada perfil pode fazer (podeFazer).*
 
 1. QUEM ABRE CADA TELA: a lista de rotas por perfil. Tela nova precisa entrar aqui (rota fora da lista é só do admin) e no menu (components/shell/navegacao.ts). _(linha 19)_
-2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 52)_
-3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 103)_
-4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 114)_
-5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 125)_
-6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 133)_
-7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 139)_
-8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 150)_
-9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 159)_
-10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 183)_
-11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 194)_
-12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 220)_
-13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 238)_
-14. Nomes das ações na tabela de permissões de /acessos. _(linha 260)_
-15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 276)_
-16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 309)_
+2. Porteiro das rotas: o prefixo mais longo vence e a fronteira é de segmento ("/painelx" não casa com "/painel"). Usado pelo layout de (sistema). _(linha 54)_
+3. A tabela de AÇÕES por perfil (o que cada um pode fazer nos projetos). Ação nova entra no tipo Acao, aqui, em ROTULO_DAS_ACOES, TODAS_AS_ACOES e CONDICAO_DA_ACAO. _(linha 105)_
+4. Criar, editar e excluir tarefa, editar lista e editar projeto: só o administrador. Para liberar para outro perfil, tire a ação deste grupo. _(linha 116)_
+5. ALOCAR: o admin em qualquer projeto e a EMPRESA nos projetos dela (decisão da PROGLOGIC, 09/10/2026). O profissional não aloca. _(linha 127)_
+6. APROVAR ENTREGA: só a empresa dona do projeto (decisão da PROGLOGIC, 09/10/2026); admin e profissional só veem o estado. _(linha 135)_
+7. MOVER TAREFA: admin move qualquer uma; profissional só as próprias; empresa não move. É a mesma regra do quadro e do detalhe da tarefa. _(linha 141)_
+8. COMENTAR: qualquer perfil que enxerga o projeto (a empresa comenta no dela; o profissional, onde está). _(linha 152)_
+9. ANEXAR E REMOVER ARQUIVO: admin em qualquer tarefa; profissional só nas próprias; empresa só vê. _(linha 161)_
+10. A TRAVA DA TRILHA OBRIGATÓRIA: com true, o profissional com etapa obrigatória pendente numa trilha geral só abre o painel e Minhas trilhas. Com false, a trava some. _(linha 185)_
+11. Quem fica preso pela trava: trilha GERAL publicada com etapa obrigatória ainda não concluída. Mudar a definição aqui muda quem é barrado. _(linha 196)_
+12. As telas que continuam abertas para quem está preso pela trava (hoje /minhas-trilhas e /painel). _(linha 222)_
+13. Nomes das telas na tabela "O que cada perfil pode fazer" da tela /acessos. Tela nova: acrescente aqui também. _(linha 240)_
+14. Nomes das ações na tabela de permissões de /acessos. _(linha 263)_
+15. A ordem das ações na tabela de /acessos. Ação nova precisa entrar nesta lista. _(linha 279)_
+16. O texto da condição ("só as próprias tarefas", "só nos projetos da própria empresa") que aparece na tabela de /acessos. _(linha 312)_
 
 ### `lib/preferencias.ts`
 *hook que devolve a densidade das tabelas escolhida pela pessoa logada (confortável ou compacta).*
@@ -977,14 +980,14 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `lib/seed.ts`
 *cria o conjunto inicial de empresas, pessoas, trilhas, projetos, alocações e tarefas do protótipo.*
 
-1. As listas padrão de todo projeto novo: A fazer, Fazendo, Revisão, Pronto. A penúltima e a última são as que aceitam aprovação da empresa. _(linha 20)_
-2. OS DADOS DE DEMONSTRAÇÃO inteiros (empresas, pessoas, trilhas, projetos, alocações, tarefas). Mudou o seed de forma incompatível? Suba a CHAVE em lib/store.tsx. _(linha 33)_
-3. As empresas de exemplo (ativa, em negociação, encerrada). CNPJs e domínios são fictícios. _(linha 51)_
-4. As pessoas de exemplo e as CONTAS de login (admin, profissionais, empresas). O cargaMax de cada uma é o limite do semáforo. Conta nova: acrescente também em CONTAS_DEMO (lib/auth.tsx). _(linha 59)_
-5. As trilhas de exemplo, com conteúdo, quizzes, prazos e datas de conclusão. As datas de publicação criam prazo vencido, perto e no prazo para a demonstração. _(linha 75)_
-6. Os projetos de exemplo, um por situação (em andamento, curto, planejado), cada um de uma empresa. _(linha 162)_
-7. AS ALOCAÇÕES que criam os cenários do semáforo: Bruno acima do limite, Diego (o exemplo do time) nunca vermelho, Elisa vermelha em 2 semanas, Gabriela livre. _(linha 171)_
-8. As tarefas do quadro, com checklist, comentários, anexos de exemplo e as aprovações da empresa (aprovadaEm). _(linha 190)_
+1. As listas padrão de todo projeto novo: A fazer, Fazendo, Revisão, Pronto. A penúltima e a última são as que aceitam aprovação da empresa. _(linha 21)_
+2. OS DADOS DE DEMONSTRAÇÃO inteiros (empresas, pessoas, trilhas, projetos, alocações, tarefas). Mudou o seed de forma incompatível? Suba a CHAVE em lib/store.tsx. _(linha 34)_
+3. As empresas de exemplo (ativa, em negociação, encerrada). CNPJs e domínios são fictícios. _(linha 52)_
+4. As pessoas de exemplo e as CONTAS de login (admin, profissionais, empresas). O cargaMax de cada uma é o limite do semáforo. Conta nova: acrescente também em CONTAS_DEMO (lib/auth.tsx). _(linha 60)_
+5. As trilhas de exemplo, com conteúdo, quizzes, prazos e datas de conclusão. As datas de publicação criam prazo vencido, perto e no prazo para a demonstração. _(linha 76)_
+6. Os projetos de exemplo, um por situação (em andamento, curto, planejado), cada um de uma empresa. _(linha 163)_
+7. AS ALOCAÇÕES que criam os cenários do semáforo: Bruno acima do limite, Diego (o exemplo do time) nunca vermelho, Elisa vermelha em 2 semanas, Gabriela livre. _(linha 172)_
+8. As tarefas do quadro, com checklist, comentários, anexos de exemplo e as aprovações da empresa (aprovadaEm). _(linha 191)_
 
 ### `lib/senha.ts`
 *funções puras que dizem se uma senha cumpre as regras do CAIS e quais regras faltam.*
@@ -994,17 +997,18 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `lib/store.tsx`
 *o "banco de dados" do protótipo — guarda empresas, pessoas, trilhas, projetos, alocações e tarefas e expõe ações para ler, salvar e apagar.*
 
-1. A CHAVE DOS DADOS no navegador. Mude o número (v6 → v7) quando o formato dos dados ou o seed mudar de jeito incompatível: todo mundo volta para a demonstração. Atualize também os testes. _(linha 29)_
-2. As coleções que todo conjunto de dados precisa ter. Coleção nova entra aqui, no tipo Dados (lib/tipos.ts) e no seed. _(linha 49)_
-3. Confere o formato do que foi lido do navegador; dado fora do formato vira a tela de erro "Não foi possível carregar os dados". _(linha 53)_
-4. Lê as pessoas direto do navegador SEM o provider (o login usa isto para saber quem existe e em que status). _(linha 70)_
-5. TEMPO REAL: ao receber evento de OUTRA aba, relê os dados do navegador. A aba que publicou ignora o próprio evento (evita laço). _(linha 193)_
-6. Latência simulada da API (450 ms) que faz aparecer o esqueleto de carregamento. TODO(API): trocar a leitura do localStorage por um fetch GET. _(linha 235)_
-7. GRAVAR (criar ou editar) qualquer coisa: upsert por id. Salvar tarefa também publica o evento de tempo real. TODO(API): virar POST ou PATCH. _(linha 261)_
-8. APAGAR qualquer coisa. Só projeto tem cascata: apagar um projeto apaga suas tarefas e alocações. TODO(API): virar DELETE. _(linha 287)_
-9. MOVER TAREFA no quadro: renumera a ordem, grava concluidaEm ao entrar na última lista e APAGA a aprovação da empresa ao sair de Revisão ou Pronto. _(linha 318)_
-10. O botão "Restaurar dados de demonstração": volta ao seed e também é a saída da tela de erro de dados danificados. APAGA o que foi editado. _(linha 360)_
-11. As horas ATIVAS HOJE de uma pessoa (usadas em /pessoas e no aviso do topo). Em fim de semana dá 0, porque não é dia útil. Para semanas e períodos use lib/carga.ts. _(linha 386)_
+1. A CHAVE DOS DADOS no navegador. Mude o número (v6 → v7) quando o formato dos dados ou o seed mudar de jeito incompatível: todo mundo volta para a demonstração. Atualize também os testes. _(linha 31)_
+2. As coleções que todo conjunto de dados precisa ter. Coleção nova entra aqui, no tipo Dados (lib/tipos.ts) e no seed. _(linha 51)_
+3. Confere o formato do que foi lido do navegador; dado fora do formato vira a tela de erro "Não foi possível carregar os dados". _(linha 55)_
+4. Lê as pessoas direto do navegador SEM o provider (o login usa isto para saber quem existe e em que status). _(linha 72)_
+5. TEMPO REAL: ao receber evento de OUTRA aba, relê os dados do navegador. A aba que publicou ignora o próprio evento (evita laço). _(linha 212)_
+6. Latência simulada da API (450 ms) que faz aparecer o esqueleto de carregamento. TODO(API): trocar a leitura do localStorage por um fetch GET. _(linha 255)_
+7. GRAVAR (criar ou editar) qualquer coisa: upsert por id. Salvar tarefa também publica o evento de tempo real. TODO(API): virar POST ou PATCH. _(linha 281)_
+8. APAGAR qualquer coisa. Só projeto tem cascata: apagar um projeto apaga suas tarefas e alocações. TODO(API): virar DELETE. _(linha 307)_
+9. MOVER TAREFA no quadro: renumera a ordem, grava concluidaEm ao entrar na última lista e APAGA a aprovação da empresa ao sair de Revisão ou Pronto. _(linha 338)_
+10. O botão "Restaurar dados de demonstração": volta ao seed e também é a saída da tela de erro de dados danificados. APAGA o que foi editado. _(linha 380)_
+11. TEMAS: as quatro ações abaixo só chamam as funções puras de lib/temas.ts (as regras de "tema em uso", base protegida etc. vivem lá). TODO(API): virar POST/PUT/DELETE dos temas. _(linha 391)_
+12. As horas ATIVAS HOJE de uma pessoa (usadas em /pessoas e no aviso do topo). Em fim de semana dá 0, porque não é dia útil. Para semanas e períodos use lib/carga.ts. _(linha 435)_
 
 ### `lib/tarefas.ts`
 *funções puras para a visão geral de tarefas (/projetos?visao=tarefas) e para o quadro de cada projeto: filtrar por projeto, colaborador, prioridade e etiqueta; ordenar por prazo, prioridade, responsável ou título; e juntar as listas de vários projetos pelo NOME (A fazer, Fazendo, ...) e contar as tarefas de cada projeto (legenda).*
@@ -1032,17 +1036,17 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `lib/tipos.ts`
 *as "formas" (interfaces TypeScript) de cada dado do sistema: empresa, pessoa, trilha, projeto, alocação, tarefa.*
 
-1. Os três perfis do sistema. Um perfil novo exige: rotas e ações em permissoes.ts, menu em navegacao.ts, um painel e o rótulo em metricas.ts (ROTULO_PERFIL). _(linha 17)_
-2. Formato de uma empresa (status, contato, endereço). Campo novo: acrescente aqui, em seed.ts e no formulário de app/(sistema)/empresas/page.tsx. _(linha 26)_
-3. Formato de uma pessoa (perfil, status, área, nível). cargaMax é o limite de horas do semáforo de carga (lib/carga.ts). _(linha 52)_
-4. Tipos de conteúdo de uma etapa de trilha. Tipo novo exige: ícone e rótulo em lib/trilhas.ts e tratamento em components/trilhas/ConteudoEtapa.tsx. _(linha 87)_
-5. Formato de uma etapa: conteúdo (texto e endereço), quiz (perguntas, notaMinima, tentativasMax de 1 a 10) e se trava a próxima (obrigatoria). _(linha 103)_
-6. Formato de uma trilha: alcance, status, prazoDias (0 = prazo indeterminado), etapas e o progresso de cada pessoa (concluidas, nota, tentativas, concluidaEm). _(linha 124)_
-7. Formato de um projeto: empresa, datas, status e as listas (colunas) do quadro. Lista nova padrão: COLUNAS_PADRAO em seed.ts. _(linha 189)_
-8. Formato de uma alocação: pessoa, papel, período e horas por semana. É a base do semáforo de carga (lib/carga.ts). _(linha 216)_
-9. Anexo de tarefa: SÓ metadados (nome, tipo, tamanho, autor, data), nunca o conteúdo (limite do localStorage). Upload real é TODO(API). _(linha 249)_
-10. Formato de uma tarefa: responsável, prazo, checklist, comentários, anexos e a aprovação da empresa (aprovadaEm/aprovadaPorId, só em Revisão ou Pronto). _(linha 270)_
-11. Todos os dados juntos (o que a store guarda e o seed cria). Coleção nova entra aqui, em seed.ts, em lib/store.tsx (COLECOES e Salvavel) e pede nova chave do localStorage. _(linha 302)_
+1. Os três perfis do sistema. Um perfil novo exige: rotas e ações em permissoes.ts, menu em navegacao.ts, um painel e o rótulo em metricas.ts (ROTULO_PERFIL). _(linha 19)_
+2. Formato de uma empresa (status, contato, endereço). Campo novo: acrescente aqui, em seed.ts e no formulário de app/(sistema)/empresas/page.tsx. _(linha 28)_
+3. Formato de uma pessoa (perfil, status, área, nível). cargaMax é o limite de horas do semáforo de carga (lib/carga.ts). _(linha 54)_
+4. Tipos de conteúdo de uma etapa de trilha. Tipo novo exige: ícone e rótulo em lib/trilhas.ts e tratamento em components/trilhas/ConteudoEtapa.tsx. _(linha 89)_
+5. Formato de uma etapa: conteúdo (texto e endereço), quiz (perguntas, notaMinima, tentativasMax de 1 a 10) e se trava a próxima (obrigatoria). _(linha 105)_
+6. Formato de uma trilha: alcance, status, prazoDias (0 = prazo indeterminado), etapas e o progresso de cada pessoa (concluidas, nota, tentativas, concluidaEm). _(linha 126)_
+7. Formato de um projeto: empresa, datas, status e as listas (colunas) do quadro. Lista nova padrão: COLUNAS_PADRAO em seed.ts. _(linha 191)_
+8. Formato de uma alocação: pessoa, papel, período e horas por semana. É a base do semáforo de carga (lib/carga.ts). _(linha 218)_
+9. Anexo de tarefa: SÓ metadados (nome, tipo, tamanho, autor, data), nunca o conteúdo (limite do localStorage). Upload real é TODO(API). _(linha 251)_
+10. Formato de uma tarefa: responsável, prazo, checklist, comentários, anexos e a aprovação da empresa (aprovadaEm/aprovadaPorId, só em Revisão ou Pronto). _(linha 272)_
+11. Todos os dados juntos (o que a store guarda e o seed cria). Coleção nova entra aqui, em seed.ts, em lib/store.tsx (COLECOES e Salvavel) e pede nova chave do localStorage. _(linha 304)_
 
 ### `lib/toast.tsx`
 *mostra pequenos avisos no canto da tela ("Empresa salva.", "Algo deu errado") que somem sozinhos.*
@@ -1108,4 +1112,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-128 arquivos mapeados, 574 pontos vitais.
+128 arquivos mapeados, 578 pontos vitais.

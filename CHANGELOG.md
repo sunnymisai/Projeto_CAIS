@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## Três novos temas-base: Oceano, Floresta e Ameixa (24/10/2026)
+- Criado: em `lib/temas.ts`, os temas-base `oceano` (azul-petróleo), `floresta` (verde-musgo) e `ameixa` (vinho e rosado), cada um com paleta clara e escura. Entram no fim de `TEMAS_BASE`, então os índices 0 a 2 (usados pelo `/design-system` e pelos testes) não mudaram.
+- Modificado: `lib/temas.casos.ts` (lista de ids passa a ter seis temas e há um caso de ids únicos); `docs/temas-contrato.md` (tabela dos temas-base); comentários de `lib/temas.ts` e `lib/tipos.ts` que diziam "três temas-base"; `docs/MAPA-DO-CODIGO.md` regenerado.
+- Removido: nada. Nenhum tema-base novo gera aviso de `validarTema` (texto, destaque, estados e botão com texto branco passam de 4,5:1 nos dois modos).
+
 ## Botão "Entrar" animado no login (16/10/2026)
 - Criado: `components/BotaoEntrar.tsx` (botão de envio com a animação do barquinho que atraca no "C" do logo, vinda da pasta `botao_novo`, refeita com tokens, `prefers-reduced-motion` e leitor de tela) e o teste `testes/navegador/j01-botao-entrar.mjs`.
 - Modificado: `components/LoginForm.tsx` usa o `BotaoEntrar`: a animação só liga com os campos válidos, volta ao início se o login for recusado e a navegação só ocorre quando o login foi aceito E a animação terminou (o efeito "já está logado" não corta mais a animação).
