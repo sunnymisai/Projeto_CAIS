@@ -2,6 +2,11 @@
 
 Cada entrada lista o que foi criado, modificado e removido.
 
+## CAIQUE com IA de verdade: rotas, Gemini e registro (17/11/2026)
+- Criado: `app/api/caique/chat/route.ts` (pergunta ao Gemini; sem chave, devolve resposta de demonstração), `app/api/caique/feedback/route.ts` (👍/👎), `lib/caique-servidor.ts` (prompt de sistema e chamada ao Gemini via `fetch`, sem biblioteca nova), `lib/caique-protecao.ts` (só o próprio site chama; 20 perguntas por minuto por endereço), `lib/caique-logger.ts` (`logs/caique-<data>.jsonl`) e `docs/CAIQUE.md` (como criar e pôr a chave).
+- Modificado: `lib/caique.ts` (contexto da trilha sem as perguntas do quiz, recorte do histórico, validação do pedido usada pela rota, chamadas às rotas); `components/caique/ChatWidget.tsx` (só conversa dentro de uma trilha, manda trilha e histórico, mostra o motivo do erro, envia a avaliação, recomeça a conversa ao trocar de trilha, aviso "IA pode errar" ou "Demonstração"); `lib/caique.casos.ts` (26 casos); `testes/navegador/l01-caique-chat.mjs` (novo comportamento; o erro é forçado interceptando o `fetch`); `.env.example` (`GEMINI_*`); `.gitignore` (`/logs/`); `SISTEMA.md`; `docs/ONDE-PARAMOS.md`; `docs/MAPA-DO-CODIGO.md` regenerado.
+- Removido: o atalho `/erro` (erro fingido) e as sugestões fora de uma trilha. Decisões do time: o CAIQUE fala só da trilha aberta e responde em pt, en ou es.
+
 ## Chat do CAIQUE: corpo do chat, ainda sem IA (03/11/2026)
 - Criado: `components/caique/ChatWidget.tsx` (botão flutuante e janela com os quatro estados: vazio com sugestões, "digitando", erro com "Tentar de novo" e conversa), `components/caique/ChatMensagem.tsx` (balão com "Útil" e "Não ajudou"), `lib/caique.ts` e `lib/caique.casos.ts` (13 casos) e o teste `testes/navegador/l01-caique-chat.mjs` (23 conferências, incluindo 375 px).
 - Modificado: `app/(sistema)/layout.tsx` (monta o chat em todas as telas internas); `docs/MAPA-DO-CODIGO.md` regenerado.

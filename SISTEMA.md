@@ -82,8 +82,10 @@ A regra fica em `lib/carga.ts` (funções puras, testadas em `lib/carga.casos.ts
 - Cenários do seed: **Bruno** acima do limite (30 + 15 h nos mesmos dias); **Diego**, o exemplo do time (§16): 10 h/sem no Sprint de acessibilidade até daqui a 7 dias e 30 h/sem no Portal a partir do 8º dia, nunca acima do limite; **Elisa** (limite 30 h) acima do limite só em 2 semanas; **Gabriela** livre.
 
 ## Login com Google
-Botão "Entrar com Google" em `/login` (só com `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` e `AUTH_SECRET` no `.env.local`). O Google só prova o e-mail; o perfil vem do cadastro e e-mail fora dele, conta inativa ou convite pendente não entram. Passo a passo e pendências em `docs/GOOGLE-AUTH.md`. ## Chat do CAIQUE (simulado)
-Botão flutuante em todas as telas internas (`components/caique/`). As respostas são fingidas (`lib/caique.ts`): a IA (Gemini) entra com os prompts I01 a I03 de `docs/prompts/`. Digite `/erro` para ver o estado de erro.
+Botão "Entrar com Google" em `/login` (só com `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` e `AUTH_SECRET` no `.env.local`). O Google só prova o e-mail; o perfil vem do cadastro e e-mail fora dele, conta inativa ou convite pendente não entram. Passo a passo e pendências em `docs/GOOGLE-AUTH.md`. 
+
+## Chat do CAIQUE (IA Gemini)
+Botão flutuante em todas as telas internas (`components/caique/`). Conversa **só dentro de uma trilha** (fora dela o campo fica travado) e responde no idioma da pergunta (pt, en ou es). As respostas vêm de `POST /api/caique/chat` (Gemini, chave só no servidor); o 👍/👎 vai para `POST /api/caique/feedback`; tudo é registrado em `logs/caique-AAAA-MM-DD.jsonl`. **Sem `GEMINI_API_KEY` no `.env.local`, a rota devolve resposta de demonstração.** Como ligar a IA e pendências: `docs/CAIQUE.md`.
 
 ## Permissões por perfil
 
