@@ -16,7 +16,7 @@ Na raiz do projeto, abra (ou crie) o arquivo `.env.local` (ele não vai para o G
 ```
 GEMINI_API_KEY=cole-a-chave-aqui
 GEMINI_MODEL=gemini-3.1-flash-lite
-GEMINI_TIMEOUT_MS=8000
+GEMINI_TIMEOUT_MS=15000
 ```
 
 Pare e suba de novo o `npm run dev` (o Next só lê o `.env.local` ao iniciar).

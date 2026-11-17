@@ -213,8 +213,8 @@ export function montarRespostaSimulada(pergunta: string, tituloTrilha: string): 
   return `Esta é uma resposta de demonstração sobre a trilha "${tituloTrilha}". Você perguntou: "${pergunta.trim()}". A IA ainda não está ligada: falta a chave do Gemini no servidor.`;
 }
 
-// [PV-4] O TEMPO MÁXIMO que o navegador espera a rota (ms). Fica acima do timeout do Gemini (GEMINI_TIMEOUT_MS, 8 s).
-const TIMEOUT_NAVEGADOR_MS = 15000;
+// [PV-4] O TEMPO MÁXIMO que o navegador espera a rota (ms). Fica acima do timeout do Gemini (GEMINI_TIMEOUT_MS, 15 s).
+const TIMEOUT_NAVEGADOR_MS = 25000;
 
 /**
  * Pede a resposta ao CAIQUE pela rota do servidor (é ela que guarda a chave do Gemini).

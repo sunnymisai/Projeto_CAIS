@@ -16,11 +16,11 @@ import type { ContextoTrilhaCaique, TurnoHistorico } from './caique';
 // vivem sobrecarregados (503). Em 17/11/2026 o 3.1-flash-lite respondeu em ~3 s. Trocar para a família 2.x exige trocar
 // thinkingLevel por thinkingBudget em CONFIG_GERACAO.
 const MODELO_PADRAO = 'gemini-3.1-flash-lite';
-const TIMEOUT_PADRAO_MS = 8000;
+const TIMEOUT_PADRAO_MS = 15000;
 
 // [PV-2] O TAMANHO E O "TOM" da resposta: maxOutputTokens limita o custo; temperature baixa = respostas mais fiéis ao material.
-// thinkingLevel 'low' deixa o "raciocínio" do Gemini 3 curto: ele gasta tokens da resposta e tempo do timeout.
-const CONFIG_GERACAO = { temperature: 0.4, topP: 0.9, maxOutputTokens: 1024, thinkingConfig: { thinkingLevel: 'low' } };
+// thinkingLevel 'minimal' quase desliga o "raciocínio" do Gemini 3: com 'low' houve respostas de 13 s; com 'minimal', ~2 s (17/11/2026).
+const CONFIG_GERACAO = { temperature: 0.4, topP: 0.9, maxOutputTokens: 1024, thinkingConfig: { thinkingLevel: 'minimal' } };
 
 /** Diz se a chave do Gemini está no ambiente. Sem ela, a rota devolve a resposta simulada. */
 export const geminiConfigurado = () => Boolean(process.env.GEMINI_API_KEY);

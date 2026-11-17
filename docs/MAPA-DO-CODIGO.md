@@ -1005,7 +1005,7 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 1. O TAMANHO MÁXIMO da pergunta (em caracteres). O limite protege o custo da IA. _(linha 68)_
 2. QUANTO DA CONVERSA E DA TRILHA vai para a IA: mensagens anteriores, texto por etapa e número de etapas. _(linha 71)_
 3. AS PERGUNTAS SUGERIDAS do chat vazio (só aparecem com uma trilha aberta). Troque o texto aqui. _(linha 94)_
-4. O TEMPO MÁXIMO que o navegador espera a rota (ms). Fica acima do timeout do Gemini (GEMINI_TIMEOUT_MS, 8 s). _(linha 216)_
+4. O TEMPO MÁXIMO que o navegador espera a rota (ms). Fica acima do timeout do Gemini (GEMINI_TIMEOUT_MS, 15 s). _(linha 216)_
 
 ### `lib/carga.ts`
 *a regra do semáforo de carga em funções puras: quanto da semana de cada pessoa está ocupado, dia a dia, levando em conta QUANDO cada alocação acontece (e não só se ela existe).*
