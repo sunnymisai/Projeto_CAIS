@@ -15,7 +15,7 @@ Na raiz do projeto, abra (ou crie) o arquivo `.env.local` (ele não vai para o G
 
 ```
 GEMINI_API_KEY=cole-a-chave-aqui
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-3.1-flash-lite
 GEMINI_TIMEOUT_MS=8000
 ```
 

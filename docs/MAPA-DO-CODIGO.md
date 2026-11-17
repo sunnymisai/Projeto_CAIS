@@ -201,6 +201,16 @@ Arquivos `.json` não aceitam comentário, por isso os pontos deles estão descr
 
 _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
 
+### `app/api/caique/chat/route.ts`
+*recebe a pergunta, a trilha aberta e o histórico; pergunta ao Gemini e devolve a resposta. É aqui (no servidor) que a chave do Gemini fica: o navegador nunca a vê.*
+
+1. AS MENSAGENS DE ERRO que a pessoa vê no chat, por status. Troque o texto aqui. _(linha 16)_
+
+### `app/api/caique/feedback/route.ts`
+*recebe o 👍/👎 de uma resposta e registra no log, para o time medir a qualidade da IA.*
+
+_Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
+
 ### `app/globals.css`
 
 1. AS CORES DO TEMA CLARO (marca, estados, painéis noite, fundo da home, superfícies, texto, borda, sombra e gráficos). Para rebrandear, edite só os valores daqui e do .dark logo abaixo. _(linha 23)_
@@ -972,6 +982,23 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 3. O TEXTO DO CAMPO DE BUSCA por perfil: precisa prometer só o que o perfil consegue achar. Mudou os tipos em montarCandidatos? Ajuste aqui. _(linha 55)_
 4. A BUSCA GLOBAL: junta tudo o que a sessão abre, filtra pelo texto (todas as palavras, sem acento) e reparte as vagas da lista entre os tipos. TODO(API): vira chamada ao servidor. _(linha 156)_
 
+### `lib/caique-logger.ts`
+*grava em logs/caique-AAAA-MM-DD.jsonl uma linha por pergunta respondida e uma por avaliação (👍/👎). JSONL = um JSON por linha: só acrescenta no fim do arquivo, então duas gravações ao mesmo tempo não se apagam.*
+
+1. ONDE OS LOGS FICAM: a pasta logs/ na raiz do projeto (fora do Git, veja o .gitignore). _(linha 39)_
+
+### `lib/caique-protecao.ts`
+*duas barreiras baratas enquanto não há login no servidor: só aceita chamada do próprio site e limita quantas perguntas um mesmo endereço faz por minuto (protege a cota e o custo do Gemini).*
+
+1. O LIMITE DE PERGUNTAS: no máximo LIMITE_POR_JANELA perguntas por endereço a cada JANELA_MS. _(linha 28)_
+
+### `lib/caique-servidor.ts`
+*monta o prompt de sistema do CAIQUE e chama a API do Gemini com a chave que só o servidor conhece.*
+
+1. O MODELO E O TEMPO MÁXIMO de espera do Gemini. Mude pelo .env.local (GEMINI_MODEL, GEMINI_TIMEOUT_MS), não aqui. _(linha 14)_
+2. O TAMANHO E O "TOM" da resposta: maxOutputTokens limita o custo; temperature baixa = respostas mais fiéis ao material. _(linha 21)_
+3. AS REGRAS DO CAIQUE (escopo, idioma, tamanho, recusa). Mudar o comportamento da IA é mexer neste texto. _(linha 56)_
+
 ### `lib/caique.ts`
 *funções do chat do CAIQUE: de qual trilha o chat está falando, quais perguntas sugerir, se a pergunta é válida, o contexto da trilha enviado à IA, a validação do pedido (usada também pela rota do servidor) e as chamadas às rotas /api/caique/chat e /api/caique/feedback.*
 
@@ -1228,4 +1255,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-148 arquivos mapeados, 609 pontos vitais.
+153 arquivos mapeados, 615 pontos vitais.
