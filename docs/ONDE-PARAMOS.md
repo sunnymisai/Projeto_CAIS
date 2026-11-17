@@ -29,13 +29,13 @@ Ainda **fora do `main`** (esperando aprovação do merge):
 - Login com Google (Auth.js, `docs/GOOGLE-AUTH.md`). Funciona; o Google só prova o e-mail e o cadastro do CAIS decide quem entra. Duas contas de teste como admin no seed.
 - Chat do CAIQUE (só o corpo): botão flutuante em todas as telas internas, estados vazio, "digitando", conversa, erro e feedback 👍/👎. **As respostas são simuladas** (`lib/caique.ts`; digite `/erro` para ver o erro). Teste: `node testes/navegador/l01-caique-chat.mjs` (23 conferências) e `node --experimental-strip-types lib/caique.casos.ts` (13 casos).
 
+**Feito em 17/11/2026 (I02/I03):** rotas `/api/caique/chat` e `/api/caique/feedback`, prompt de sistema, chamada ao Gemini e logs em `logs/`. Decidido: o CAIQUE fala **só da trilha aberta** e responde em **pt, en ou es**. Detalhes em `docs/CAIQUE.md`.
+
 **O que falta (em ordem):**
-1. **I01 · chave do Gemini (manual):** criar a chave e pôr no `.env.local`: `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-2.0-flash`, `GEMINI_TIMEOUT_MS=8000`. Declarar também no `.env.example`.
-2. **I02/I03 · IA de verdade:** criar `/api/caique/chat` (a rota esconde a chave), com o prompt de sistema; o cliente monta o contexto da trilha e a rota o repassa. Trocar o `TODO(API)` de `perguntarAoCaique` em `lib/caique.ts` por um `fetch`. Enviar o feedback 👍/👎 a `/api/caique/feedback` (hoje só marca na tela) e registrar logs.
-3. **Isolamento por empresa:** hoje é só do lado do cliente (não há sessão no servidor). Revisar antes de produção.
-4. **I04 (rascunho a reescrever), I05 (pôr o ChatWidget em `/design-system`), I06 (testes da rota), I07 (QA manual), I08 a I12 (docs).**
-5. **Decisões em aberto:** o CAIQUE responde só sobre a trilha ou também ajuda com o sistema? Só português ou pt/en/es?
-6. **Conversa some ao recarregar a página** (não há persistência); decidir se guarda.
+1. **I01 · chave do Gemini (manual):** criar a chave e pôr no `.env.local` (`GEMINI_API_KEY`; passo a passo em `docs/CAIQUE.md`). Sem ela o chat responde com texto de demonstração.
+2. **Isolamento por empresa:** hoje é só do lado do cliente (não há sessão no servidor e o conteúdo da trilha vem do navegador). Revisar antes de produção.
+3. **I04 (rascunho a reescrever), I05 (pôr o ChatWidget em `/design-system`), I07 (QA manual com a IA ligada), I08 a I12 (docs).**
+4. **Conversa some ao recarregar a página** (não há persistência); decidir se guarda.
 
 **Segredos:** o `.env.local` nunca foi para o git (repositório público). Cópia na área de trabalho (`env.local`) para levar ao Drive. **Trocar o segredo do cliente Google** (foi exposto em conversa). Em outra máquina: clonar, copiar o `env.local` para `.env.local`, `npm install`, `npm run dev`. Em produção, `AUTH_*` precisam existir na hora do build (a `/login` é estática).
 

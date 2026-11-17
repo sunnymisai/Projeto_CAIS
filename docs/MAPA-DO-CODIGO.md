@@ -277,9 +277,9 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 ### `auth.ts`
 *configura o Auth.js com o provedor Google. Ele só PROVA QUEM A PESSOA É (o e-mail verificado pelo Google); quem decide se ela entra e com qual perfil é o cadastro do CAIS (lib/googleLogin.ts), conferido em components/RetornoGoogle.tsx.*
 
-1. QUANDO O BOTÃO DO GOOGLE APARECE: só com as três variáveis no .env.local (veja docs/GOOGLE-AUTH.md). Sem elas, o login por e-mail e senha continua sozinho. _(linha 20)_
-2. A TELA DE LOGIN do Auth.js: erros do Google (ex.: acesso negado) voltam para /login com ?error=. _(linha 30)_
-3. A REGRA DE QUEM PODE USAR O GOOGLE: hoje, só e-mail com verificação do Google. Domínio permitido ou lista de e-mails entram aqui. _(linha 41)_
+1. QUANDO O BOTÃO DO GOOGLE APARECE: só com as três variáveis no .env.local (veja docs/GOOGLE-AUTH.md). Sem elas, o login por e-mail e senha continua sozinho. _(linha 21)_
+2. A TELA DE LOGIN do Auth.js: erros do Google (ex.: acesso negado) voltam para /login com ?error=. _(linha 55)_
+3. A REGRA DE QUEM PODE USAR O GOOGLE: hoje, só e-mail com verificação do Google. Domínio permitido ou lista de e-mails entram aqui. _(linha 66)_
 
 ### `next.config.ts`
 *a configuração do Next.js do projeto.*
@@ -333,6 +333,11 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 2. O TAMANHO do símbolo dentro do botão (ESCALA) e as medidas do casco do barquinho e da barra do logo. O botão tem 56 px de altura (h-14); se mudar a altura, ajuste ESCALA na mesma proporção. _(linha 31)_
 3. A APARÊNCIA do botão: cor de fundo (bg-botao e bg-botao-hover, tokens), altura h-14 (56 px; ligada à ESCALA do símbolo), canto rounded-xl e anel de foco. active:scale dá o "afundar" ao clicar. _(linha 267)_
 
+### `components/BotaoGoogle.tsx`
+*carrega a biblioteca oficial accounts.google.com/gsi/client e desenha o botão com google.accounts.id.renderButton(). O Google devolve um ID token (credential); ele é enviado ao Auth.js (provedor "google-gis" em auth.ts), que o valida no servidor.*
+
+1. A CARA DO BOTÃO: a moldura copia o Button md do design system (h-10, rounded-xl, border-borda) e fundo branco nos dois temas, no mesmo tom do botão do Google (outline). O Google não deixa mudar o raio do iframe; por isso a moldura corta (overflow-hidden) e o iframe fica 1px maior de cada lado (-m-px) para esconder a borda dele. Para outra curvatura, troque o rounded-xl. _(linha 111)_
+
 ### `components/BrandPanel.tsx`
 *o painel escuro do lado esquerdo do login (só em telas grandes), com o logo, a frase da marca e o desenho dos três pilares conectados.*
 
@@ -355,9 +360,9 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuração que o time costume mudar._
 
 ### `components/caique/ChatWidget.tsx`
-*o botão redondo no canto da tela e a janela de conversa do CAIQUE, com os quatro estados: vazio (boas-vindas e sugestões), carregando ("CAIQUE está digitando"), erro (com "Tentar de novo") e com conversa. As respostas ainda são SIMULADAS (lib/caique.ts); a IA entra depois.*
+*o botão redondo no canto da tela e a janela de conversa do CAIQUE, com os quatro estados: vazio (boas-vindas e sugestões), carregando ("CAIQUE está digitando"), erro (com "Tentar de novo") e com conversa. As respostas vêm da rota /api/caique/chat (Gemini); sem a chave no servidor, ela devolve texto de demonstração. O CAIQUE só conversa sobre a trilha aberta (decisão do time, 17/11/2026): fora de uma trilha o campo fica travado.*
 
-1. OS TEXTOS DO CHAT: nome, boas-vindas, aviso de demonstração e mensagens de erro. Troque o texto aqui, não no meio do JSX. _(linha 23)_
+1. OS TEXTOS DO CHAT: nome, boas-vindas, avisos e mensagens de erro. Troque o texto aqui, não no meio do JSX. _(linha 27)_
 
 ### `components/CaisLogo.tsx`
 *o símbolo (CaisMark) e o logo completo com o nome (CaisLogo), desenhados em SVG inline com os vetores do guia da marca.*
@@ -500,10 +505,10 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 4. AS REGRAS DO FORMULÁRIO de login: e-mail obrigatório e no formato certo (EMAIL_REGEX), senha obrigatória. _(linha 94)_
 5. PARA ONDE O LOGIN LEVA: o endereço de ?voltar= (só caminho interno, nunca "//" nem /login, para não abrir outro site nem entrar em laço) ou /painel. _(linha 150)_
 6. O BOTÃO DO GOOGLE: o destino do retorno é /login/google?voltar=<destino>. Mudar a rota exige mudar app/login/google e o endereço no Google Cloud. _(linha 182)_
-7. O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx. _(linha 200)_
-8. A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui. _(linha 252)_
-9. A mensagem de falha de rede ou servidor (diferente de senha errada). _(linha 257)_
-10. O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. _(linha 368)_
+7. O ENVIO DO LOGIN: valida, chama entrar() de lib/auth.tsx e, se der certo, vai para o destino. TODO(API): a chamada real fica em lib/auth.tsx. _(linha 202)_
+8. A MENSAGEM de cada motivo de recusa: conta inativa, convite não ativado ou e-mail/senha incorretos. Motivo novo da API entra aqui. _(linha 254)_
+9. A mensagem de falha de rede ou servidor (diferente de senha errada). _(linha 259)_
+10. O BOTÃO DE ENVIO: animado (components/BotaoEntrar.tsx). "executando" liga a animação enquanto o login roda; ao terminar, aoTerminar libera a navegação. O texto é COPY.submit. _(linha 370)_
 
 ### `components/marca/LogoDaMarca.tsx`
 *mostra a marca da empresa configurada no tema ativo (imagem e/ou nome); sem marca no tema, mostra o logo do CAIS de sempre. Também exporta `useNomeDaMarca`, o nome para leitor de tela.*
@@ -968,10 +973,12 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 4. A BUSCA GLOBAL: junta tudo o que a sessão abre, filtra pelo texto (todas as palavras, sem acento) e reparte as vagas da lista entre os tipos. TODO(API): vira chamada ao servidor. _(linha 156)_
 
 ### `lib/caique.ts`
-*funções puras do chat do CAIQUE: de qual trilha o chat está falando, quais perguntas sugerir, se a pergunta é válida e a resposta (por enquanto FINGIDA, sem IA).*
+*funções do chat do CAIQUE: de qual trilha o chat está falando, quais perguntas sugerir, se a pergunta é válida, o contexto da trilha enviado à IA, a validação do pedido (usada também pela rota do servidor) e as chamadas às rotas /api/caique/chat e /api/caique/feedback.*
 
-1. O TAMANHO MÁXIMO da pergunta (em caracteres). O limite protege o custo da IA quando ela for ligada. _(linha 22)_
-2. AS PERGUNTAS SUGERIDAS do chat vazio: com trilha aberta e sem trilha. Troque o texto aqui. _(linha 41)_
+1. O TAMANHO MÁXIMO da pergunta (em caracteres). O limite protege o custo da IA. _(linha 68)_
+2. QUANTO DA CONVERSA E DA TRILHA vai para a IA: mensagens anteriores, texto por etapa e número de etapas. _(linha 71)_
+3. AS PERGUNTAS SUGERIDAS do chat vazio (só aparecem com uma trilha aberta). Troque o texto aqui. _(linha 94)_
+4. O TEMPO MÁXIMO que o navegador espera a rota (ms). Fica acima do timeout do Gemini (GEMINI_TIMEOUT_MS, 8 s). _(linha 216)_
 
 ### `lib/carga.ts`
 *a regra do semáforo de carga em funções puras: quanto da semana de cada pessoa está ocupado, dia a dia, levando em conta QUANDO cada alocação acontece (e não só se ela existe).*
@@ -1221,4 +1228,4 @@ _Sem ponto vital de alteração: o arquivo não tem regra, texto ou configuraç�
 
 ---
 
-147 arquivos mapeados, 606 pontos vitais.
+148 arquivos mapeados, 609 pontos vitais.

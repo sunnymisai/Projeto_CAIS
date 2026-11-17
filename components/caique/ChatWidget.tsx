@@ -2,9 +2,10 @@
    CHATWIDGET.TSX — O CHAT DO CAIQUE (BOTÃO FLUTUANTE + JANELA)
    O que é: o botão redondo no canto da tela e a janela de conversa do CAIQUE, com os quatro estados:
    vazio (boas-vindas e sugestões), carregando ("CAIQUE está digitando"), erro (com "Tentar de novo") e com conversa.
-   As respostas ainda são SIMULADAS (lib/caique.ts); a IA entra depois.
+   As respostas vêm da rota /api/caique/chat (Gemini); sem a chave no servidor, ela devolve texto de demonstração.
+   O CAIQUE só conversa sobre a trilha aberta (decisão do time, 17/11/2026): fora de uma trilha o campo fica travado.
    Onde é usado: app/(sistema)/layout.tsx (aparece em todas as telas internas).
-   Depende de: lib/caique.ts, lib/store.tsx (useDados, para o título da trilha), components/caique/ChatMensagem.tsx,
+   Depende de: lib/caique.ts, lib/store.tsx (useDados, para a trilha aberta), components/caique/ChatMensagem.tsx,
      lucide-react e next/navigation (usePathname).
    Contexto: §4 (trilhas), §13 (acessível); prompts I04 e I05 em docs/prompts.
    ============================================================================ */
@@ -14,22 +15,28 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { CircleAlert, MessageCircle, RotateCw, Send, Sparkles, Trash2, X } from 'lucide-react';
 import { useDados } from '@/lib/store';
-import { LIMITE_PERGUNTA, idTrilhaDoCaminho, perguntarAoCaique, sugestoesCaique, validarPergunta, type MensagemCaique } from '@/lib/caique';
+import {
+  LIMITE_PERGUNTA, enviarAvaliacao, historicoParaEnvio, idTrilhaDoCaminho, montarContextoTrilha,
+  perguntarAoCaique, sugestoesCaique, validarPergunta, type MensagemCaique,
+} from '@/lib/caique';
 import { ChatMensagem } from './ChatMensagem';
 
 /** Hora atual no formato HH:mm, para o carimbo das mensagens. */
 const horaAgora = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-// [PV-1] OS TEXTOS DO CHAT: nome, boas-vindas, aviso de demonstração e mensagens de erro. Troque o texto aqui, não no meio do JSX.
+// [PV-1] OS TEXTOS DO CHAT: nome, boas-vindas, avisos e mensagens de erro. Troque o texto aqui, não no meio do JSX.
 const COPY = {
   nome: 'CAIQUE',
-  semTrilha: 'Assistente do CAIS',
+  semTrilha: 'Assistente das trilhas',
   abrir: 'Abrir o chat do CAIQUE',
   fechar: 'Fechar o chat',
   limpar: 'Limpar conversa',
   boasVindas: 'Oi! Eu sou o CAIQUE.',
-  boasVindasTexto: 'Tiro dúvidas sobre as trilhas e o CAIS. Escolha uma pergunta ou escreva a sua.',
-  aviso: 'Demonstração: as respostas ainda são simuladas.',
+  boasVindasTexto: 'Tiro dúvidas sobre esta trilha. Escolha uma pergunta ou escreva a sua.',
+  semTrilhaTexto: 'Abra uma trilha para conversar comigo. Eu tiro dúvidas sobre o conteúdo das etapas dela.',
+  semTrilhaCampo: 'Abra uma trilha para perguntar.',
+  aviso: 'O CAIQUE usa IA e pode errar. Confira no material da trilha.',
+  avisoSimulado: 'Demonstração: a IA ainda não está ligada.',
   placeholder: 'Escreva a sua pergunta…',
   enviar: 'Enviar pergunta',
   digitando: 'CAIQUE está digitando…',
@@ -54,15 +61,32 @@ export function ChatWidget() {
   const [enviando, setEnviando] = useState(false);
   // Pergunta que falhou, guardada para o "Tentar de novo". null = sem erro.
   const [falhou, setFalhou] = useState<string | null>(null);
+  // Mensagem do servidor sobre a falha (ex.: "demorou demais"); null = usa o texto padrão.
+  const [motivoFalha, setMotivoFalha] = useState<string | null>(null);
+  // true quando a última resposta veio de demonstração (servidor sem chave do Gemini).
+  const [simulada, setSimulada] = useState(false);
   // Erro de validação da pergunta (vazia ou grande demais), mostrado ao tentar enviar.
   const [erroCampo, setErroCampo] = useState<string | null>(null);
   const fimRef = useRef<HTMLDivElement>(null);
   const campoRef = useRef<HTMLTextAreaElement>(null);
   const contador = useRef(0);
 
-  // Título da trilha da tela aberta (se for uma trilha que existe); undefined nas outras telas.
+  // A trilha da tela aberta (se for uma trilha que existe); undefined nas outras telas.
   const idTrilha = idTrilhaDoCaminho(caminho);
-  const tituloTrilha = idTrilha ? dados.trilhas.find((t) => t.id === idTrilha)?.titulo : undefined;
+  const trilha = idTrilha ? dados.trilhas.find((t) => t.id === idTrilha) : undefined;
+  const tituloTrilha = trilha?.titulo;
+
+  // De qual trilha é a conversa na tela. Quando a pessoa troca de trilha (ou sai dela), a conversa anterior
+  // era sobre outro material, então recomeça. Trocar de etapa na mesma trilha mantém a conversa.
+  // Ajuste durante a renderização (padrão do React para "resetar estado quando uma prop muda"), sem useEffect.
+  const [trilhaDaConversa, setTrilhaDaConversa] = useState(trilha?.id);
+  if (trilhaDaConversa !== trilha?.id) {
+    setTrilhaDaConversa(trilha?.id);
+    setMensagens([]);
+    setFalhou(null);
+    setMotivoFalha(null);
+    setErroCampo(null);
+  }
 
   // Roda quando chega mensagem ou muda "digitando/erro": leva a conversa ao fim. Sem limpeza.
   useEffect(() => {
@@ -79,44 +103,54 @@ export function ChatWidget() {
    * @param pergunta - o texto a enviar (do campo, de uma sugestão ou do "Tentar de novo").
    * @param repetindo - true quando é o "Tentar de novo": a pergunta já está na conversa e não é duplicada.
    */
-  // GRAVA: só o estado do chat na tela (a conversa some ao recarregar a página).
-  // TODO(API): a resposta virá da rota /api/caique/chat; o histórico passa a ser enviado junto.
+  // GRAVA: o estado do chat na tela (a conversa some ao recarregar a página) e, no servidor, uma linha de log.
   async function enviar(pergunta: string, repetindo = false) {
-    // Enviar de novo enquanto espera duplicaria a pergunta.
-    if (enviando) return;
+    // Enviar de novo enquanto espera duplicaria a pergunta; sem trilha não há sobre o que conversar.
+    if (enviando || !trilha) return;
     const erro = validarPergunta(pergunta);
     setErroCampo(erro);
     if (erro) return;
     const limpa = pergunta.trim();
     setFalhou(null);
+    setMotivoFalha(null);
+    // O histórico é o que veio ANTES desta pergunta. No "Tentar de novo" a pergunta já é a última da lista, então sai do recorte.
+    const anteriores = repetindo ? mensagens.slice(0, -1) : mensagens;
     if (!repetindo) {
       setMensagens((m) => [...m, { id: `m${++contador.current}`, papel: 'usuario', texto: limpa, hora: horaAgora() }]);
       setTexto('');
     }
     setEnviando(true);
     try {
-      const resposta = await perguntarAoCaique(limpa, tituloTrilha);
-      setMensagens((m) => [...m, { id: `m${++contador.current}`, papel: 'caique', texto: resposta, hora: horaAgora() }]);
-    } catch {
-      // Falha de rede, timeout ou limite da IA: guarda a pergunta para tentar de novo.
+      const resposta = await perguntarAoCaique(limpa, montarContextoTrilha(trilha), historicoParaEnvio(anteriores));
+      setSimulada(resposta.simulada);
+      setMensagens((m) => [...m, { id: `m${++contador.current}`, papel: 'caique', texto: resposta.texto, hora: horaAgora(), idResposta: resposta.id }]);
+    } catch (e) {
+      // Falha de rede, timeout ou limite da IA: guarda a pergunta para tentar de novo e mostra o motivo que o servidor deu.
       setFalhou(limpa);
+      // "Falha 500" e erros de rede do navegador não ajudam a pessoa: nesses casos fica o texto padrão.
+      const motivo = e instanceof Error && !/^Falha \d+$/.test(e.message) && e.name === 'Error' ? e.message : null;
+      setMotivoFalha(motivo);
     } finally {
       setEnviando(false);
     }
   }
 
   /** Registra a avaliação de uma resposta (clicar de novo na mesma avaliação a desfaz). */
-  // GRAVA: só o estado do chat na tela.
-  // TODO(API): enviar a avaliação para /api/caique/feedback.
+  // GRAVA: o estado do chat na tela e a avaliação no log do servidor (/api/caique/feedback).
   function avaliar(id: string, valor: 'util' | 'nao-util') {
-    setMensagens((m) => m.map((x) => (x.id === id ? { ...x, feedback: x.feedback === valor ? undefined : valor } : x)));
+    const alvo = mensagens.find((x) => x.id === id);
+    if (!alvo) return;
+    const novo = alvo.feedback === valor ? undefined : valor;
+    setMensagens((m) => m.map((x) => (x.id === id ? { ...x, feedback: novo } : x)));
+    if (alvo.idResposta) void enviarAvaliacao(alvo.idResposta, novo ?? null);
   }
 
   /** Apaga a conversa inteira e volta ao estado vazio. */
-  // APAGA: remove todas as mensagens da tela (não há nada salvo).
+  // APAGA: remove todas as mensagens da tela (o log do servidor fica).
   function limpar() {
     setMensagens([]);
     setFalhou(null);
+    setMotivoFalha(null);
     setErroCampo(null);
     setTexto('');
     campoRef.current?.focus();
@@ -171,7 +205,8 @@ export function ChatWidget() {
           // Estado VAZIO: explica o que o CAIQUE faz e oferece a próxima ação (perguntas prontas).
           <div className="flex h-full flex-col justify-center">
             <p className="font-space text-lg font-semibold text-tinta">{COPY.boasVindas}</p>
-            <p className="mt-1 text-sm text-tinta-suave">{COPY.boasVindasTexto}</p>
+            {/* Sem trilha aberta não há sugestão (sugestoesCaique devolve []): só a orientação de abrir uma. */}
+            <p className="mt-1 text-sm text-tinta-suave">{trilha ? COPY.boasVindasTexto : COPY.semTrilhaTexto}</p>
             <div className="mt-4 flex flex-col gap-2">
               {sugestoesCaique(tituloTrilha).map((s) => (
                 <button key={s} type="button" onClick={() => enviar(s)}
@@ -201,7 +236,7 @@ export function ChatWidget() {
             <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <div>
               <p className="font-semibold">{COPY.erroTitulo}</p>
-              <p>{COPY.erroTexto}</p>
+              <p>{motivoFalha ?? COPY.erroTexto}</p>
               <button type="button" onClick={() => enviar(falhou, true)}
                 className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-erro/40 px-2.5 py-1 text-xs font-semibold transition-colors hover:bg-erro/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-erro/50">
                 <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
@@ -227,17 +262,19 @@ export function ChatWidget() {
             value={texto}
             rows={2}
             maxLength={LIMITE_PERGUNTA + 50}
-            placeholder={COPY.placeholder}
+            disabled={!trilha}
+            placeholder={trilha ? COPY.placeholder : COPY.semTrilhaCampo}
             onChange={(e) => { setTexto(e.target.value); if (erroCampo) setErroCampo(null); }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void enviar(texto); } }}
-            className="max-h-28 min-h-[44px] flex-1 resize-none rounded-xl border border-borda bg-fundo px-3 py-2.5 text-sm text-tinta placeholder:text-tinta-fraca focus:border-primaria focus:outline-none focus:ring-2 focus:ring-primaria/25"
+            className="max-h-28 min-h-[44px] flex-1 resize-none rounded-xl border border-borda bg-fundo px-3 py-2.5 text-sm text-tinta placeholder:text-tinta-fraca focus:border-primaria focus:outline-none focus:ring-2 focus:ring-primaria/25 disabled:cursor-not-allowed disabled:opacity-60"
           />
-          <button type="submit" disabled={enviando} aria-label={COPY.enviar}
+          <button type="submit" disabled={enviando || !trilha} aria-label={COPY.enviar}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-botao text-sobre-cor transition-colors hover:bg-botao-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primaria/50 disabled:opacity-50">
             <Send className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
-        <p className="mt-1.5 text-[11px] text-tinta-suave">{COPY.aviso}</p>
+        {/* Aviso: deixa claro quando a IA está desligada (resposta de demonstração) e, com ela ligada, que pode errar. */}
+        <p className="mt-1.5 text-[11px] text-tinta-suave">{simulada ? COPY.avisoSimulado : COPY.aviso}</p>
       </form>
     </section>
   );

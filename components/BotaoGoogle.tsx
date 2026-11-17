@@ -57,6 +57,7 @@ export function BotaoGoogle({
   useEffect(() => {
     let cancelado = false;
 
+    /** Inicializa o Google Identity Services e desenha o botão oficial dentro de `alvo` (só se o script já carregou). */
     const desenhar = () => {
       const id = window.google?.accounts.id;
       if (cancelado || !id || !alvo.current) return;

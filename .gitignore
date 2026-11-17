@@ -45,3 +45,6 @@ next-env.d.ts
 
 # exceção: o modelo de variáveis (sem segredos) vai para o Git
 !.env.example
+
+# logs do CAIQUE (perguntas, respostas e avaliações; podem ter dados pessoais): ficam só na máquina
+/logs/
